@@ -1,0 +1,142 @@
+export const translations = {
+    es: {
+        // Sidebar
+        dashboard: "Panel de control",
+        myLibrary: "Mi Biblioteca",
+        statistics: "Estadísticas",
+        appVersion: "Códice v0.9.1",
+
+        // Dashboard
+        welcomeBack: "Bienvenido de nuevo",
+        libraryOverview: "Aquí tienes un resumen de tu biblioteca",
+        totalBooks: "Total de Libros",
+        booksRead: "Libros Leídos",
+        currentlyReading: "Leyendo Actualmente",
+        recentlyAdded: "Añadidos Recientemente",
+        noBooksYet: "Todavía no hay libros en tu biblioteca. ¡Ve a Mi Biblioteca para añadir algunos!",
+
+        // My Library
+        booksTotal: "{count} libros en total",
+        bookTotal: "{count} libro en total",
+        addNewBook: "Añadir Nuevo Libro",
+        searchPlaceholder: "Buscar libros o autores...",
+        allStatuses: "Todos los estados",
+        newestFirst: "Más recientes primero",
+        titleAZ: "Título: A-Z",
+        titleZA: "Título: Z-A",
+        progressSort: "Progreso",
+        noBooksFound: "No se encontraron libros",
+        tryAdjusting: "Intenta ajustar tu búsqueda o filtros, o añade un nuevo libro.",
+        addABook: "Añadir un Libro",
+
+        // Book Modal
+        editBook: "Editar Libro",
+        addBookHeading: "Añadir Nuevo Libro",
+        titleLabel: "Título *",
+        authorLabel: "Autor *",
+        genreLabel: "Género",
+        statusLabel: "Estado",
+        totalPagesLabel: "Páginas Totales *",
+        pagesReadLabel: "Páginas Leídas",
+        coverUrlLabel: "Portada del Libro",
+        uploadCoverBtn: "Subir Imagen",
+        coverUrlPlaceholder: "O dejar en blanco para portada por defecto",
+        ratingLabel: "Valoración (1-5)",
+        notesLabel: "Notas y Frases Destacadas",
+        addNotePlaceholder: "Escribe una nota, pensamiento o cita aquí...",
+        addNoteBtn: "Añadir Nota",
+        noNotesYet: "Aún no hay notas para este libro. ¡Escribe tus pensamientos!",
+        cancel: "Cancelar",
+        saveChanges: "Guardar Cambios",
+        addBookBtn: "Añadir Libro",
+
+        // Statuses & Genres
+        toRead: "Por Leer",
+        reading: "Leyendo",
+        read: "Leído",
+        uncategorized: "Sin Categoría",
+
+        // Statistics
+        readingStats: "Estadísticas de Lectura",
+        analyzeHabits: "Analiza tus hábitos de lectura",
+        addBooksForStats: "¡Añade algunos libros a tu biblioteca para ver tus estadísticas de lectura!",
+        totalPagesLibrary: "Páginas Totales",
+        pagesReadStat: "Páginas Leídas",
+        overallCompletion: "Progreso Global",
+        booksByGenre: "Libros por Género",
+        readingStatusBreakdown: "Desglose por Estado",
+    },
+    en: {
+        // Sidebar
+        dashboard: "Dashboard",
+        myLibrary: "My Library",
+        statistics: "Statistics",
+        appVersion: "Códice v0.9.1",
+
+        // Dashboard
+        welcomeBack: "Welcome back",
+        libraryOverview: "Here is your library overview",
+        totalBooks: "Total Books",
+        booksRead: "Books Read",
+        currentlyReading: "Currently Reading",
+        recentlyAdded: "Recently Added",
+        noBooksYet: "No books in your library yet. Go to My Library to add some!",
+
+        // My Library
+        booksTotal: "{count} books total",
+        bookTotal: "{count} book total",
+        addNewBook: "Add New Book",
+        searchPlaceholder: "Search books or authors...",
+        allStatuses: "All Statuses",
+        newestFirst: "Newest First",
+        titleAZ: "Title: A-Z",
+        titleZA: "Title: Z-A",
+        progressSort: "Progress",
+        noBooksFound: "No books found",
+        tryAdjusting: "Try adjusting your search or filters, or add a new book to your library.",
+        addABook: "Add a Book",
+
+        // Book Modal
+        editBook: "Edit Book",
+        addBookHeading: "Add New Book",
+        titleLabel: "Title *",
+        authorLabel: "Author *",
+        genreLabel: "Genre",
+        statusLabel: "Status",
+        totalPagesLabel: "Total Pages *",
+        pagesReadLabel: "Pages Read",
+        coverUrlLabel: "Book Cover",
+        uploadCoverBtn: "Upload Image",
+        coverUrlPlaceholder: "Or leave blank for default cover",
+        ratingLabel: "Rating (1-5)",
+        notesLabel: "Notes & Quotes",
+        addNotePlaceholder: "Write a note, thought, or quote here...",
+        addNoteBtn: "Add Note",
+        noNotesYet: "No notes yet for this book. Start writing your thoughts!",
+        cancel: "Cancel",
+        saveChanges: "Save Changes",
+        addBookBtn: "Add Book",
+
+        // Statuses & Genres
+        toRead: "To Read",
+        reading: "Reading",
+        read: "Read",
+        uncategorized: "Uncategorized",
+
+        // Statistics
+        readingStats: "Reading Statistics",
+        analyzeHabits: "Analyze your reading habits",
+        addBooksForStats: "Add some books to your library to see your reading statistics!",
+        totalPagesLibrary: "Total Pages",
+        pagesReadStat: "Pages Read",
+        overallCompletion: "Overall Progress",
+        booksByGenre: "Books by Genre",
+        readingStatusBreakdown: "Reading Status",
+        totalBooks: "Total Books",
+        avgRating: "Avg Rating",
+        ratingDistribution: "Rating Distribution",
+        topAuthors: "Top Authors",
+        stars: "Stars",
+        unknownAuthor: "Unknown",
+    }
+};

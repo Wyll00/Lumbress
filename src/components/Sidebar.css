@@ -1,0 +1,212 @@
+.sidebar {
+    width: 260px;
+    height: calc(100vh - 32px);
+    position: fixed;
+    left: 16px;
+    top: 16px;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0;
+    z-index: 100;
+    background: var(--sidebar-bg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-header {
+    padding: 0 24px 18px;
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 18px;
+    flex-shrink: 0;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--sidebar-ink);
+}
+
+.logo-img {
+    width: 88px;
+    height: 88px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+.logo-icon {
+    color: var(--accent);
+}
+
+.logo-fallback {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-fallback svg {
+    color: var(--accent);
+}
+
+.logo-fallback h1,
+.logo-container h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--sidebar-ink);
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 16px;
+    flex: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+    color: var(--sidebar-muted);
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-badge {
+    margin-left: auto;
+    background: var(--accent-color, #f1c40f);
+    color: #111;
+    font-size: 0.66rem;
+    font-weight: 800;
+    min-width: 19px;
+    height: 19px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    flex-shrink: 0;
+}
+
+.nav-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: var(--nav-active-bg);
+    opacity: 1;
+    transition: width 0.3s ease;
+    z-index: 0;
+}
+
+.nav-item:hover {
+    color: var(--sidebar-ink);
+    background: var(--nav-active-bg);
+}
+
+.nav-item.active {
+    color: var(--accent);
+    background: var(--nav-active-bg);
+}
+
+.nav-item.active::before {
+    width: 100%;
+}
+
+.nav-item svg,
+.nav-item span {
+    position: relative;
+    z-index: 1;
+}
+
+.nav-item.active svg {
+    color: var(--accent);
+}
+
+.sidebar-footer {
+    padding: 0 24px;
+    font-size: 0.8rem;
+    color: var(--sidebar-muted);
+    text-align: center;
+}
+
+/* Mini avatar in sidebar footer */
+.sidebar-user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sidebar-user-avatar:hover {
+    border-color: var(--accent-hover);
+    transform: scale(1.08);
+    box-shadow: 0 0 16px rgba(193, 138, 47, 0.3);
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: calc(100% - 32px);
+        height: 70px;
+        top: auto;
+        bottom: 16px;
+        flex-direction: row;
+        padding: 0;
+        align-items: center;
+        border-radius: 20px;
+    }
+
+    .sidebar-header,
+    .sidebar-footer {
+        display: none;
+    }
+
+    .nav-links {
+        flex-direction: row;
+        justify-content: space-around;
+        padding: 0 8px;
+        width: 100%;
+    }
+
+    .nav-item {
+        padding: 12px;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .nav-item span {
+        font-size: 0.7rem;
+    }
+}

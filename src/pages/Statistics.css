@@ -1,0 +1,147 @@
+.statistics {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.empty-stats {
+    padding: 64px 32px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+}
+
+.stats-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.stat-overview-card {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 24px;
+    border-radius: 18px;
+}
+
+.stat-overview-card.clickable-card {
+    cursor: pointer;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.stat-overview-card.clickable-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--success-color, #2ecc71);
+    box-shadow: 0 12px 28px rgba(46, 204, 113, 0.18);
+}
+
+.stat-overview-card .card-hint {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.stat-overview-card.clickable-card:hover .card-hint {
+    opacity: 1;
+}
+
+.stat-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.stat-overview-card h3 {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.large-number {
+    font-size: 2.8rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    letter-spacing: -1px;
+}
+
+.charts-grid-main {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 32px;
+}
+
+.chart-container {
+    padding: 24px;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    width: calc(33.333% - 16px);
+    min-width: 300px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.chart-header h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.chart-meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.chart-meta-accent {
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.chart-wrapper {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 950px) {
+    .chart-container {
+        width: calc(50% - 12px);
+    }
+}
+
+@media (max-width: 650px) {
+    .stats-overview-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .charts-grid-main {
+        flex-direction: column;
+    }
+
+    .chart-container {
+        width: 100%;
+        min-width: 100%;
+    }
+}

@@ -1,0 +1,152 @@
+.mylibrary-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.mylibrary-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.library-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.title-section h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    background: var(--text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.title-section p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+.add-book-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.controls-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    gap: 24px;
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.search-box input {
+    padding-left: 44px;
+}
+
+.filters-box {
+    display: flex;
+    gap: 16px;
+}
+
+.filter-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.filter-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.filter-group select {
+    cursor: pointer;
+    min-width: 150px;
+}
+
+.filter-group:first-child select {
+    padding-left: 40px;
+}
+
+.books-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    margin-top: 16px;
+}
+
+.empty-library {
+    display: flex;
+    justify-content: center;
+    padding: 64px 0;
+}
+
+.empty-message {
+    text-align: center;
+    padding: 48px;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.empty-message h2 {
+    font-size: 1.5rem;
+    color: var(--text);
+}
+
+.empty-message p {
+    color: var(--text-muted);
+    margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+    .mylibrary-layout {
+        flex-direction: column;
+    }
+
+    .library-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .controls-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-box {
+        max-width: none;
+    }
+
+    .filters-box {
+        flex-direction: column;
+    }
+}

@@ -1,0 +1,346 @@
+/* ============================================================
+ * Librix · Niebla & Oliva — Design Tokens
+ * ============================================================
+ * Paleta minimalista y editorial con doble modo (claro / oscuro).
+ *
+ * Uso:
+ *   1. Importa este archivo en tu CSS raíz:
+ *        @import url('./niebla-oliva.css');
+ *
+ *   2. El tema claro está activo por defecto. Para el modo oscuro
+ *      añade `data-theme="dark"` al <html> o <body>:
+ *        <html data-theme="dark"> … </html>
+ *
+ *      Alternativa: respetar `prefers-color-scheme` automáticamente
+ *      — ver el bloque @media al final.
+ *
+ *   3. Usa las variables semánticas en tu CSS:
+ *        background: var(--bg);
+ *        color: var(--text);
+ *        border: 1px solid var(--card-border);
+ *
+ * ----------------------------------------------------------------
+ * Tipografía sugerida:
+ *   --font-sans:    Inter (Google Fonts)
+ *   --font-display: Fraunces (Google Fonts)
+ * ============================================================ */
+
+:root {
+  /* ---------- Tipografía ---------- */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  /* ---------- Escalas ---------- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 9999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 28px;
+  --space-8: 40px;
+
+  /* ============================================================
+   * MODO CLARO (default)
+   * ============================================================ */
+
+  /* Fondos */
+  --bg: #EDEDE6;
+  --sidebar-bg: #E2E2D6;
+  --card-bg: #F8F8F0;
+  --input-bg: #F8F8F0;
+  --cover-bg: #D2D2C2;
+
+  /* Tinta / texto */
+  --text: #2E2F1F;
+  --text-muted: #71726A;
+  --sidebar-ink: #2E2F1F;
+  --sidebar-muted: #71726A;
+
+  /* Acento (oliva → ocre) */
+  --accent: #C18A2F;
+  --accent-ink: #FFFFFF;
+  --accent-soft: rgba(193, 138, 47, 0.16);
+  --accent-hover: #A87726;
+
+  /* Líneas / bordes */
+  --divider: rgba(46, 47, 31, 0.10);
+  --card-border: rgba(46, 47, 31, 0.08);
+  --input-border: rgba(46, 47, 31, 0.10);
+
+  /* Navegación activa */
+  --nav-active-bg: rgba(193, 138, 47, 0.14);
+  --nav-active-ink: #2E2F1F;
+
+  /* Estados de libro (status pills) */
+  --status-unread: #8C7944;
+  --status-unread-bg: rgba(140, 121, 68, 0.12);
+  --status-reading: #C18A2F;
+  --status-reading-bg: rgba(193, 138, 47, 0.14);
+  --status-read: #4E6147;
+  --status-read-bg: rgba(78, 97, 71, 0.14);
+  --status-abandoned: #8B6F7A;
+  --status-abandoned-bg: rgba(139, 111, 122, 0.12);
+
+  /* Tags / chips */
+  --tag-bg: rgba(193, 138, 47, 0.08);
+  --tag-ink: #2E2F1F;
+  --tag-border: rgba(193, 138, 47, 0.20);
+  --chip-bg: rgba(248, 248, 240, 0.85);
+  --chip-ink: #2E2F1F;
+
+  /* Otros */
+  --ring-track: rgba(46, 47, 31, 0.10);
+  --card-shadow: 0 1px 0 rgba(46, 47, 31, 0.04);
+  --btn-shadow: 0 1px 2px rgba(193, 138, 47, 0.30), 0 4px 12px rgba(193, 138, 47, 0.15);
+
+  /* Tonos para gráficos / iconos categorizados (armónicos con la paleta) */
+  --chart-1: #C18A2F;  /* ocre — primary */
+  --chart-2: #94B58A;  /* sage */
+  --chart-3: #C9897A;  /* dusty rose */
+  --chart-4: #7B92A8;  /* slate blue */
+  --chart-5: #8A5A7F;  /* plum */
+
+  --selection-bg: rgba(193, 138, 47, 0.25);
+  --focus-ring: 0 0 0 3px rgba(193, 138, 47, 0.35);
+}
+
+
+/* ============================================================
+ * MODO OSCURO
+ * ============================================================ */
+
+:root[data-theme='dark'],
+[data-theme='dark'] {
+  /* Fondos */
+  --bg: #13140C;
+  --sidebar-bg: #0D0E08;
+  --card-bg: #1A1B11;
+  --input-bg: #16170E;
+  --cover-bg: #2E2F1F;
+
+  /* Tinta */
+  --text: #EDEDE6;
+  --text-muted: #7F8074;
+  --sidebar-ink: #EDEDE6;
+  --sidebar-muted: #7F8074;
+
+  /* Acento (oliva → ocre más vibrante) */
+  --accent: #E6B345;
+  --accent-ink: #13140C;
+  --accent-soft: rgba(230, 179, 69, 0.16);
+  --accent-hover: #F2C155;
+
+  /* Líneas / bordes */
+  --divider: rgba(237, 237, 230, 0.07);
+  --card-border: rgba(237, 237, 230, 0.06);
+  --input-border: rgba(237, 237, 230, 0.08);
+
+  /* Navegación activa */
+  --nav-active-bg: rgba(230, 179, 69, 0.14);
+  --nav-active-ink: #EDEDE6;
+
+  /* Estados de libro */
+  --status-unread: #D1B174;
+  --status-unread-bg: rgba(209, 177, 116, 0.12);
+  --status-reading: #E6B345;
+  --status-reading-bg: rgba(230, 179, 69, 0.14);
+  --status-read: #94B58A;
+  --status-read-bg: rgba(148, 181, 138, 0.12);
+  --status-abandoned: #B89B9F;
+  --status-abandoned-bg: rgba(184, 155, 159, 0.12);
+
+  /* Tags / chips */
+  --tag-bg: rgba(230, 179, 69, 0.10);
+  --tag-ink: #EDEDE6;
+  --tag-border: rgba(230, 179, 69, 0.22);
+  --chip-bg: rgba(26, 27, 17, 0.85);
+  --chip-ink: #EDEDE6;
+
+  /* Otros */
+  --ring-track: rgba(237, 237, 230, 0.10);
+  --card-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+  --btn-shadow: 0 4px 20px rgba(230, 179, 69, 0.25);
+
+  /* Tonos gráficos (más luminosos en oscuro) */
+  --chart-1: #E6B345;
+  --chart-2: #A8C99E;
+  --chart-3: #DCA294;
+  --chart-4: #9AB0C6;
+  --chart-5: #A87794;
+
+  --selection-bg: rgba(230, 179, 69, 0.30);
+  --focus-ring: 0 0 0 3px rgba(230, 179, 69, 0.40);
+}
+
+
+/* ============================================================
+ * Auto dark mode (opcional)
+ * Descomenta este bloque si quieres que se active solo según el
+ * sistema, sin necesidad de el atributo data-theme.
+ * ============================================================ */
+/*
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #13140C;
+    --sidebar-bg: #0D0E08;
+    --card-bg: #1A1B11;
+    --input-bg: #16170E;
+    --cover-bg: #2E2F1F;
+    --text: #EDEDE6;
+    --text-muted: #7F8074;
+    --sidebar-ink: #EDEDE6;
+    --sidebar-muted: #7F8074;
+    --accent: #DCA84A;
+    --accent-ink: #13140C;
+    --accent-soft: rgba(220, 168, 74, 0.16);
+    --accent-hover: #E8B65A;
+    --divider: rgba(237, 237, 230, 0.07);
+    --card-border: rgba(237, 237, 230, 0.06);
+    --input-border: rgba(237, 237, 230, 0.08);
+    --nav-active-bg: rgba(220, 168, 74, 0.14);
+    --nav-active-ink: #EDEDE6;
+    --status-unread: #C2A36A;
+    --status-unread-bg: rgba(194, 163, 106, 0.12);
+    --status-read: #94B58A;
+    --status-read-bg: rgba(148, 181, 138, 0.12);
+    --tag-bg: rgba(220, 168, 74, 0.10);
+    --tag-ink: #EDEDE6;
+    --tag-border: rgba(220, 168, 74, 0.22);
+    --chip-bg: rgba(26, 27, 17, 0.85);
+    --chip-ink: #EDEDE6;
+    --ring-track: rgba(237, 237, 230, 0.10);
+    --card-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+    --btn-shadow: 0 4px 20px rgba(220, 168, 74, 0.25);
+    --chart-1: #DCA84A;
+    --chart-2: #A8C99E;
+    --chart-3: #DCA294;
+    --chart-4: #9AB0C6;
+    --chart-5: #A87794;
+  }
+}
+*/
+
+
+/* ============================================================
+ * RESETS / BASE TIPOGRÁFICA
+ * ============================================================ */
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background 220ms ease, color 220ms ease;
+}
+
+::selection { background: var(--selection-bg); color: var(--text); }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0;
+}
+
+h1 { font-size: 36px; }
+h2 { font-size: 26px; }
+h3 { font-size: 19px; }
+h4 { font-size: 16px; }
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+
+/* ============================================================
+ * COMPONENTES BASE — clases de utilidad opcionales
+ * ============================================================ */
+
+/* Card */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+}
+
+/* Botón primario */
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  padding: 11px 18px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--btn-shadow);
+  transition: background 180ms ease, transform 120ms ease;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:active { transform: translateY(1px); }
+
+/* Botón secundario / ghost */
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--divider);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--text-muted); }
+
+/* Input */
+.input {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  color: var(--text);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+  width: 100%;
+}
+.input:focus { outline: none; border-color: var(--accent); box-shadow: var(--focus-ring); }
+.input::placeholder { color: var(--text-muted); }
+
+/* Tag */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--tag-bg);
+  border: 1px solid var(--tag-border);
+  color: var(--tag-ink);
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+}
+
+/* Status pills */
+.status { padding: 3px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.status-unread    { color: var(--status-unread);    background: var(--status-unread-bg); }
+.status-reading   { color: var(--status-reading);   background: var(--status-reading-bg); }
+.status-read      { color: var(--status-read);      background: var(--status-read-bg); }
+.status-abandoned { color: var(--status-abandoned); background: var(--status-abandoned-bg); }

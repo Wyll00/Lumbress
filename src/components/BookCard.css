@@ -1,0 +1,271 @@
+.book-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100%;
+}
+
+.book-card-header {
+    position: relative;
+    height: 180px;
+    background: var(--cover-bg);
+    border-bottom: 1px solid var(--card-border);
+}
+
+.book-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.book-cover-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.book-card:hover .book-cover-placeholder img {
+    opacity: 1;
+}
+
+.cover-fallback {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    opacity: 0.3;
+    letter-spacing: -2px;
+}
+
+
+
+.book-card-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.book-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 0.8rem;
+}
+
+.book-genre {
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    font-size: 0.7rem;
+}
+
+.book-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.book-author {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.book-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    margin-bottom: 20px;
+}
+
+.book-category-chip {
+    background: var(--tag-bg);
+    border: 1px solid var(--tag-border);
+    color: var(--tag-ink);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.70rem;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.book-category-chip:hover {
+    background: var(--selection-bg);
+    border-color: var(--accent);
+}
+
+.remove-cat-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    border-radius: 50%;
+    opacity: 0.6;
+    transition: all 0.2s ease;
+}
+
+.remove-cat-btn:hover {
+    opacity: 1;
+    background: var(--status-abandoned-bg);
+    color: var(--status-abandoned);
+}
+
+.progress-section {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.progress-pie-chart {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: background 0.4s ease;
+}
+
+.progress-pie-inner {
+    width: 48px;
+    height: 48px;
+    background-color: var(--card-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    box-shadow: inset 0 2px 5px var(--ring-track);
+    z-index: 2;
+}
+
+.progress-controls {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.progress-text {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+}
+
+.pages-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.quick-update input {
+    width: 60px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    text-align: center;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+}
+
+.quick-update input::-webkit-outer-spin-button,
+.quick-update input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.book-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--card-border);
+}
+
+.book-card-actions-inline {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn-inline {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    border: 1px solid var(--card-border);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.action-btn-inline:hover {
+    background: var(--bg);
+    color: var(--text);
+    transform: translateY(-2px);
+}
+
+.action-btn-inline.notes-btn:hover {
+    color: var(--accent);
+}
+
+.action-btn-inline.edit-btn:hover {
+    color: var(--chart-4);
+}
+
+.action-btn-inline.delete-btn:hover {
+    color: var(--status-abandoned);
+    border-color: var(--status-abandoned-bg);
+}
+
+.book-card-rating {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.inline-star-btn {
+    background: transparent;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.inline-star-btn:hover {
+    transform: scale(1.2);
+}
+
+.inline-star-btn:active {
+    transform: scale(0.9);
+}

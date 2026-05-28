@@ -1,0 +1,391 @@
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.page-header p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px;
+}
+
+.stat-card.clickable-stat {
+    cursor: pointer;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.stat-card.clickable-stat:hover {
+    transform: translateY(-3px);
+    border-color: #2ecc71;
+    box-shadow: 0 12px 28px rgba(46, 204, 113, 0.2);
+}
+
+.stat-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-details h3 {
+    font-size: 1rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.dashboard-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+.recent-books {
+    padding: 24px;
+}
+
+.recent-books h2 {
+    font-size: 1.25rem;
+    margin-bottom: 20px;
+    color: var(--text);
+}
+
+.empty-state {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 32px 0;
+    font-style: italic;
+}
+
+.recent-grid-vertical {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.recent-card-vertical {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                border-color 0.3s ease,
+                box-shadow 0.3s ease,
+                z-index 0s 0.3s;
+    z-index: 1;
+}
+
+.recent-card-vertical:hover {
+    transform: scale(1.06);
+    border-color: var(--accent);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+    z-index: 10;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                border-color 0.3s ease,
+                box-shadow 0.3s ease,
+                z-index 0s;
+}
+
+/* ─── Preview overlay (resumen al hover) ──────────────────────────── */
+.book-preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 52px; /* deja libre la zona del dropdown de etiquetas */
+    background: linear-gradient(180deg, rgba(15, 15, 18, 0.96) 0%, rgba(10, 10, 14, 0.98) 100%);
+    backdrop-filter: blur(10px);
+    color: var(--text);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.25s ease 0.05s, transform 0.25s ease 0.05s;
+    overflow-y: auto;
+    border-radius: 12px 12px 0 0;
+    z-index: 2;
+}
+
+.recent-card-vertical:hover .book-preview-overlay {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.preview-title {
+    font-size: 0.95rem;
+    color: var(--accent, #f1c40f);
+    margin: 0;
+    line-height: 1.25;
+    font-weight: 700;
+    /* limit to 2 lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.preview-author {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin: 0;
+    font-style: italic;
+}
+
+.preview-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.preview-badge,
+.preview-status {
+    display: inline-block;
+    font-size: 0.62rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.preview-badge {
+    background: rgba(123, 97, 255, 0.18);
+    color: #b4a4ff;
+    border: 1px solid rgba(123, 97, 255, 0.35);
+}
+
+.preview-status {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.preview-status.status-read,
+.preview-status.status-leído {
+    background: rgba(46, 204, 113, 0.18);
+    color: #4fdc8a;
+    border-color: rgba(46, 204, 113, 0.35);
+}
+
+.preview-status.status-reading,
+.preview-status.status-leyendo {
+    background: rgba(241, 196, 15, 0.18);
+    color: #ffd84a;
+    border-color: rgba(241, 196, 15, 0.35);
+}
+
+.preview-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 8px 0;
+}
+
+.preview-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.preview-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.preview-progress-bar > div {
+    height: 100%;
+    background: linear-gradient(90deg, #7b61ff, var(--accent, #f1c40f));
+    transition: width 0.4s ease;
+}
+
+.preview-rating {
+    color: #f1c40f;
+    letter-spacing: 2px;
+    font-size: 0.85rem;
+}
+
+.preview-quote {
+    font-style: italic;
+    font-size: 0.78rem;
+    color: var(--text);
+    border-left: 2px solid var(--accent, #f1c40f);
+    padding: 4px 8px;
+    margin: 0;
+    line-height: 1.35;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0 4px 4px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.preview-emotion {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.preview-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: auto;
+    padding-top: 6px;
+}
+
+.preview-tag {
+    background: rgba(123, 97, 255, 0.15);
+    color: #b4a4ff;
+    font-size: 0.62rem;
+    padding: 2px 7px;
+    border-radius: 8px;
+    border: 1px solid rgba(123, 97, 255, 0.3);
+    white-space: nowrap;
+}
+
+/* Permitir que la card crecida se vea por encima sin recortes del padre */
+.recent-grid-vertical {
+    overflow: visible;
+}
+
+.vertical-card-header {
+    height: 120px;
+    width: 100%;
+    background: var(--cover-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vertical-card-header img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    opacity: 0.7;
+}
+
+.fallback-cover-small {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    opacity: 0.3;
+}
+
+.vertical-card-info {
+    padding: 12px;
+    text-align: center;
+}
+
+.vertical-card-info h4 {
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vertical-card-info p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.vertical-card-actions {
+    padding: 10px;
+    margin-top: auto;
+    border-top: 1px solid var(--card-border);
+    background: var(--card-bg);
+    position: relative;
+    z-index: 3;
+}
+
+.recent-card-vertical:hover .vertical-card-actions {
+    background: rgba(10, 10, 14, 0.98);
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.category-dropdown {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    background: transparent !important;
+    color: var(--text-muted);
+    border: 1px solid var(--card-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.category-dropdown:hover {
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+.category-dropdown:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(123, 97, 255, 0.2);
+    color: var(--text);
+}
+
+.category-dropdown option {
+    background-color: var(--card-bg); /* Use a dark background to match theme */
+    color: var(--text);
+    padding: 12px 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.category-dropdown option:disabled {
+    color: var(--text-muted);
+    font-style: italic;
+    background-color: rgba(0, 0, 0, 0.2);
+}
