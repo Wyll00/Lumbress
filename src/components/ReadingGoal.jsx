@@ -3,6 +3,7 @@ import { Target, Pencil, Check } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
 import { API_URL, withAuth } from '../config';
+import PremiumGate from './PremiumGate';
 import './ReadingGoal.css';
 
 // Reto de lectura anual: meta + progreso (leídos este año) + ritmo + celebración.
@@ -30,6 +31,17 @@ const ReadingGoal = ({ books = [] }) => {
     const remaining = Math.max(0, goal - readThisYear);
 
     const openEdit = () => { setInput(goal ? String(goal) : ''); setEditing(true); };
+
+    // Objetivos de lectura: función Premium
+    if (user && user.plan !== 'premium') {
+        return (
+            <PremiumGate
+                compact
+                title={`${t('rgTitle')} ${year}`}
+                text="Fija tu reto anual de libros y sigue tu ritmo con Códice Premium."
+            />
+        );
+    }
 
     const save = async () => {
         const g = Math.max(0, Math.min(9999, parseInt(input, 10) || 0));

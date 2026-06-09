@@ -49,7 +49,8 @@ biblioteca-personal/
 │   ├── utils/cookies.js         ← COOKIE_NAME + cookieOptions (httpOnly, sameSite)
 │   ├── services/newsFetcher.js  ← RSS + filtros literarios + og:image fallback
 │   ├── services/mailer.js       ← nodemailer: aviso "urgente" de mensaje nuevo (a prueba de fallos)
-│   ├── scripts/setup_stripe.js  ← crea los 3 precios de suscripción en Stripe (imprime los price IDs)
+│   ├── scripts/setup_stripe.js  ← crea "Códice Premium" (precio mes+año) y configura el Customer Portal
+│   ├── middleware/plan.js       ← getPlan/requirePremium + límites por plan (free: 5 libros)
 │   ├── routes/                  ← auth, books, categories, users, posts, events, podcasts,
 │   │                              news, uploads, anuncios, mensajes, taller, authors,
 │   │                              booksearch, geosearch, subscriptions, recommendations,
@@ -98,9 +99,13 @@ SMTP_USER=  SMTP_PASS=  MAIL_FROM=
 # Stripe (suscripciones, claves TEST) — las pone el usuario; precios con scripts/setup_stripe.js
 STRIPE_SECRET_KEY=          # sk_test_...
 STRIPE_WEBHOOK_SECRET=      # whsec_... (Stripe CLi) — pendiente, no hace falta para el alta vía /sync
-STRIPE_PRICE_LECTOR=        # price_...
-STRIPE_PRICE_BIBLIOFILO=    # price_...
-STRIPE_PRICE_COLECCIONISTA= # price_...
+STRIPE_PRICE_PREMIUM_MES=   # price_... (4,99 €/mes) — modelo actual Free+Premium
+STRIPE_PRICE_PREMIUM_ANO=   # price_... (44,99 €/año)
+STRIPE_PRICE_LECTOR=        # price_... (LEGACY: planes antiguos, se tratan como premium)
+STRIPE_PRICE_BIBLIOFILO=    # price_... (legacy)
+STRIPE_PRICE_COLECCIONISTA= # price_... (legacy)
+# Límites de plan (opcionales; defaults en server/middleware/plan.js)
+# FREE_MAX_BOOKS=5  FREE_MAX_STORAGE_MB=500  PREMIUM_MAX_STORAGE_GB=20
 ```
 
 ### `.env` (frontend)
@@ -121,7 +126,7 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 
 | Tabla | Para qué |
 |---|---|
-| `usuarios` | id, username, email, password (bcrypt), phone, profile_image (base64), reading_hours, podcast_seconds, **reading_goal** (meta anual), **public_shelf** (estantería pública on/off) |
+| `usuarios` | id, username, email, password (bcrypt), phone, profile_image (base64), reading_hours, podcast_seconds, **reading_goal** (meta anual), **public_shelf** (estantería pública on/off), **plan** (`free`\|`premium`, lo mantienen webhook/sync de Stripe), **plan_status**, **storage_used_bytes** |
 | `libros` | titulo, autor, genero, formato, estado_lectura, impacto_emocional, cita_memorable, calificacion, paginas_leidas, numero_paginas, **fecha_inicio**, **fecha_fin**, portada_url, notas (JSON), **created_at** |
 | `etiquetas_literarias` | (usuario_id, nombre) categorías personalizadas, máx **4 por libro** |
 | `libros_etiquetas` | tabla pivote libro ↔ etiqueta |
@@ -158,7 +163,7 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 | `/authors` | GET /search?q= | Autocompletar autores (proxy Open Library) |
 | `/book-search` | GET /?q= , GET /pages?key= | Buscar libro (Open Library) → título/autor/portada/páginas (+fallback de páginas por ediciones) |
 | `/geo-search` | GET /?q= | Autocompletar direcciones (proxy Photon/OSM). **OJO: Photon NO admite `lang=es` (devuelve 400)** |
-| `/subscriptions` | POST /checkout, POST /sync, POST /portal, GET /me, **POST /webhook (body crudo)** | Stripe: alta/estado/gestión de suscripción |
+| `/subscriptions` | POST /checkout `{interval: month\|year}`, POST /sync, POST /portal, GET /me → `{plan, plan_status, storage_used_bytes, subscription}`, **POST /webhook (body crudo)** | Stripe modelo **Free+Premium**: webhook/sync actualizan también `usuarios.plan` |
 | `/recommendations` | GET / | "Más libros de tus autores favoritos" (Open Library, descarta los que ya tienes) |
 | `/public/shelf/:username` | GET (**SIN auth**) | Estantería pública — solo si `public_shelf=1`; expone solo nombre/avatar/stats/libros (nunca email/teléfono) |
 | Estáticos | `/uploads/...` | servidos con `express.static` + CORP cross-origin |
@@ -179,7 +184,7 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 | `/vender` | VenderLibro | Form de venta + "Mis anuncios" con editar. **Autor y dirección con autocompletado** |
 | `/taller` | TallerNovela | Sub-nav: Resumen, Personajes, Ubicaciones, Especies, Idiomas, Objetos, Capítulos, Relaciones |
 | `/settings` | Settings | Perfil, password (min 8), horas, Notificaciones, **Estantería pública (toggle + enlace para compartir)** |
-| `/subscriptions` | Subscriptions | **Stripe funcional**: elegir plan → Checkout → plan activo (`/sync`). Banner éxito/cancelado, botón "✓ Tu plan actual — Gestionar" (portal) |
+| `/subscriptions` | Subscriptions | **Modelo Free+Premium** (doc estrategia): Lector 0 € vs Lector+ 4,99 €/mes o 44,99 €/año (toggle mensual/anual), comparativa, plan Autor "próximamente". Checkout → `/sync`. "Gestionar" abre el Customer Portal (configurado por API en setup_stripe.js) |
 | `/u/:username` | PublicShelf | **Ruta PÚBLICA (sin login)** — estantería compartible; muestra avatar, nombre, stats y libros. 404 si privada |
 
 ---
@@ -233,6 +238,7 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 - ✅ **Notificaciones de mensajes**: badge sidebar + contador en título de pestaña + Web Notifications del navegador (`NotificationContext`) + aviso por email (nodemailer, OFF sin clave SMTP)
 - ✅ **Autocompletados** (gratis, sin key): autor; título → autorrellena autor/portada/páginas (Open Library); dirección → CP/ciudad/provincia/país (Photon)
 - ✅ **Suscripciones con Stripe** (modo TEST): Checkout alojado, `/sync` tras pagar, tabla `suscripciones`, plan activo mostrado en la UI
+- ✅ **Modelo Free+Premium con gating** (doc "Estrategia de suscripción"): página de precios Lector/Lector+ (toggle mes/año, comparativa), `usuarios.plan` mantenido por webhook+sync, **límite 5 libros en free** (402 al exceder, alert en UI), **PremiumGate** en Estadísticas y Reto de lectura, Customer Portal configurado por API. La comunidad/marketplace/chat siempre gratis. Cuenta demo free: `freetester@test.local` / `pruebas1234`
 - ✅ **Reto de lectura** (Dashboard): meta anual + progreso (leídos este año = `Read` con `fecha_fin` del año) + ritmo + celebración
 - ✅ **Recomendaciones** (Dashboard): "más de tus autores favoritos" vía Open Library, descarta los que ya tienes, botón "Añadir"
 - ✅ **Logros/insignias** (Estadísticas): 10 badges calculados en vivo desde libros/perfil (sin BD)
@@ -244,7 +250,8 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 ## 11. Pendientes / decisiones a futuro
 
 - ✅ ~~Notificaciones en navegador~~ · ✅ ~~Chat enlazado al anuncio~~ · ✅ ~~Suscripciones~~ *(hechos esta sesión)*
-- 🟡 **Stripe para prod**: webhook con la **Stripe CLI** (`stripe listen` → da `whsec_`) para renovaciones/cancelaciones automáticas, + activar el **Customer Portal** en el Dashboard (para el botón "Gestionar"). Hoy el alta funciona vía `/sync`.
+- 🟡 **Stripe para prod**: webhook con la **Stripe CLI** (`stripe listen` → da `whsec_`) para renovaciones/cancelaciones automáticas. Hoy el alta funciona vía `/sync`; el Customer Portal ya está configurado (setup_stripe.js).
+- 🟡 **Fase 2 del doc de estrategia**: lector EPUB/PDF (react-reader/react-pdf) con sync de posición, catálogo legal (Standard Ebooks/Gutenberg), contador real de `storage_used_bytes` al subir archivos, plan Autor, términos de uso + notice-and-takedown.
 - 🟡 **Email de mensajes**: reactivar (app-password válida en `SMTP_PASS`) y, en prod, enviar solo si el destinatario lleva rato sin leer/desconectado (anti-spam) en vez de en cada mensaje.
 - ✅ ~~Refactor de autocompletados a `<Typeahead>`~~ *(hecho)* — quedan **3 CSS huérfanos** sin importar (`AuthorAutocomplete.css`, `BookSearchAutocomplete.css`, `AddressAutocomplete.css`), borrables.
 - 🟡 Rotar password de MySQL (sigue siendo `root` vacío en local)

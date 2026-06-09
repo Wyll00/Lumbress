@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const auth = require('../middleware/auth');
+const { getPlan } = require('../middleware/plan');
 
 router.use(auth);
 
@@ -45,6 +46,18 @@ router.get('/', async (req, res) => {
 // POST /api/books
 router.post('/', async (req, res) => {
     try {
+        // Plan gratis: biblioteca limitada (palanca de conversión). Premium: sin límite.
+        const { plan, limits } = await getPlan(req.user.id);
+        if (plan !== 'premium') {
+            const [[{ total }]] = await pool.query('SELECT COUNT(*) AS total FROM libros WHERE usuario_id = ?', [req.user.id]);
+            if (total >= limits.maxBooks) {
+                return res.status(402).json({
+                    code: 'LIMIT_REACHED',
+                    message: `El plan gratuito permite hasta ${limits.maxBooks} libros. Pásate a Premium para biblioteca ilimitada.`,
+                });
+            }
+        }
+
         const { title, author, genre, formato, status, impacto_emocional, cita_memorable, rating, totalPages, pagesRead, fecha_inicio, fecha_fin, coverUrl, notes, categoryIds } = req.body;
         
         const stringifiedNotes = notes ? JSON.stringify(notes) : '[]';

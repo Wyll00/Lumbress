@@ -1,41 +1,43 @@
-import React, { useContext, useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LanguageContext } from '../context/LanguageContext';
-import { Check, Star, Crown, BookOpen, Package, Cloud, Users, Headphones, Gift } from 'lucide-react';
+import { Check, X, Star, BookOpen, Feather } from 'lucide-react';
 import { API_URL, withAuth } from '../config';
 import './Subscriptions.css';
 
+// Modelo de lanzamiento: Gratis + Premium (doc "Estrategia de suscripción").
+// El plan Autor queda como teaser hasta que haya tracción en el Taller.
+const PRICE = { month: '4,99 €', year: '44,99 €' };
+
 const Subscriptions = () => {
-    const { t } = useContext(LanguageContext);
     const [searchParams] = useSearchParams();
-    const [currentSub, setCurrentSub] = useState(null);
+    const [me, setMe] = useState(null); // { plan, plan_status, subscription }
+    const [interval, setInterval_] = useState('year');
     const [busy, setBusy] = useState(null);
     const notice = searchParams.get('success') ? 'success' : (searchParams.get('canceled') ? 'canceled' : null);
 
-    const loadSub = useCallback(async () => {
+    const loadMe = useCallback(async () => {
         try {
             const res = await fetch(`${API_URL}/api/subscriptions/me`, withAuth());
-            if (res.ok) setCurrentSub(await res.json());
+            if (res.ok) setMe(await res.json());
         } catch { /* noop */ }
     }, []);
 
-    useEffect(() => { loadSub(); }, [loadSub]);
+    useEffect(() => { loadMe(); }, [loadMe]);
 
-    // Al volver de Stripe con éxito, el webhook puede tardar un par de segundos: recarga el estado
+    // Al volver de Stripe con éxito, el webhook puede tardar: sincroniza y recarga
     useEffect(() => {
         if (searchParams.get('success')) {
-            // Sincroniza desde Stripe (por si el webhook aún no llegó) y recarga el estado
-            fetch(`${API_URL}/api/subscriptions/sync`, withAuth({ method: 'POST' })).finally(loadSub);
+            fetch(`${API_URL}/api/subscriptions/sync`, withAuth({ method: 'POST' })).finally(loadMe);
         }
-    }, [searchParams, loadSub]);
+    }, [searchParams, loadMe]);
 
-    const subscribe = async (planId) => {
-        setBusy(planId);
+    const subscribe = async () => {
+        setBusy('checkout');
         try {
             const res = await fetch(`${API_URL}/api/subscriptions/checkout`, withAuth({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ plan: planId }),
+                body: JSON.stringify({ interval }),
             }));
             const data = await res.json();
             if (res.ok && data.url) { window.location.href = data.url; return; }
@@ -55,178 +57,50 @@ const Subscriptions = () => {
         finally { setBusy(null); }
     };
 
-    const isActive = (planId) => currentSub && currentSub.plan === planId && ['active', 'trialing'].includes(currentSub.status);
+    const isPremium = me?.plan === 'premium';
+    const sub = me?.subscription;
 
-    const plans = [
-        {
-            id: 'lector',
-            name: 'Plan Lector',
-            price: '15,99 €',
-            icon: <BookOpen size={28} />,
-            description: 'Ideal para quien quiere descubrir un buen libro al mes y empezar a formar parte de la comunidad.',
-            categories: [
-                {
-                    title: '📦 Libros y envíos',
-                    items: [
-                        '1 libro físico al mes (selección curada)',
-                        'Envío estándar (5–7 días laborables)'
-                    ]
-                },
-                {
-                    title: '☁️ Biblioteca digital',
-                    items: [
-                        'Hasta 50 libros digitales en la nube',
-                        'Sube tus propios EPUB/PDF/MOBI',
-                        'Lector integrado con marcadores y notas',
-                        'Catálogo con vista previa'
-                    ]
-                },
-                {
-                    title: '👥 Comunidad y club',
-                    items: [
-                        'Acceso completo a foros y retos',
-                        'Club de lectura mensual asíncrono',
-                        'Perfil público con estantería virtual'
-                    ]
-                },
-                {
-                    title: '🎧 Contenido',
-                    items: [
-                        'Podcast oficial semanal',
-                        'Newsletter y recomendaciones'
-                    ]
-                },
-                {
-                    title: '🎁 Descuentos',
-                    items: [
-                        '5% dto. en librería',
-                        '5% dto. en papelería básica'
-                    ]
-                }
-            ],
-            buttonText: 'Comenzar Plan Lector',
-            featured: false
-        },
-        {
-            id: 'bibliofilo',
-            name: 'Plan Bibliófilo',
-            price: '23,99 €',
-            icon: <Star size={28} />,
-            description: 'Para el lector constante que quiere más variedad de formatos, comunidad activa y mejores descuentos.',
-            includesPrevious: 'Incluye todo lo del Plan Lector, y además:',
-            categories: [
-                {
-                    title: '📦 Libros y envíos',
-                    items: [
-                        '1 libro físico + 1 ebook al mes',
-                        'Envío prioritario (2–3 días)'
-                    ]
-                },
-                {
-                    title: '☁️ Biblioteca ampliada',
-                    items: [
-                        'Hasta 250 libros digitales',
-                        'Lector avanzado con subrayados de colores y exportación',
-                        'Sincronización ilimitada multidispositivo',
-                        'Estadísticas de lectura completas'
-                    ]
-                },
-                {
-                    title: '👥 Comunidad activa',
-                    items: [
-                        'Club de lectura en directo con moderador',
-                        'Canales temáticos privados',
-                        'Proponer y votar lecturas del mes'
-                    ]
-                },
-                {
-                    title: '🎧 Contenido premium',
-                    items: [
-                        'Podcast premium (episodios extendidos y archivo)',
-                        '1 evento virtual al mes con autores invitados'
-                    ]
-                },
-                {
-                    title: '🎁 Extras premium',
-                    items: [
-                        '10% dto. en librería y papelería premium',
-                        'Material coleccionable mensual',
-                        'Reseñas destacadas en tu perfil',
-                        'Códigos dto. en librerías asociadas'
-                    ]
-                }
-            ],
-            buttonText: 'Hacerse Bibliófilo',
-            featured: true
-        },
-        {
-            id: 'coleccionista',
-            name: 'Plan Coleccionista',
-            price: '29,99 €',
-            icon: <Crown size={28} />,
-            description: 'La experiencia completa: ediciones exclusivas, biblioteca ilimitada y privilegios totales.',
-            includesPrevious: 'Incluye todo lo anterior, y además:',
-            categories: [
-                {
-                    title: '📦 Ediciones exclusivas',
-                    items: [
-                        '2 libros físicos al mes (uno en edición especial)',
-                        'Edición firmada por el autor cada 3 meses',
-                        'Envío express gratis (24–48 h)'
-                    ]
-                },
-                {
-                    title: '☁️ Ilimitado',
-                    items: [
-                        'Almacenamiento ilimitado en la nube',
-                        'Audiolibros ilimitados',
-                        'Lector profesional (anotaciones a mano, offline completo)',
-                        'Anotaciones colaborativas'
-                    ]
-                },
-                {
-                    title: '👥 Comunidad VIP',
-                    items: [
-                        'Canales privados VIP',
-                        'Club de lectura premium con autor invitado',
-                        'Sesión 1:1 trimestral con un autor o crítico',
-                        'Insignia "Coleccionista"'
-                    ]
-                },
-                {
-                    title: '🎧 Eventos VIP',
-                    items: [
-                        'Eventos presenciales prioritarios',
-                        'Acceso anticipado a novedades',
-                        'Podcast sin cortes + episodios privados'
-                    ]
-                },
-                {
-                    title: '🎁 Experiencia total',
-                    items: [
-                        '20% dto. en librería y papelería exclusiva',
-                        'Caja sorpresa trimestral premium',
-                        'Tote bag oficial de regalo',
-                        'Bolígrafo o marcapáginas grabado (primer mes)'
-                    ]
-                }
-            ],
-            buttonText: 'Ser Coleccionista',
-            featured: false
-        }
+    const freeFeatures = [
+        'Comunidad completa: feed, reseñas, chat y perfiles',
+        'Marketplace de segunda mano (comprar y vender)',
+        'Biblioteca personal: hasta 5 libros',
+        'Reseñas, valoraciones y notas en tus libros',
+        '1 proyecto en el Taller de Novela',
+        'Estantería pública para compartir',
+    ];
+    const premiumFeatures = [
+        'Biblioteca ilimitada y privada',
+        'Estadísticas de lectura completas y logros',
+        'Reto de lectura anual y seguimiento de ritmo',
+        'Importación de libros en lote',
+        'Insignia Premium en tu perfil',
+        'Soporte prioritario',
+        'Próximamente: lector EPUB/PDF con anotaciones y sincronización',
+    ];
+
+    // Comparativa rápida (del documento de estrategia)
+    const compare = [
+        ['Comunidad (feed, reseñas, chat)', true, true],
+        ['Marketplace 2ª mano', true, true],
+        ['Biblioteca propia', '5 libros', 'Ilimitada'],
+        ['Estadísticas y logros', false, true],
+        ['Reto de lectura anual', false, true],
+        ['Importar libros en lote', true, true],
+        ['Taller de Novela', '1 proyecto', '1 proyecto'],
+        ['Insignia de perfil', false, true],
     ];
 
     return (
         <div className="subscriptions-page animate-fade-in">
             <header className="subscriptions-header">
-                <h1 className="gradient-text">Planes de Suscripción</h1>
-                <p>Tres niveles diseñados para acompañar a cada tipo de lector: desde quien empieza a construir su biblioteca hasta el coleccionista más exigente.</p>
+                <h1 className="gradient-text">Códice Premium</h1>
+                <p>La comunidad siempre es gratis. Premium es para el lector ávido: biblioteca sin límites, estadísticas y tu reto anual.</p>
                 <div className="header-perks">
-                    <span>☁️ Nube digital</span>
+                    <span>👥 Comunidad gratis para siempre</span>
                     <span className="dot">•</span>
-                    <span>👥 Club de lectura</span>
+                    <span>☁️ Biblioteca ilimitada</span>
                     <span className="dot">•</span>
-                    <span>🎁 Descuentos</span>
+                    <span>📊 Estadísticas y retos</span>
                 </div>
             </header>
 
@@ -240,98 +114,128 @@ const Subscriptions = () => {
                     Pago cancelado — no se ha cobrado nada.
                 </div>
             )}
-            {currentSub && currentSub.status && (
+            {isPremium && (
                 <div className="glass-panel" style={{ padding: '12px 18px', margin: '0 0 18px', color: 'var(--text-secondary)' }}>
-                    Tu plan: <strong style={{ color: 'var(--accent-color)', textTransform: 'capitalize' }}>{currentSub.plan}</strong> · estado {currentSub.status}
-                    {currentSub.current_period_end ? ` · renueva el ${new Date(currentSub.current_period_end).toLocaleDateString('es-ES')}` : ''}
+                    Tu plan: <strong style={{ color: 'var(--accent-color)' }}>Premium</strong>
+                    {sub?.status ? ` · estado ${sub.status}` : ''}
+                    {sub?.current_period_end ? ` · renueva el ${new Date(sub.current_period_end).toLocaleDateString('es-ES')}` : ''}
+                    {sub?.cancel_at_period_end ? ' · se cancelará al final del periodo' : ''}
                 </div>
             )}
 
-            <div className="pricing-grid">
-                {plans.map((plan, index) => (
-                    <div key={plan.id} className={`pricing-card glass-panel ${plan.featured ? 'featured' : ''}`} style={{ animationDelay: `${index * 0.15}s` }}>
-                        {plan.featured && <div className="featured-badge">Recomendado</div>}
-                        
-                        <div className="card-header">
-                            <div className={`plan-icon-wrapper ${plan.id}`}>
-                                {plan.icon}
-                            </div>
-                            <h2 className="plan-name">{plan.name}</h2>
-                            <p className="plan-description">{plan.description}</p>
-                            <div className="plan-price">
-                                {plan.price}<span>/mes</span>
-                            </div>
-                            {isActive(plan.id) ? (
-                                <button className="btn-secondary" onClick={openPortal} disabled={busy === 'portal'}>
-                                    ✓ Tu plan actual — Gestionar
-                                </button>
-                            ) : (
-                                <button
-                                    className={plan.featured ? 'btn-primary' : 'btn-secondary'}
-                                    onClick={() => subscribe(plan.id)}
-                                    disabled={busy === plan.id}
-                                >
-                                    {busy === plan.id ? 'Redirigiendo…' : plan.buttonText}
-                                </button>
-                            )}
-                        </div>
+            {/* Toggle mensual / anual */}
+            <div className="billing-toggle">
+                <button className={interval === 'month' ? 'active' : ''} onClick={() => setInterval_('month')}>Mensual</button>
+                <button className={interval === 'year' ? 'active' : ''} onClick={() => setInterval_('year')}>
+                    Anual <span className="save-badge">2 meses gratis</span>
+                </button>
+            </div>
 
-                        <div className="card-body scrollable-content">
-                            {plan.includesPrevious && (
-                                <div className="includes-previous">
-                                    <span className="plus-icon">+</span> {plan.includesPrevious}
-                                </div>
-                            )}
-                            
-                            <div className="plan-categories">
-                                {plan.categories.map((cat, catIdx) => (
-                                    <div key={catIdx} className="plan-category">
-                                        <h4 className="category-title">{cat.title}</h4>
-                                        <ul className="plan-features">
-                                            {cat.items.map((item, itemIdx) => (
-                                                <li key={itemIdx}>
-                                                    <Check size={16} className="feature-icon" />
-                                                    <span>{item}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+            <div className="pricing-grid two-plans">
+                {/* Gratis */}
+                <div className="pricing-card glass-panel">
+                    <div className="card-header">
+                        <div className="plan-icon-wrapper lector"><BookOpen size={28} /></div>
+                        <h2 className="plan-name">Lector</h2>
+                        <p className="plan-description">Para formar parte de la comunidad y llevar tus lecturas. Gratis para siempre.</p>
+                        <div className="plan-price">0 €<span>/mes</span></div>
+                        <button className="btn-secondary" disabled>
+                            {isPremium ? 'Incluido en tu plan' : '✓ Tu plan actual'}
+                        </button>
                     </div>
-                ))}
+                    <div className="card-body">
+                        <ul className="plan-features">
+                            {freeFeatures.map((f, i) => (
+                                <li key={i}><Check size={16} className="feature-icon" /><span>{f}</span></li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+
+                {/* Premium */}
+                <div className="pricing-card glass-panel featured">
+                    <div className="featured-badge">Recomendado</div>
+                    <div className="card-header">
+                        <div className="plan-icon-wrapper bibliofilo"><Star size={28} /></div>
+                        <h2 className="plan-name">Lector+</h2>
+                        <p className="plan-description">El plan del lector ávido: sin límites y con todas las herramientas de seguimiento.</p>
+                        <div className="plan-price">
+                            {PRICE[interval]}<span>/{interval === 'year' ? 'año' : 'mes'}</span>
+                        </div>
+                        {interval === 'year' && (
+                            <p style={{ margin: '-8px 0 12px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                Equivale a 3,75 €/mes
+                            </p>
+                        )}
+                        {isPremium ? (
+                            <button className="btn-secondary" onClick={openPortal} disabled={busy === 'portal'}>
+                                {busy === 'portal' ? 'Abriendo…' : '✓ Tu plan actual — Gestionar'}
+                            </button>
+                        ) : (
+                            <button className="btn-primary" onClick={subscribe} disabled={busy === 'checkout'}>
+                                {busy === 'checkout' ? 'Redirigiendo…' : 'Hacerme Premium'}
+                            </button>
+                        )}
+                    </div>
+                    <div className="card-body">
+                        <div className="includes-previous"><span className="plus-icon">+</span> Todo lo del plan Lector, y además:</div>
+                        <ul className="plan-features">
+                            {premiumFeatures.map((f, i) => (
+                                <li key={i}><Check size={16} className="feature-icon" /><span>{f}</span></li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {/* Comparativa rápida */}
+            <div className="glass-panel compare-table-wrap">
+                <h3>Comparativa rápida</h3>
+                <table className="compare-table">
+                    <thead>
+                        <tr><th>Función</th><th>Lector (gratis)</th><th>Lector+ (Premium)</th></tr>
+                    </thead>
+                    <tbody>
+                        {compare.map(([feat, free, prem], i) => (
+                            <tr key={i}>
+                                <td>{feat}</td>
+                                <td>{free === true ? <Check size={16} className="cmp-yes" /> : free === false ? <X size={16} className="cmp-no" /> : free}</td>
+                                <td>{prem === true ? <Check size={16} className="cmp-yes" /> : prem === false ? <X size={16} className="cmp-no" /> : prem}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
 
             <div className="extra-ideas glass-panel">
-                <h3>💡 ¿Aún no te decides?</h3>
+                <h3>💡 Bueno saberlo</h3>
                 <div className="ideas-grid">
                     <div className="idea-item">
-                        <span className="idea-emoji">⏱️</span>
+                        <span className="idea-emoji">🔒</span>
                         <div>
-                            <h4>Prueba gratuita de 14 días</h4>
-                            <p>Acceso digital y comunidad sin compromiso.</p>
+                            <h4>Pago seguro con Stripe</h4>
+                            <p>Cancela o cambia de mensual a anual cuando quieras desde "Gestionar".</p>
                         </div>
                     </div>
                     <div className="idea-item">
                         <span className="idea-emoji">🗓️</span>
                         <div>
-                            <h4>Plan Anual</h4>
-                            <p>Paga 10 meses y llévate 2 meses gratis.</p>
+                            <h4>Plan anual</h4>
+                            <p>{PRICE.year}/año: pagas 9 meses, lees 12.</p>
                         </div>
                     </div>
                     <div className="idea-item">
-                        <span className="idea-emoji">🎁</span>
+                        <span className="idea-emoji">👥</span>
                         <div>
-                            <h4>Plan Regalo</h4>
-                            <p>Regala 1, 3, 6 o 12 meses a otro lector.</p>
+                            <h4>La comunidad no se paga</h4>
+                            <p>Feed, reseñas, chat y marketplace son gratis para todos, siempre.</p>
                         </div>
                     </div>
                     <div className="idea-item">
-                        <span className="idea-emoji">⏸️</span>
+                        <span className="idea-emoji"><Feather size={20} /></span>
                         <div>
-                            <h4>Flexibilidad Total</h4>
-                            <p>Pausa tu suscripción hasta 2 meses al año.</p>
+                            <h4>Plan Autor — próximamente</h4>
+                            <p>Taller ilimitado, exportar tu manuscrito y vender tu ebook en Códice.</p>
                         </div>
                     </div>
                 </div>

@@ -67,6 +67,10 @@ export const LibraryProvider = ({ children }) => {
       if (res.ok) {
         const savedBook = await res.json();
         setBooks(prev => [savedBook, ...prev]);
+      } else {
+        // P. ej. límite del plan gratis (402): avisar al usuario en vez de fallar en silencio
+        const data = await res.json().catch(() => ({}));
+        if (data.message) alert(data.message);
       }
     } catch (err) {
       console.error("Error adding book:", err);

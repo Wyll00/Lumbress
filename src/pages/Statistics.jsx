@@ -11,6 +11,7 @@ import { BookOpen, Layers, Target, Library, Star } from 'lucide-react';
 import Calendar from '../components/Calendar';
 import ReadBooksModal from '../components/ReadBooksModal';
 import Achievements from '../components/Achievements';
+import PremiumGate from '../components/PremiumGate';
 import './Statistics.css';
 
 const COLORS = ['#7b61ff', '#2ecc71', '#f1c40f', '#e74c3c', '#00C49F', '#FFBB28', '#FF8042'];
@@ -57,7 +58,7 @@ const GenreTooltip = ({ active, payload }) => {
 const Statistics = () => {
     const { books } = useContext(LibraryContext);
     const { t } = useContext(LanguageContext);
-    const { isAuthenticated } = useContext(AuthContext);
+    const { isAuthenticated, user } = useContext(AuthContext);
     const [weeklyData, setWeeklyData] = useState([]);
     const [showBooksModal, setShowBooksModal] = useState(false);
 
@@ -173,6 +174,22 @@ const Statistics = () => {
 
         return { total, totalPages, completedPages, genreData, statusData, averageRating, ratingsData, authorData, uniqueGenresCount, weeklyRankingData, weeklyHoursText };
     }, [books, t, weeklyData]);
+
+    // Estadísticas: función Premium (el plan gratis ve el aviso con CTA de upgrade)
+    if (user && user.plan !== 'premium') {
+        return (
+            <div className="statistics animate-fade-in">
+                <header className="page-header">
+                    <h1>{t('readingStats')}</h1>
+                    <p>{t('analyzeHabits')}</p>
+                </header>
+                <PremiumGate
+                    title="Estadísticas de lectura"
+                    text="Gráficas por género, valoraciones, autores top, calendario y logros: todo tu año lector, con Códice Premium."
+                />
+            </div>
+        );
+    }
 
     if (books.length === 0) {
         return (
