@@ -1,10 +1,61 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { LanguageContext } from '../context/LanguageContext';
 import { Check, Star, Crown, BookOpen, Package, Cloud, Users, Headphones, Gift } from 'lucide-react';
+import { API_URL, withAuth } from '../config';
 import './Subscriptions.css';
 
 const Subscriptions = () => {
     const { t } = useContext(LanguageContext);
+    const [searchParams] = useSearchParams();
+    const [currentSub, setCurrentSub] = useState(null);
+    const [busy, setBusy] = useState(null);
+    const notice = searchParams.get('success') ? 'success' : (searchParams.get('canceled') ? 'canceled' : null);
+
+    const loadSub = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/subscriptions/me`, withAuth());
+            if (res.ok) setCurrentSub(await res.json());
+        } catch { /* noop */ }
+    }, []);
+
+    useEffect(() => { loadSub(); }, [loadSub]);
+
+    // Al volver de Stripe con éxito, el webhook puede tardar un par de segundos: recarga el estado
+    useEffect(() => {
+        if (searchParams.get('success')) {
+            // Sincroniza desde Stripe (por si el webhook aún no llegó) y recarga el estado
+            fetch(`${API_URL}/api/subscriptions/sync`, withAuth({ method: 'POST' })).finally(loadSub);
+        }
+    }, [searchParams, loadSub]);
+
+    const subscribe = async (planId) => {
+        setBusy(planId);
+        try {
+            const res = await fetch(`${API_URL}/api/subscriptions/checkout`, withAuth({
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan: planId }),
+            }));
+            const data = await res.json();
+            if (res.ok && data.url) { window.location.href = data.url; return; }
+            alert(data.message || 'No se pudo iniciar el pago.');
+        } catch { alert('Error de conexión.'); }
+        finally { setBusy(null); }
+    };
+
+    const openPortal = async () => {
+        setBusy('portal');
+        try {
+            const res = await fetch(`${API_URL}/api/subscriptions/portal`, withAuth({ method: 'POST' }));
+            const data = await res.json();
+            if (res.ok && data.url) { window.location.href = data.url; return; }
+            alert(data.message || 'No se pudo abrir el portal.');
+        } catch { alert('Error de conexión.'); }
+        finally { setBusy(null); }
+    };
+
+    const isActive = (planId) => currentSub && currentSub.plan === planId && ['active', 'trialing'].includes(currentSub.status);
 
     const plans = [
         {
@@ -179,6 +230,23 @@ const Subscriptions = () => {
                 </div>
             </header>
 
+            {notice === 'success' && (
+                <div className="glass-panel" style={{ padding: '14px 18px', margin: '0 0 18px', borderLeft: '4px solid #2ecc71' }}>
+                    ✅ ¡Suscripción activada! Gracias por unirte. Puede tardar unos segundos en reflejarse.
+                </div>
+            )}
+            {notice === 'canceled' && (
+                <div className="glass-panel" style={{ padding: '14px 18px', margin: '0 0 18px', borderLeft: '4px solid #e0a93b', color: 'var(--text-secondary)' }}>
+                    Pago cancelado — no se ha cobrado nada.
+                </div>
+            )}
+            {currentSub && currentSub.status && (
+                <div className="glass-panel" style={{ padding: '12px 18px', margin: '0 0 18px', color: 'var(--text-secondary)' }}>
+                    Tu plan: <strong style={{ color: 'var(--accent-color)', textTransform: 'capitalize' }}>{currentSub.plan}</strong> · estado {currentSub.status}
+                    {currentSub.current_period_end ? ` · renueva el ${new Date(currentSub.current_period_end).toLocaleDateString('es-ES')}` : ''}
+                </div>
+            )}
+
             <div className="pricing-grid">
                 {plans.map((plan, index) => (
                     <div key={plan.id} className={`pricing-card glass-panel ${plan.featured ? 'featured' : ''}`} style={{ animationDelay: `${index * 0.15}s` }}>
@@ -193,9 +261,19 @@ const Subscriptions = () => {
                             <div className="plan-price">
                                 {plan.price}<span>/mes</span>
                             </div>
-                            <button className={plan.featured ? 'btn-primary' : 'btn-secondary'}>
-                                {plan.buttonText}
-                            </button>
+                            {isActive(plan.id) ? (
+                                <button className="btn-secondary" onClick={openPortal} disabled={busy === 'portal'}>
+                                    ✓ Tu plan actual — Gestionar
+                                </button>
+                            ) : (
+                                <button
+                                    className={plan.featured ? 'btn-primary' : 'btn-secondary'}
+                                    onClick={() => subscribe(plan.id)}
+                                    disabled={busy === plan.id}
+                                >
+                                    {busy === plan.id ? 'Redirigiendo…' : plan.buttonText}
+                                </button>
+                            )}
                         </div>
 
                         <div className="card-body scrollable-content">

@@ -1,0 +1,91 @@
+.ps-wrap {
+    min-height: 100vh;
+    background: #1a1410;
+    color: #f5efe6;
+    padding: 40px 20px 60px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.ps-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 16px;
+    min-height: 80vh;
+}
+.ps-center h1 { font-size: 3rem; margin: 0; }
+
+.ps-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+.ps-avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    margin: 0 auto 14px;
+    overflow: hidden;
+    background: rgba(224, 169, 59, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(224, 169, 59, 0.4);
+}
+.ps-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.ps-avatar span { font-size: 1.8rem; font-weight: 800; color: #e0a93b; }
+
+.ps-header h1 { font-size: 1.6rem; margin: 0 0 14px; font-weight: 600; }
+.ps-header h1 strong { color: #e0a93b; }
+
+.ps-stats {
+    display: flex;
+    gap: 22px;
+    justify-content: center;
+    flex-wrap: wrap;
+    color: #9b8e78;
+    font-size: 0.9rem;
+}
+.ps-stats b { color: #f5efe6; font-size: 1.15rem; }
+
+.ps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 20px;
+}
+.ps-book { display: flex; flex-direction: column; gap: 6px; }
+.ps-cover {
+    aspect-ratio: 2 / 3;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #2a2018;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+.ps-cover img { width: 100%; height: 100%; object-fit: cover; }
+.ps-cover span { font-size: 1.6rem; font-weight: 800; color: #6b5e4a; }
+.ps-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ps-author {
+    font-size: 0.76rem;
+    color: #9b8e78;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ps-rating { font-size: 0.8rem; color: #f1c40f; }
+
+.ps-empty { text-align: center; color: #9b8e78; }
+
+.ps-footer { text-align: center; margin-top: 44px; }
+.ps-footer a { color: #9b8e78; text-decoration: none; font-size: 0.9rem; }
+.ps-footer a:hover { color: #e0a93b; }

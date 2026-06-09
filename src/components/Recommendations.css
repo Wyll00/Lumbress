@@ -1,0 +1,106 @@
+.recommendations {
+    padding: 18px 20px;
+    margin-top: 22px;
+}
+
+.recommendations h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 2px;
+}
+
+.rec-sub {
+    color: var(--text-secondary, #9b8e78);
+    font-size: 0.85rem;
+    margin: 0 0 16px;
+}
+
+.rec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 14px;
+}
+
+.rec-card {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.rec-cover {
+    width: 46px;
+    height: 66px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    overflow: hidden;
+    background: #2a2018;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.rec-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.rec-cover-empty {
+    font-size: 1.4rem;
+}
+
+.rec-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+    gap: 2px;
+}
+.rec-title {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text-primary, #f5efe6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.rec-author {
+    font-size: 0.78rem;
+    color: var(--text-secondary, #9b8e78);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.rec-reason {
+    font-size: 0.72rem;
+    color: #8a7d68;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rec-add {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    align-self: flex-start;
+    background: rgba(224, 169, 59, 0.15);
+    color: var(--accent-color, #e0a93b);
+    border: none;
+    border-radius: 7px;
+    padding: 5px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.rec-add:hover {
+    background: rgba(224, 169, 59, 0.28);
+}
+.rec-add.added {
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    cursor: default;
+}

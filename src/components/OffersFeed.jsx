@@ -152,7 +152,7 @@ const OffersFeed = () => {
                         {!o.vendido && o.usuario_id !== user?.id && (
                             <button
                                 className="offer-message-btn"
-                                onClick={() => navigate(`/mensajes?to=${o.usuario_id}&nombre=${encodeURIComponent(o.vendedor)}`)}
+                                onClick={() => navigate(`/mensajes?to=${o.usuario_id}&nombre=${encodeURIComponent(o.vendedor)}&anuncio=${o.id}&libro=${encodeURIComponent(o.titulo_libro)}`)}
                             >
                                 <MessageSquare size={14} /> Enviar mensaje al vendedor
                             </button>

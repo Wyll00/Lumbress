@@ -4,15 +4,17 @@ import { LanguageContext } from '../context/LanguageContext';
 import BookCard from '../components/BookCard';
 import BookModal from '../components/BookModal';
 import NotesPanel from '../components/NotesPanel';
-import { Plus, Search, Filter } from 'lucide-react';
+import ImportBooksModal from '../components/ImportBooksModal';
+import { Plus, Search, Filter, Upload } from 'lucide-react';
 import './MyLibrary.css';
 
 const MyLibrary = () => {
-    const { books, addBook, updateBook, deleteBook, updateProgress } = useContext(LibraryContext);
+    const { books, addBook, updateBook, deleteBook, updateProgress, refetchBooks } = useContext(LibraryContext);
     const { t } = useContext(LanguageContext);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingBook, setEditingBook] = useState(null);
     const [selectedBookForNotes, setSelectedBookForNotes] = useState(null);
+    const [importOpen, setImportOpen] = useState(false);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('All');
@@ -47,10 +49,11 @@ const MyLibrary = () => {
                     return a.title.localeCompare(b.title);
                 case 'Title: Z-A':
                     return b.title.localeCompare(a.title);
-                case 'Progress':
+                case 'Progress': {
                     const aProg = a.totalPages ? a.pagesRead / a.totalPages : 0;
                     const bProg = b.totalPages ? b.pagesRead / b.totalPages : 0;
                     return bProg - aProg;
+                }
                 case 'Date Added':
                 default:
                     return new Date(b.dateAdded) - new Date(a.dateAdded);
@@ -107,10 +110,16 @@ const MyLibrary = () => {
                         <h1>{t('myLibrary')}</h1>
                         <p>{books.length === 1 ? t('bookTotal', { count: books.length }) : t('booksTotal', { count: books.length })}</p>
                     </div>
-                    <button className="btn-primary add-book-btn" onClick={() => handleOpenModal()}>
-                        <Plus size={20} />
-                        <span>{t('addNewBook')}</span>
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                        <button className="btn-secondary" onClick={() => setImportOpen(true)}>
+                            <Upload size={18} />
+                            <span>Importar</span>
+                        </button>
+                        <button className="btn-primary add-book-btn" onClick={() => handleOpenModal()}>
+                            <Plus size={20} />
+                            <span>{t('addNewBook')}</span>
+                        </button>
+                    </div>
                 </header>
 
                 <div className="controls-bar glass-panel">
@@ -196,6 +205,12 @@ const MyLibrary = () => {
                 onClose={handleCloseModal}
                 onSave={handleSaveBook}
                 editingBook={editingBook}
+            />
+
+            <ImportBooksModal
+                isOpen={importOpen}
+                onClose={() => setImportOpen(false)}
+                onImported={refetchBooks}
             />
         </div>
     );

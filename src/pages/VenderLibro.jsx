@@ -4,6 +4,8 @@ import gsap from 'gsap';
 import { ArrowLeft, BookPlus, Upload, Tag, Trash2, CheckCircle, Edit3, X } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { API_URL, withAuth, mediaUrl, uploadFile } from '../config';
+import AuthorAutocomplete from '../components/AuthorAutocomplete';
+import AddressAutocomplete from '../components/AddressAutocomplete';
 import './VenderLibro.css';
 
 const ESTADOS = ['Nuevo', 'Como nuevo', 'Buen estado', 'Aceptable'];
@@ -186,7 +188,14 @@ const VenderLibro = () => {
                     <div className="vender-row">
                         <div className="vender-field">
                             <label>Autor</label>
-                            <input type="text" name="autor" value={form.autor} onChange={handleChange} maxLength={255} />
+                            <AuthorAutocomplete
+                                value={form.autor}
+                                onChange={(val) => setForm(prev => ({ ...prev, autor: val }))}
+                                id="venta-autor"
+                                name="autor"
+                                className=""
+                                maxLength={255}
+                            />
                         </div>
                         <div className="vender-field">
                             <label>Género</label>
@@ -251,7 +260,23 @@ const VenderLibro = () => {
 
                     <div className="vender-field">
                         <label>Calle y número</label>
-                        <input type="text" name="direccion" value={form.direccion} onChange={handleChange} placeholder="Ej: C/ Mayor, 12, 3º B" maxLength={255} />
+                        <AddressAutocomplete
+                            value={form.direccion}
+                            onChange={(val) => setForm(prev => ({ ...prev, direccion: val }))}
+                            onSelect={(addr) => setForm(prev => ({
+                                ...prev,
+                                direccion: addr.direccion || prev.direccion,
+                                codigo_postal: addr.codigo_postal || prev.codigo_postal,
+                                ciudad: addr.ciudad || prev.ciudad,
+                                provincia: addr.provincia || prev.provincia,
+                                pais: addr.pais || prev.pais,
+                            }))}
+                            id="venta-direccion"
+                            name="direccion"
+                            className=""
+                            maxLength={255}
+                            placeholder="Ej: C/ Mayor, 12, 3º B"
+                        />
                     </div>
 
                     <div className="vender-row">

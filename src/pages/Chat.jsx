@@ -2,6 +2,7 @@ import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Send, ArrowLeft, MessagesSquare } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import { NotificationContext } from '../context/NotificationContext';
 import { API_URL, withAuth, mediaUrl } from '../config';
 import './Chat.css';
 
@@ -30,10 +31,12 @@ const Avatar = ({ name, image, size = 42 }) => (
 
 const Chat = () => {
     const { user, isAuthenticated } = useContext(AuthContext);
+    const { refreshUnread } = useContext(NotificationContext);
     const [searchParams, setSearchParams] = useSearchParams();
     const [conversaciones, setConversaciones] = useState([]);
     const [activeId, setActiveId] = useState(null);
     const [activeUser, setActiveUser] = useState(null);
+    const [activeAnuncio, setActiveAnuncio] = useState(null);
     const [mensajes, setMensajes] = useState([]);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
@@ -55,11 +58,13 @@ const Chat = () => {
                 const data = await res.json();
                 setMensajes(data.mensajes);
                 if (data.usuario) setActiveUser(data.usuario);
+                if (data.anuncio) setActiveAnuncio(data.anuncio); // anuncio del que trata la conversación
+                refreshUnread(); // el GET marca leídos: refresca badge/título global
             }
         } catch (err) {
             console.error('Error fetching mensajes', err);
         }
-    }, []);
+    }, [refreshUnread]);
 
     // Carga inicial de conversaciones
     useEffect(() => {
@@ -74,6 +79,9 @@ const Chat = () => {
             setActiveId(id);
             const nombre = searchParams.get('nombre');
             if (nombre) setActiveUser({ id, username: nombre });
+            const anuncio = searchParams.get('anuncio');
+            const libro = searchParams.get('libro');
+            setActiveAnuncio(anuncio ? { id: Number(anuncio), titulo_libro: libro || '' } : null);
         }
     }, [searchParams]);
 
@@ -100,6 +108,7 @@ const Chat = () => {
     const openChat = (conv) => {
         setActiveId(conv.user_id);
         setActiveUser({ id: conv.user_id, username: conv.username, profile_image: conv.profile_image });
+        setActiveAnuncio(null); // se rellena con el anuncio de la conversación al cargar los mensajes
         setSearchParams({});
     };
 
@@ -122,7 +131,7 @@ const Chat = () => {
             const res = await fetch(`${API_URL}/api/mensajes`, withAuth({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ receptor_id: activeId, contenido }),
+                body: JSON.stringify({ receptor_id: activeId, contenido, anuncio_id: activeAnuncio?.id }),
             }));
             if (res.ok) {
                 await fetchMensajes(activeId);
@@ -182,12 +191,29 @@ const Chat = () => {
                     ) : (
                         <>
                             <div className="chat-window-header">
-                                <button className="chat-back" onClick={() => { setActiveId(null); setActiveUser(null); }}>
+                                <button className="chat-back" onClick={() => { setActiveId(null); setActiveUser(null); setActiveAnuncio(null); }}>
                                     <ArrowLeft size={18} />
                                 </button>
                                 <Avatar name={activeUser?.username} image={activeUser?.profile_image} size={36} />
                                 <span className="chat-window-name">@{activeUser?.username || '...'}</span>
                             </div>
+
+                            {activeAnuncio && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 14px', background: 'rgba(224, 169, 59, 0.10)', borderBottom: '1px solid rgba(224, 169, 59, 0.25)' }}>
+                                    {activeAnuncio.imagen_url && (
+                                        <img src={mediaUrl(activeAnuncio.imagen_url)} alt="" style={{ width: 30, height: 42, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
+                                    )}
+                                    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                                        <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>Sobre el anuncio</span>
+                                        <span style={{ fontSize: '0.9rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>📖 {activeAnuncio.titulo_libro}</span>
+                                    </div>
+                                    {activeAnuncio.precio != null && (
+                                        <span style={{ fontWeight: 700, color: 'var(--accent-color)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                            {Number(activeAnuncio.precio)}{activeAnuncio.moneda || '€'}{activeAnuncio.vendido ? ' · Vendido' : ''}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="chat-messages">
                                 {mensajes.length === 0 ? (

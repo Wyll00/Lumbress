@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from './AuthContext';
 import { API_URL as BASE_URL, withAuth } from '../config';
 
@@ -46,6 +46,15 @@ export const LibraryProvider = ({ children }) => {
   }, [isAuthenticated]);
 
   const jsonHeaders = { 'Content-Type': 'application/json' };
+
+  const refetchBooks = useCallback(async () => {
+    try {
+      const res = await fetch(API_URL, withAuth());
+      if (res.ok) setBooks(await res.json());
+    } catch (err) {
+      console.error('Error refetching books:', err);
+    }
+  }, []);
 
   const addBook = async (bookData) => {
     try {
@@ -218,7 +227,8 @@ export const LibraryProvider = ({ children }) => {
         createCategory,
         deleteCategory,
         assignCategory,
-        removeCategory
+        removeCategory,
+        refetchBooks
     }}>
       {children}
     </LibraryContext.Provider>

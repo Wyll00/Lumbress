@@ -1,13 +1,37 @@
 import { useContext, useState, useEffect, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { NotificationContext } from '../context/NotificationContext';
 import { API_URL, withAuth } from '../config';
-import { Camera, User, Mail, Phone, Lock, Eye, EyeOff, Save, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Camera, User, Mail, Phone, Lock, Eye, EyeOff, Save, CheckCircle, XCircle, Clock, Bell, Share2, Copy } from 'lucide-react';
 import './Settings.css';
 
 const API = `${API_URL}/api/users`;
 
 const Settings = () => {
     const { user, isAuthenticated, refreshUser } = useContext(AuthContext);
+    const { permission, supported: notifSupported, enableNotifications } = useContext(NotificationContext);
+    const [copied, setCopied] = useState(false);
+    const [sharing, setSharing] = useState(false);
+    const shelfUrl = `${window.location.origin}/u/${encodeURIComponent(user?.username || '')}`;
+
+    const copyShelfLink = () => {
+        navigator.clipboard?.writeText(shelfUrl)
+            .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); })
+            .catch(() => {});
+    };
+
+    const toggleShelf = async (enabled) => {
+        setSharing(true);
+        try {
+            const res = await fetch(`${API_URL}/api/users/me/public-shelf`, withAuth({
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled }),
+            }));
+            if (res.ok) await refreshUser();
+        } catch { /* noop */ }
+        finally { setSharing(false); }
+    };
 
     // --- Profile state ---
     const [profile, setProfile] = useState({ username: '', email: '', phone: '', profile_image: '', reading_hours: 0 });
@@ -84,7 +108,7 @@ const Settings = () => {
             } else {
                 setProfileMsg({ type: 'error', text: data.message || 'Error al guardar el perfil.' });
             }
-        } catch (err) {
+        } catch {
             setProfileMsg({ type: 'error', text: 'Error de conexión.' });
         } finally {
             setSavingProfile(false);
@@ -118,7 +142,7 @@ const Settings = () => {
             } else {
                 setPassMsg({ type: 'error', text: data.message || 'Error al cambiar la contraseña.' });
             }
-        } catch (err) {
+        } catch {
             setPassMsg({ type: 'error', text: 'Error de conexión.' });
         } finally {
             setSavingPass(false);
@@ -155,7 +179,7 @@ const Settings = () => {
             } else {
                 setHoursMsg({ type: 'error', text: data.message || 'Error al añadir horas.' });
             }
-        } catch (err) {
+        } catch {
             setHoursMsg({ type: 'error', text: 'Error de conexión.' });
         } finally {
             setSavingHours(false);
@@ -307,6 +331,67 @@ const Settings = () => {
                                 {savingHours ? 'Añadiendo...' : 'Añadir horas'}
                             </button>
                         </form>
+                    </section>
+
+                    {/* Notifications */}
+                    <section className="settings-card glass-panel">
+                        <h2><Bell size={18} /> Notificaciones</h2>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '15px' }}>
+                            Recibe un aviso del navegador cuando te lleguen mensajes nuevos, aunque tengas Códice en segundo plano o en otra pestaña.
+                        </p>
+                        {!notifSupported ? (
+                            <div className="settings-alert error">
+                                <XCircle size={16} /> Tu navegador no admite notificaciones.
+                            </div>
+                        ) : permission === 'granted' ? (
+                            <div className="settings-alert success">
+                                <CheckCircle size={16} /> Notificaciones activadas.
+                            </div>
+                        ) : permission === 'denied' ? (
+                            <div className="settings-alert error">
+                                <XCircle size={16} /> Notificaciones bloqueadas. Habilítalas desde los ajustes del navegador (icono junto a la barra de direcciones).
+                            </div>
+                        ) : (
+                            <button type="button" className="btn-primary settings-save-btn" onClick={enableNotifications}>
+                                <Bell size={16} /> Activar notificaciones
+                            </button>
+                        )}
+                    </section>
+
+                    {/* Estantería pública */}
+                    <section className="settings-card glass-panel">
+                        <h2><Share2 size={18} /> Estantería pública</h2>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '15px' }}>
+                            Comparte tu biblioteca con un enlace público. Solo se muestran tu nombre, avatar y libros (con valoraciones) — nunca tu email, teléfono ni mensajes.
+                        </p>
+                        {user?.public_shelf ? (
+                            <>
+                                <div className="settings-alert success">
+                                    <CheckCircle size={16} /> Tu estantería es pública.
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+                                    <input
+                                        readOnly
+                                        value={shelfUrl}
+                                        onFocus={(e) => e.target.select()}
+                                        style={{ flex: 1, minWidth: '200px', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(224,169,59,0.3)', background: 'rgba(0,0,0,0.25)', color: 'var(--text-primary)' }}
+                                    />
+                                    <button type="button" className="btn-secondary" onClick={copyShelfLink}>
+                                        <Copy size={15} /> {copied ? '¡Copiado!' : 'Copiar'}
+                                    </button>
+                                </div>
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '12px', flexWrap: 'wrap' }}>
+                                    <a href={shelfUrl} target="_blank" rel="noreferrer" className="btn-secondary">Ver mi estantería</a>
+                                    <button type="button" className="action-btn-inline delete-btn" style={{ width: 'auto', height: 'auto', padding: '8px 14px' }} onClick={() => toggleShelf(false)} disabled={sharing}>
+                                        Hacerla privada
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <button type="button" className="btn-primary settings-save-btn" onClick={() => toggleShelf(true)} disabled={sharing}>
+                                <Share2 size={16} /> Hacer mi estantería pública
+                            </button>
+                        )}
                     </section>
 
                     {/* Password form */}

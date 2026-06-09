@@ -5,6 +5,8 @@ import { LanguageContext } from '../context/LanguageContext';
 import { Library, BookOpen, Clock } from 'lucide-react';
 import AnimatedNumber from '../components/AnimatedNumber';
 import ReadBooksModal from '../components/ReadBooksModal';
+import ReadingGoal from '../components/ReadingGoal';
+import Recommendations from '../components/Recommendations';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -113,6 +115,8 @@ const Dashboard = () => {
                 </div>
             </div>
 
+            <ReadingGoal books={books} />
+
             <div className="dashboard-content">
                 <div className="recent-books glass-panel">
                     <h2>{t('recentlyAdded')}</h2>
@@ -120,7 +124,7 @@ const Dashboard = () => {
                         <p className="empty-state">{t('noBooksYet')}</p>
                     ) : (
                         <div className="recent-grid-vertical">
-                            {books.slice(-4).reverse().map(book => {
+                            {books.slice(0, 4).map(book => {
                                 const pages = book.totalPages || 0;
                                 const read = book.pagesRead || 0;
                                 const progress = pages > 0 ? Math.min(100, Math.round((read / pages) * 100)) : 0;
@@ -210,6 +214,8 @@ const Dashboard = () => {
                     )}
                 </div>
             </div>
+
+            <Recommendations />
 
             <ReadBooksModal
                 isOpen={showBooksModal}

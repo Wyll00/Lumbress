@@ -1,0 +1,116 @@
+.import-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.import-modal {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    padding: 28px;
+    border-radius: 16px;
+}
+
+.import-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: none;
+    border: none;
+    color: var(--text-secondary, #9b8e78);
+    cursor: pointer;
+}
+
+.import-modal h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    font-size: 1.3rem;
+}
+
+.import-help {
+    color: var(--text-secondary, #9b8e78);
+    font-size: 0.9rem;
+    margin: 0 0 18px;
+    line-height: 1.4;
+}
+
+.import-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 28px;
+    border: 2px dashed rgba(224, 169, 59, 0.35);
+    border-radius: 12px;
+    cursor: pointer;
+    color: var(--text-secondary, #9b8e78);
+    transition: border-color 0.15s, background 0.15s;
+    text-align: center;
+}
+.import-dropzone:hover {
+    border-color: rgba(224, 169, 59, 0.6);
+    background: rgba(224, 169, 59, 0.05);
+}
+
+.import-error {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(231, 76, 60, 0.12);
+    color: #e74c3c;
+    font-size: 0.85rem;
+}
+
+.import-preview {
+    margin-top: 18px;
+}
+.import-preview > p {
+    margin: 0 0 8px;
+}
+.import-preview ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 180px;
+    overflow-y: auto;
+}
+.import-preview li {
+    padding: 6px 0;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary, #cbbfa9);
+}
+.import-preview li em {
+    color: #9b8e78;
+    font-style: normal;
+    font-size: 0.78rem;
+}
+.import-more {
+    color: #9b8e78 !important;
+    font-style: italic;
+}
+
+.import-go {
+    width: 100%;
+    margin-top: 18px;
+}
+
+.import-success {
+    text-align: center;
+    padding: 20px 0;
+    color: #2ecc71;
+}
+.import-success p {
+    color: var(--text-primary, #f5efe6);
+    font-size: 1.05rem;
+    margin: 12px 0 18px;
+}

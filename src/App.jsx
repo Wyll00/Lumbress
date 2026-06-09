@@ -17,6 +17,7 @@ const Chat = lazy(() => import('./pages/Chat'));
 const TallerNovela = lazy(() => import('./pages/TallerNovela'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const PublicShelf = lazy(() => import('./pages/PublicShelf'));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
@@ -30,6 +31,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/u/:username" element={<PublicShelf />} />
 
         <Route path="/*" element={
           <ProtectedRoute>

@@ -2,6 +2,8 @@ import { useState, useEffect, useContext, useRef } from 'react';
 import { X, Plus, Trash2, Upload, Star } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { LibraryContext } from '../context/LibraryContext';
+import AuthorAutocomplete from './AuthorAutocomplete';
+import BookSearchAutocomplete from './BookSearchAutocomplete';
 import './BookModal.css';
 
 const INITIAL_STATE = {
@@ -198,29 +200,28 @@ const BookModal = ({ isOpen, onClose, onSave, editingBook }) => {
                 <form onSubmit={handleSubmit} className="book-form">
                     <div className="form-group">
                         <label htmlFor="title">{t('titleLabel')}</label>
-                        <input
-                            required
-                            type="text"
-                            id="title"
-                            name="title"
-                            className="input"
+                        <BookSearchAutocomplete
                             value={formData.title}
-                            onChange={handleChange}
+                            onChange={(val) => setFormData(prev => ({ ...prev, title: val }))}
+                            onSelect={(book) => setFormData(prev => ({
+                                ...prev,
+                                title: book.title || prev.title,
+                                author: book.author || prev.author,
+                                coverUrl: book.coverUrl || prev.coverUrl,
+                                totalPages: book.totalPages != null ? String(book.totalPages) : prev.totalPages,
+                            }))}
                             placeholder="The Great Gatsby"
+                            required
                         />
                     </div>
 
                     <div className="form-group">
                         <label htmlFor="author">{t('authorLabel')}</label>
-                        <input
-                            required
-                            type="text"
-                            id="author"
-                            name="author"
-                            className="input"
+                        <AuthorAutocomplete
                             value={formData.author}
-                            onChange={handleChange}
+                            onChange={(val) => setFormData(prev => ({ ...prev, author: val }))}
                             placeholder="F. Scott Fitzgerald"
+                            required
                         />
                     </div>
 
