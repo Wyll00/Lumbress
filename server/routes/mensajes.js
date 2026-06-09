@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const auth = require('../middleware/auth');
+const { sendNewMessageEmail } = require('../services/mailer');
 
 router.use(auth);
 
@@ -67,7 +68,7 @@ router.get('/:userId', async (req, res) => {
         }
 
         const [rows] = await pool.query(
-            `SELECT m.id, m.emisor_id, m.receptor_id, m.contenido, m.leido, m.created_at
+            `SELECT m.id, m.emisor_id, m.receptor_id, m.contenido, m.leido, m.created_at, m.anuncio_id
              FROM mensajes m
              WHERE (m.emisor_id = ? AND m.receptor_id = ?)
                 OR (m.emisor_id = ? AND m.receptor_id = ?)
@@ -84,7 +85,17 @@ router.get('/:userId', async (req, res) => {
         // Datos del otro usuario
         const [u] = await pool.query('SELECT id, username, profile_image FROM usuarios WHERE id = ?', [otro]);
 
-        res.json({ mensajes: rows, usuario: u[0] || null });
+        // Anuncio del que trata la conversación (el más reciente con anuncio_id entre ambos)
+        const [anuncioRows] = await pool.query(
+            `SELECT a.id, a.titulo_libro, a.precio, a.moneda, a.imagen_url, a.vendido
+             FROM mensajes m JOIN anuncios a ON a.id = m.anuncio_id
+             WHERE m.anuncio_id IS NOT NULL
+               AND ((m.emisor_id = ? AND m.receptor_id = ?) OR (m.emisor_id = ? AND m.receptor_id = ?))
+             ORDER BY m.created_at DESC LIMIT 1`,
+            [uid, otro, otro, uid]
+        );
+
+        res.json({ mensajes: rows, usuario: u[0] || null, anuncio: anuncioRows[0] || null });
     } catch (err) {
         console.error('Error fetching mensajes:', err);
         res.status(500).json({ message: 'Error obteniendo mensajes' });
@@ -107,19 +118,33 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ message: 'El mensaje es demasiado largo' });
         }
 
-        // Verificar que el receptor existe
-        const [exists] = await pool.query('SELECT id FROM usuarios WHERE id = ?', [receptor_id]);
+        // Verificar que el receptor existe (y traer datos para el aviso por email)
+        const [exists] = await pool.query('SELECT id, username, email FROM usuarios WHERE id = ?', [receptor_id]);
         if (exists.length === 0) {
             return res.status(404).json({ message: 'El destinatario no existe' });
         }
+        const receptor = exists[0];
+
+        // Anuncio opcional del que trata la conversación (al contactar desde una oferta)
+        const anuncioIdRaw = Number(req.body.anuncio_id);
+        const anuncio_id = Number.isInteger(anuncioIdRaw) && anuncioIdRaw > 0 ? anuncioIdRaw : null;
 
         const [result] = await pool.query(
-            'INSERT INTO mensajes (emisor_id, receptor_id, contenido) VALUES (?, ?, ?)',
-            [req.user.id, receptor_id, contenido]
+            'INSERT INTO mensajes (emisor_id, receptor_id, contenido, anuncio_id) VALUES (?, ?, ?, ?)',
+            [req.user.id, receptor_id, contenido, anuncio_id]
         );
 
         const [rows] = await pool.query('SELECT * FROM mensajes WHERE id = ?', [result.insertId]);
         res.status(201).json(rows[0]);
+
+        // Aviso "urgente" por email al destinatario.
+        // No se hace await: la respuesta ya salió y un fallo de email nunca debe romper el envío del mensaje.
+        sendNewMessageEmail({
+            toEmail: receptor.email,
+            toName: receptor.username,
+            fromName: req.user.username,
+            preview: contenido,
+        }).catch((e) => console.error('[mail] fallo no crítico:', e.message));
     } catch (err) {
         console.error('Error sending mensaje:', err);
         res.status(500).json({ message: 'Error enviando el mensaje' });

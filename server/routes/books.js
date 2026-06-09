@@ -48,11 +48,12 @@ router.post('/', async (req, res) => {
         const { title, author, genre, formato, status, impacto_emocional, cita_memorable, rating, totalPages, pagesRead, fecha_inicio, fecha_fin, coverUrl, notes, categoryIds } = req.body;
         
         const stringifiedNotes = notes ? JSON.stringify(notes) : '[]';
+        const trimStr = (v) => (typeof v === 'string' ? v.trim() : v);
 
         const [result] = await pool.query(
-            `INSERT INTO libros (usuario_id, titulo, autor, genero, formato, estado_lectura, impacto_emocional, cita_memorable, calificacion, numero_paginas, paginas_leidas, fecha_inicio, fecha_fin, portada_url, notas) 
+            `INSERT INTO libros (usuario_id, titulo, autor, genero, formato, estado_lectura, impacto_emocional, cita_memorable, calificacion, numero_paginas, paginas_leidas, fecha_inicio, fecha_fin, portada_url, notas)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [req.user.id, title, author, genre || '', formato || '', status || 'Pendiente', impacto_emocional || '', cita_memorable || '', rating || 0, totalPages || 0, pagesRead || 0, fecha_inicio || null, fecha_fin || null, coverUrl || '', stringifiedNotes]
+            [req.user.id, trimStr(title), trimStr(author), trimStr(genre) || '', formato || '', status || 'Pendiente', impacto_emocional || '', cita_memorable || '', rating || 0, totalPages || 0, pagesRead || 0, fecha_inicio || null, fecha_fin || null, coverUrl || '', stringifiedNotes]
         );
         
         const newBookId = result.insertId;
@@ -90,6 +91,38 @@ router.post('/', async (req, res) => {
     }
 });
 
+// POST /api/books/import — alta masiva desde CSV { books: [...] }
+router.post('/import', async (req, res) => {
+    try {
+        const incoming = Array.isArray(req.body.books) ? req.body.books : [];
+        const trimStr = (v) => (typeof v === 'string' ? v.trim() : v);
+        const values = [];
+        for (const b of incoming.slice(0, 1000)) {
+            const title = trimStr(b.title);
+            if (!title) continue;
+            values.push([
+                req.user.id, title, trimStr(b.author) || '', trimStr(b.genre) || '', '',
+                b.status || 'To Read', '', '',
+                Number(b.rating) || 0, Number(b.totalPages) || 0, 0,
+                null, b.fecha_fin || null, '', '[]',
+            ]);
+        }
+        if (values.length === 0) return res.json({ imported: 0 });
+
+        await pool.query(
+            `INSERT INTO libros
+               (usuario_id, titulo, autor, genero, formato, estado_lectura, impacto_emocional, cita_memorable,
+                calificacion, numero_paginas, paginas_leidas, fecha_inicio, fecha_fin, portada_url, notas)
+             VALUES ?`,
+            [values]
+        );
+        res.status(201).json({ imported: values.length });
+    } catch (err) {
+        console.error('Error importando libros:', err);
+        res.status(500).json({ message: 'Error al importar los libros' });
+    }
+});
+
 // PUT /api/books/:id
 router.put('/:id', async (req, res) => {
     try {
@@ -99,10 +132,11 @@ router.put('/:id', async (req, res) => {
         // Build dynamic query
         const fields = [];
         const values = [];
+        const trimStr = (v) => (typeof v === 'string' ? v.trim() : v);
 
-        if (updates.title !== undefined) { fields.push('titulo=?'); values.push(updates.title); }
-        if (updates.author !== undefined) { fields.push('autor=?'); values.push(updates.author); }
-        if (updates.genre !== undefined) { fields.push('genero=?'); values.push(updates.genre); }
+        if (updates.title !== undefined) { fields.push('titulo=?'); values.push(trimStr(updates.title)); }
+        if (updates.author !== undefined) { fields.push('autor=?'); values.push(trimStr(updates.author)); }
+        if (updates.genre !== undefined) { fields.push('genero=?'); values.push(trimStr(updates.genre)); }
         if (updates.formato !== undefined) { fields.push('formato=?'); values.push(updates.formato); }
         if (updates.status !== undefined) { fields.push('estado_lectura=?'); values.push(updates.status); }
         if (updates.impacto_emocional !== undefined) { fields.push('impacto_emocional=?'); values.push(updates.impacto_emocional); }

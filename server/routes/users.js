@@ -8,7 +8,7 @@ const auth = require('../middleware/auth');
 router.get('/me', auth, async (req, res) => {
     try {
         const [rows] = await pool.query(
-            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds FROM usuarios WHERE id = ?',
+            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf FROM usuarios WHERE id = ?',
             [req.user.id]
         );
         if (rows.length === 0) {
@@ -43,7 +43,7 @@ router.put('/me', auth, async (req, res) => {
         );
 
         const [updated] = await pool.query(
-            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds FROM usuarios WHERE id = ?',
+            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf FROM usuarios WHERE id = ?',
             [req.user.id]
         );
 
@@ -112,7 +112,7 @@ router.put('/me/reading-hours', auth, async (req, res) => {
 
         // Fetch updated user
         const [updated] = await pool.query(
-            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds FROM usuarios WHERE id = ?',
+            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf FROM usuarios WHERE id = ?',
             [req.user.id]
         );
 
@@ -168,6 +168,41 @@ router.put('/me/podcast-time', auth, async (req, res) => {
         res.json({ podcast_seconds: updated[0].podcast_seconds });
     } catch (err) {
         console.error('Error adding podcast time:', err);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+});
+
+// PUT /api/users/me/public-shelf — activar/desactivar la estantería pública
+router.put('/me/public-shelf', auth, async (req, res) => {
+    try {
+        const enabled = req.body.enabled ? 1 : 0;
+        await pool.query('UPDATE usuarios SET public_shelf = ? WHERE id = ?', [enabled, req.user.id]);
+        const [updated] = await pool.query(
+            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf FROM usuarios WHERE id = ?',
+            [req.user.id]
+        );
+        res.json({ message: 'Estantería actualizada', user: updated[0] });
+    } catch (err) {
+        console.error('Error toggling public shelf:', err);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+});
+
+// PUT /api/users/me/reading-goal — fijar la meta anual de libros
+router.put('/me/reading-goal', auth, async (req, res) => {
+    try {
+        const goal = parseInt(req.body.goal, 10);
+        if (!Number.isInteger(goal) || goal < 0 || goal > 9999) {
+            return res.status(400).json({ message: 'Meta no válida (0–9999).' });
+        }
+        await pool.query('UPDATE usuarios SET reading_goal = ? WHERE id = ?', [goal, req.user.id]);
+        const [updated] = await pool.query(
+            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf FROM usuarios WHERE id = ?',
+            [req.user.id]
+        );
+        res.json({ message: 'Meta actualizada', user: updated[0] });
+    } catch (err) {
+        console.error('Error setting reading goal:', err);
         res.status(500).json({ message: 'Error interno del servidor' });
     }
 });

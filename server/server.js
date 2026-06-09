@@ -47,6 +47,10 @@ app.use(cors({
     credentials: true
 }));
 
+// Webhook de Stripe: necesita el body CRUDO, por eso se monta ANTES de express.json()
+const subscriptionsModule = require('./routes/subscriptions');
+app.post('/api/subscriptions/webhook', express.raw({ type: 'application/json' }), subscriptionsModule.webhook);
+
 app.use(express.json({ limit: '100mb' }));
 app.use(cookieParser());
 
@@ -87,6 +91,11 @@ const uploadsRoutes = require('./routes/uploads');
 const anunciosRoutes = require('./routes/anuncios');
 const mensajesRoutes = require('./routes/mensajes');
 const tallerRoutes = require('./routes/taller');
+const authorsRoutes = require('./routes/authors');
+const bookSearchRoutes = require('./routes/booksearch');
+const geoSearchRoutes = require('./routes/geosearch');
+const recommendationsRoutes = require('./routes/recommendations');
+const publicRoutes = require('./routes/public');
 const { startNewsScheduler } = require('./services/newsFetcher');
 
 app.use('/api/auth', authLimiter, authRoutes);
@@ -101,6 +110,12 @@ app.use('/api/uploads', apiLimiter, uploadsRoutes);
 app.use('/api/anuncios', apiLimiter, anunciosRoutes);
 app.use('/api/mensajes', apiLimiter, mensajesRoutes);
 app.use('/api/taller', apiLimiter, tallerRoutes);
+app.use('/api/authors', apiLimiter, authorsRoutes);
+app.use('/api/book-search', apiLimiter, bookSearchRoutes);
+app.use('/api/geo-search', apiLimiter, geoSearchRoutes);
+app.use('/api/recommendations', apiLimiter, recommendationsRoutes);
+app.use('/api/public', apiLimiter, publicRoutes);
+app.use('/api/subscriptions', apiLimiter, subscriptionsModule.router);
 
 // Arranca el scheduler de noticias (fetch inicial + cada 60 min)
 startNewsScheduler();
