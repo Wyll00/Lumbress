@@ -150,7 +150,7 @@ const Community = () => {
     try {
       const res = await fetch(`${API}?limit=50`, withAuth());
       if (res.ok) setPosts(await res.json());
-    } catch (e) {
+    } catch {
       setError('No se pudo conectar con el servidor.');
     } finally {
       setLoading(false);

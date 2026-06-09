@@ -297,7 +297,7 @@ const Podcasts = () => {
                 try {
                     const data = await res.json();
                     if (data?.message) msg = data.message;
-                } catch (e) { /* respuesta sin JSON */ }
+                } catch { /* respuesta sin JSON */ }
                 setSaveError(msg);
             }
         } catch (err) {

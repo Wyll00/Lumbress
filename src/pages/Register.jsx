@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { BookMarked, Eye, EyeOff } from 'lucide-react';
 import { API_URL, withAuth } from '../config';

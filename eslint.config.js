@@ -5,7 +5,8 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // El backend (server/) es Node CommonJS con su propio entorno: no lo lintamos con la config del frontend.
+  globalIgnores(['dist', 'server']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -24,6 +25,13 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+  {
+    // Archivos que se ejecutan en Node: config (vite.config.js…) y scripts de utilidad.
+    files: ['*.config.{js,mjs,cjs}', 'scripts/**/*.js'],
+    languageOptions: {
+      globals: globals.node,
     },
   },
 ])

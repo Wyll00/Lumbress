@@ -10,7 +10,7 @@ import Recommendations from '../components/Recommendations';
 import './Dashboard.css';
 
 const Dashboard = () => {
-    const { books, categories, updateBook, assignCategory } = useContext(LibraryContext);
+    const { books, categories, assignCategory } = useContext(LibraryContext);
     const { t } = useContext(LanguageContext);
     const rootRef = useRef(null);
 

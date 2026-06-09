@@ -88,7 +88,7 @@ export default function TallerNovela() {
           const json = await res.json();
           if (json && json.data) setData({ ...EMPTY, ...json.data });
         }
-      } catch (e) { /* primera vez, usamos EMPTY */ }
+      } catch { /* primera vez, usamos EMPTY */ }
       finally { setLoaded(true); }
     })();
   }, []);
@@ -111,7 +111,7 @@ export default function TallerNovela() {
         } else {
           setSaveState("idle");
         }
-      } catch (e) { setSaveState("idle"); }
+      } catch { setSaveState("idle"); }
     }, 700);
   }, []);
 
@@ -272,6 +272,7 @@ function AddButton({ onClick, label }) {
   );
 }
 
+// eslint-disable-next-line no-unused-vars -- `Icon` se usa como componente en JSX (patrón icono-por-prop)
 function EmptyState({ icon: Icon, hint }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center",

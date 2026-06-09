@@ -131,7 +131,7 @@ const VenderLibro = () => {
                 const data = await res.json().catch(() => ({}));
                 setError(data.message || 'No se pudo guardar el anuncio.');
             }
-        } catch (err) {
+        } catch {
             setError('Error de conexión.');
         } finally {
             setSaving(false);
