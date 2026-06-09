@@ -7,7 +7,7 @@
 ## 1. Identidad
 
 - **Nombre:** Códice — *"Lecturas Sociales"*
-- **Versión actual:** v0.9.1
+- **Versión actual:** v0.11.0 *(sesión 2026-06-07: reto de lectura, recomendaciones, logros, estantería pública, refactor a `<Typeahead>`)*
 - **Idiomas UI:** ES (principal) / EN
 - **Logo:** `public/logo.png` (círculo dorado sobre negro, *EST · MMXXVI*)
 - **Tipografías:** Inter + Fraunces (global), Plus Jakarta Sans + Spectral (Taller de Novela)
@@ -25,6 +25,9 @@
 | **Seguridad** | helmet, CORS restringido (dev acepta localhost), rate-limit, bcrypt 10 rounds |
 | **Subidas** | multer → carpeta `server/uploads/{audio,covers}/` (no base64 en BD) |
 | **RSS** | rss-parser (servicio `newsFetcher` con cron 60min) |
+| **Email** | nodemailer (`services/mailer.js`) — aviso de mensaje nuevo; SMTP por `.env`, **OFF si no hay clave** |
+| **Pagos** | **Stripe** (suscripciones, Checkout alojado + webhook) — modo TEST |
+| **APIs externas** | Open Library (autores/libros), Photon/OSM (direcciones) — gratis, sin API key, vía proxy del backend |
 | **Dev** | XAMPP (MySQL en `C:\xampp\mysql\bin\mysqld.exe`), Vite proxy `/api` + `/uploads` → :5001 |
 
 ---
@@ -39,25 +42,33 @@ biblioteca-personal/
 ├── .env                         ← VITE_API_URL (vacío en dev)
 ├── server/
 │   ├── server.js                ← Express + helmet + CORS + scheduler noticias
+│   │                              (webhook Stripe montado con body CRUDO antes de express.json)
 │   ├── db.js                    ← pool MySQL (host 127.0.0.1, keepAlive)
-│   ├── .env                     ← JWT_SECRET, DB_*, ALLOWED_ORIGINS, NODE_ENV
+│   ├── .env                     ← JWT_SECRET, DB_*, ALLOWED_ORIGINS, NODE_ENV, SMTP_*, STRIPE_*
 │   ├── middleware/auth.js       ← lee cookie 'token' o header Authorization
 │   ├── utils/cookies.js         ← COOKIE_NAME + cookieOptions (httpOnly, sameSite)
 │   ├── services/newsFetcher.js  ← RSS + filtros literarios + og:image fallback
-│   ├── routes/                  ← auth, books, categories, users, posts, events,
-│   │                              podcasts, news, uploads, anuncios, mensajes, taller
+│   ├── services/mailer.js       ← nodemailer: aviso "urgente" de mensaje nuevo (a prueba de fallos)
+│   ├── scripts/setup_stripe.js  ← crea los 3 precios de suscripción en Stripe (imprime los price IDs)
+│   ├── routes/                  ← auth, books, categories, users, posts, events, podcasts,
+│   │                              news, uploads, anuncios, mensajes, taller, authors,
+│   │                              booksearch, geosearch, subscriptions, recommendations,
+│   │                              public (estantería pública SIN auth)
 │   └── uploads/{audio,covers}/  ← archivos de usuarios (en .gitignore)
 └── src/
-    ├── main.jsx                 ← Providers: Auth → Library → Player
+    ├── main.jsx                 ← Providers: Auth → Notification → Library → Player
     ├── App.jsx                  ← rutas lazy + MiniPlayer global
     ├── config.js                ← API_URL, withAuth, mediaUrl, uploadFile
-    ├── context/                 ← AuthContext, LibraryContext, LanguageContext, PlayerContext
+    ├── context/                 ← AuthContext, LibraryContext, LanguageContext, PlayerContext,
+    │                              NotificationContext (badge + título + Web Notifications)
     ├── components/              ← Sidebar, BookCard, BookModal, Calendar, MiniPlayer, NewsFeed,
     │                              OffersFeed, ReadBooksModal, NotesPanel, EventModal,
-    │                              AnimatedNumber, ProtectedRoute
+    │                              AnimatedNumber, ProtectedRoute, Typeahead (genérico),
+    │                              AuthorAutocomplete + BookSearchAutocomplete + AddressAutocomplete (wrappers de Typeahead),
+    │                              ReadingGoal, Recommendations, Achievements
     ├── pages/                   ← Dashboard, MyLibrary, Statistics, Settings, Community,
     │                              Subscriptions, Podcasts, Login, Register,
-    │                              VenderLibro, Chat, TallerNovela
+    │                              VenderLibro, Chat, TallerNovela, PublicShelf (/u/:username, pública)
     └── i18n/translations.js     ← ES/EN
 ```
 
@@ -78,6 +89,18 @@ DB_NAME=biblioteca_personal
 JWT_SECRET=<64 bytes hex>     # obligatorio, el server muere si falta
 JWT_EXPIRES_IN=7d
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:4173
+APP_URL=http://localhost:5173                 # success/cancel de Stripe + enlaces de email
+
+# Email (avisos de mensajes) — opcional; si falta, se omite sin romper
+SMTP_HOST=  SMTP_PORT=465  SMTP_SECURE=true
+SMTP_USER=  SMTP_PASS=  MAIL_FROM=
+
+# Stripe (suscripciones, claves TEST) — las pone el usuario; precios con scripts/setup_stripe.js
+STRIPE_SECRET_KEY=          # sk_test_...
+STRIPE_WEBHOOK_SECRET=      # whsec_... (Stripe CLi) — pendiente, no hace falta para el alta vía /sync
+STRIPE_PRICE_LECTOR=        # price_...
+STRIPE_PRICE_BIBLIOFILO=    # price_...
+STRIPE_PRICE_COLECCIONISTA= # price_...
 ```
 
 ### `.env` (frontend)
@@ -94,12 +117,12 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 
 ---
 
-## 5. Base de datos (13 tablas)
+## 5. Base de datos (14 tablas)
 
 | Tabla | Para qué |
 |---|---|
-| `usuarios` | id, username, email, password (bcrypt), phone, profile_image (base64), reading_hours, **podcast_seconds** |
-| `libros` | titulo, autor, genero, formato, estado_lectura, impacto_emocional, cita_memorable, calificacion, paginas_leidas, numero_paginas, **fecha_inicio**, **fecha_fin**, portada_url, notas (JSON) |
+| `usuarios` | id, username, email, password (bcrypt), phone, profile_image (base64), reading_hours, podcast_seconds, **reading_goal** (meta anual), **public_shelf** (estantería pública on/off) |
+| `libros` | titulo, autor, genero, formato, estado_lectura, impacto_emocional, cita_memorable, calificacion, paginas_leidas, numero_paginas, **fecha_inicio**, **fecha_fin**, portada_url, notas (JSON), **created_at** |
 | `etiquetas_literarias` | (usuario_id, nombre) categorías personalizadas, máx **4 por libro** |
 | `libros_etiquetas` | tabla pivote libro ↔ etiqueta |
 | `reading_logs` | (user_id, hours, log_date) histórico para gráfica semanal |
@@ -109,8 +132,9 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 | `podcasts` | nombre, autor, descripcion, url_fuente, **audio_url** (ruta `/uploads/audio/`), portada_url, categoria, estado, rating, notas, episodios_total/escuchados |
 | `noticias` | titulo, descripcion, link UNIQUE, source, image_url, fecha_publicacion (filtrado literario por keywords) |
 | `anuncios` | marketplace de libros: titulo_libro, autor, precio, moneda, estado_libro, descripcion, imagen_url, contacto, telefono, **direccion + codigo_postal + ciudad + provincia + pais**, vendido |
-| `mensajes` | (emisor_id, receptor_id, contenido, leido) chat 1-a-1 |
+| `mensajes` | (emisor_id, receptor_id, contenido, leido, **anuncio_id**) chat 1-a-1; `anuncio_id` enlaza la conversación a la oferta concreta |
 | `taller_novela` | (usuario_id PK, **data JSON**) un único documento por usuario para el Taller |
+| `suscripciones` | (usuario_id UNIQUE, stripe_customer_id, stripe_subscription_id, plan, status, current_period_end, cancel_at_period_end) — estado de la suscripción Stripe |
 
 ---
 
@@ -119,9 +143,9 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 | Path | Métodos | Función |
 |---|---|---|
 | `/auth` | POST register, POST login, POST logout | Setea cookie httpOnly |
-| `/users/me` | GET / PUT / PUT password / PUT reading-hours / PUT podcast-time | Perfil + horas |
+| `/users/me` | GET / PUT / PUT password / PUT reading-hours / PUT podcast-time / **PUT reading-goal** / **PUT public-shelf** | Perfil + horas + meta + estantería |
 | `/users/me/reading-stats` | GET | Últimos 7 días |
-| `/books` | CRUD | Con JOIN a etiquetas (categorias) |
+| `/books` | CRUD | Con JOIN a etiquetas (categorias). Recorta espacios en titulo/autor/genero al guardar |
 | `/categories` | CRUD + POST /assign + POST /remove | **Límite 4 categorías/libro** |
 | `/posts` | CRUD + POST /:id/like | Feed de Comunidad |
 | `/events` | CRUD | Calendario en Estadísticas |
@@ -129,8 +153,14 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 | `/news` | GET ?period=day\|week\|month\|year, GET /sources, POST /refresh | Solo filtro literario en título |
 | `/uploads/:kind` | POST (multer, máx 500MB audio / 10MB cover) + DELETE | kind = audio \| covers |
 | `/anuncios` | CRUD + PATCH (vendido) + GET /mios + **GET /:id/contacto** | El GET público OCULTA calle/CP, solo se revelan en /contacto |
-| `/mensajes` | GET /conversaciones, GET /no-leidos, GET /:userId (marca leídos), POST | Chat con polling |
+| `/mensajes` | GET /conversaciones, GET /no-leidos, GET /:userId (marca leídos + devuelve `anuncio`), POST (acepta `anuncio_id`) | Chat con polling |
 | `/taller` | GET / PUT | Upsert del JSON del usuario |
+| `/authors` | GET /search?q= | Autocompletar autores (proxy Open Library) |
+| `/book-search` | GET /?q= , GET /pages?key= | Buscar libro (Open Library) → título/autor/portada/páginas (+fallback de páginas por ediciones) |
+| `/geo-search` | GET /?q= | Autocompletar direcciones (proxy Photon/OSM). **OJO: Photon NO admite `lang=es` (devuelve 400)** |
+| `/subscriptions` | POST /checkout, POST /sync, POST /portal, GET /me, **POST /webhook (body crudo)** | Stripe: alta/estado/gestión de suscripción |
+| `/recommendations` | GET / | "Más libros de tus autores favoritos" (Open Library, descarta los que ya tienes) |
+| `/public/shelf/:username` | GET (**SIN auth**) | Estantería pública — solo si `public_shelf=1`; expone solo nombre/avatar/stats/libros (nunca email/teléfono) |
 | Estáticos | `/uploads/...` | servidos con `express.static` + CORP cross-origin |
 
 ---
@@ -140,16 +170,17 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 | Ruta | Página | Notas |
 |---|---|---|
 | `/login`, `/register` | Login, Register | Públicas, animación GSAP de caída |
-| `/` | Dashboard | Stats animadas (AnimatedNumber), recent books con hover-preview, click "Total de Libros" → ReadBooksModal |
-| `/library` | MyLibrary | Filtros estado + formato + búsqueda + sort |
-| `/statistics` | Statistics | Recharts, calendar con highlight de día, modal de tabla |
+| `/` | Dashboard | Stats animadas, recientes (primeros 4 del array, API ya `created_at DESC`), **🎯 Reto de lectura (ReadingGoal)** + **✨ Recomendado para ti (Recommendations)** |
+| `/library` | MyLibrary | Filtros estado + formato + búsqueda + sort. Añadir libro: **título y autor con autocompletado** |
+| `/statistics` | Statistics | Recharts, calendar, modal de tabla, agrupación normalizada (trim+minúsculas), **🏅 Logros/insignias (Achievements, calculadas en vivo)** |
 | `/podcasts` | Podcasts | Cards compactas (78px banner), bolita minimizada, modal rating al terminar |
 | `/community` | Community | Pills: Todo / Reseñas / Recomendaciones / Reflexión / **Noticias** / **Ofertas** + botón dorado "Vende tu libro" |
-| `/mensajes` | Chat | Conversaciones + ventana, polling 5s, badge en sidebar |
-| `/vender` | VenderLibro | Form de venta + "Mis anuncios" con editar |
+| `/mensajes` | Chat | Conversaciones + ventana, polling 5s, badge en sidebar, **banner "Sobre el anuncio"** al contactar desde una oferta |
+| `/vender` | VenderLibro | Form de venta + "Mis anuncios" con editar. **Autor y dirección con autocompletado** |
 | `/taller` | TallerNovela | Sub-nav: Resumen, Personajes, Ubicaciones, Especies, Idiomas, Objetos, Capítulos, Relaciones |
-| `/settings` | Settings | Perfil, password (min 8), horas |
-| `/subscriptions` | Subscriptions | (existente, sin lógica real aún) |
+| `/settings` | Settings | Perfil, password (min 8), horas, Notificaciones, **Estantería pública (toggle + enlace para compartir)** |
+| `/subscriptions` | Subscriptions | **Stripe funcional**: elegir plan → Checkout → plan activo (`/sync`). Banner éxito/cancelado, botón "✓ Tu plan actual — Gestionar" (portal) |
+| `/u/:username` | PublicShelf | **Ruta PÚBLICA (sin login)** — estantería compartible; muestra avatar, nombre, stats y libros. 404 si privada |
 
 ---
 
@@ -158,12 +189,14 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 - **Seguridad**: JWT en cookie httpOnly, **nunca** localStorage. CORS restringido en prod, abierto a localhost en dev. Rate limit 10/15min en `/auth/*`, 300/15min resto. Errores 500 NO devuelven `err.message` al cliente.
 - **Categorías por libro**: máximo 4 (validado en frontend + backend).
 - **Subidas**: NUNCA base64 a BD. Multer → disco. Solo la ruta `/uploads/...` en BD.
-- **`mediaUrl()`** helper en `config.js`: detecta `data:`, `http://`, `/uploads/` y resuelve correctamente.
+- **`mediaUrl()`** helper en `config.js`: detecta `data:`, `http://`, `/uploads/` y resuelve correctamente (las portadas de Open Library son URLs `https://covers.openlibrary.org/...`).
 - **`withAuth()`**: todos los fetch usan `credentials: 'include'`.
 - **Vite proxy**: `/api` y `/uploads` → backend (same-site cookies en dev).
 - **Estilo**: tema oscuro, glass-panel (`backdrop-filter: blur`), border-radius generoso, animaciones GSAP en entradas. Taller de Novela mantiene su paleta ámbar propia con estilos inline.
 - **Privacidad marketplace**: dirección exacta (calle + CP) NO viaja en lista pública, solo vía `GET /anuncios/:id/contacto`.
 - **Filtro noticias**: solo título, lista positiva (libro/novela/autor/escritor/premios) + lista negativa (cine puro/música/toros/cómic) + override de frases fuertes para adaptaciones libro→cine.
+- **APIs externas a prueba de fallos**: autores/libros/direcciones/email/Stripe — si la fuente falla o no hay clave, devuelven vacío/omiten **sin romper** el flujo principal.
+- **Pagos seguros**: Stripe Checkout alojado → la **tarjeta nunca toca la app** (PCI lo gestiona Stripe). Las claves Stripe/SMTP las pone el usuario en `.env`.
 
 ---
 
@@ -178,6 +211,10 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 ```
 
 > Si MySQL da `ETIMEDOUT` después de horas idle → conexiones zombie. Reiniciar MySQL desde XAMPP. El pool tiene `keepAlive` + `idleTimeout: 60s` para mitigarlo.
+>
+> ⚠️ **Apaga MySQL siempre desde XAMPP (Stop)** antes de cerrar/apagar el PC — los cierres en seco corrompen las tablas Aria del sistema (incidente 2026-05-28; se reparó con `aria_chk --safe-recover --force` desde el datadir + cuarentena de los relay-logs).
+>
+> ⚠️ **Probar pagos (Stripe):** el antivirus **Kaspersky** rompe la página de Checkout (inyecta scripts `kaspersky-labs.com`; los JS de Stripe fallan con status 499 / "MIME image/png"). **Pausa Kaspersky** o añade `*.stripe.com` a sus direcciones de confianza. No es bug del código.
 
 ---
 
@@ -190,20 +227,30 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 - ✅ Comunidad con posts + likes + imágenes
 - ✅ Noticias literarias (5 fuentes RSS, filtro estricto, og:image fallback, "añadir al calendario" con modal)
 - ✅ Marketplace de libros con dirección privada + teléfono click-to-call + edición + marcar vendido
-- ✅ Chat 1-a-1 entre usuarios con polling + badge no-leídos
+- ✅ Chat 1-a-1 entre usuarios con polling + badge no-leídos, **enlazado al anuncio**
 - ✅ Taller de Novela (8 secciones, autosave JSON en BD)
 - ✅ i18n ES/EN, sidebar con scroll, logo Códice
+- ✅ **Notificaciones de mensajes**: badge sidebar + contador en título de pestaña + Web Notifications del navegador (`NotificationContext`) + aviso por email (nodemailer, OFF sin clave SMTP)
+- ✅ **Autocompletados** (gratis, sin key): autor; título → autorrellena autor/portada/páginas (Open Library); dirección → CP/ciudad/provincia/país (Photon)
+- ✅ **Suscripciones con Stripe** (modo TEST): Checkout alojado, `/sync` tras pagar, tabla `suscripciones`, plan activo mostrado en la UI
+- ✅ **Reto de lectura** (Dashboard): meta anual + progreso (leídos este año = `Read` con `fecha_fin` del año) + ritmo + celebración
+- ✅ **Recomendaciones** (Dashboard): "más de tus autores favoritos" vía Open Library, descarta los que ya tienes, botón "Añadir"
+- ✅ **Logros/insignias** (Estadísticas): 10 badges calculados en vivo desde libros/perfil (sin BD)
+- ✅ **Estantería pública** (opt-in): toggle en Ajustes + ruta pública `/u/:username`; expone solo datos seguros
+- ✅ **Refactor**: los 3 autocompletados ahora envuelven un `<Typeahead>` genérico (sin duplicación)
 
 ---
 
 ## 11. Pendientes / decisiones a futuro
 
+- ✅ ~~Notificaciones en navegador~~ · ✅ ~~Chat enlazado al anuncio~~ · ✅ ~~Suscripciones~~ *(hechos esta sesión)*
+- 🟡 **Stripe para prod**: webhook con la **Stripe CLI** (`stripe listen` → da `whsec_`) para renovaciones/cancelaciones automáticas, + activar el **Customer Portal** en el Dashboard (para el botón "Gestionar"). Hoy el alta funciona vía `/sync`.
+- 🟡 **Email de mensajes**: reactivar (app-password válida en `SMTP_PASS`) y, en prod, enviar solo si el destinatario lleva rato sin leer/desconectado (anti-spam) en vez de en cada mensaje.
+- ✅ ~~Refactor de autocompletados a `<Typeahead>`~~ *(hecho)* — quedan **3 CSS huérfanos** sin importar (`AuthorAutocomplete.css`, `BookSearchAutocomplete.css`, `AddressAutocomplete.css`), borrables.
 - 🟡 Rotar password de MySQL (sigue siendo `root` vacío en local)
-- 🟡 Antes de deploy prod: `NODE_ENV=production`, regenerar `JWT_SECRET`, `ALLOWED_ORIGINS` con dominio real
+- 🟡 Antes de deploy prod: `NODE_ENV=production`, regenerar `JWT_SECRET`, `ALLOWED_ORIGINS` con dominio real, claves Stripe **live**
 - 🟡 Migrar uploads de disco local a S3/Cloudflare R2 cuando despliegues
-- 🟡 Notificaciones en navegador para nuevos mensajes
-- 🟡 Chat enlazado al anuncio concreto del que se habla
-- 🟡 Suscripciones (página existe pero sin lógica real)
+- 🟡 Limpiar datos de prueba (mensajes/suscripción de test) y el espacio en `usuarios.username` "Alberto "
 
 ---
 
@@ -213,9 +260,10 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 2. Verifica MySQL (`netstat -ano | grep ":3306 "`).
 3. Arranca backend (`cd server && npm start`) y frontend (`npm run dev`).
 4. Los archivos modificados con más historia:
-   - `server/routes/{anuncios,mensajes,podcasts,news}.js`
-   - `src/pages/{Podcasts,Community,VenderLibro,Chat,TallerNovela}.jsx`
-   - `src/components/{MiniPlayer,OffersFeed,Sidebar}.jsx`
-   - `src/context/{PlayerContext,AuthContext}.jsx`
-   - `src/config.js`
-5. La lógica de **privacidad de la dirección** (anuncios) y el **filtro de noticias** son las dos piezas más sutiles — revisar antes de modificarlas.
+   - `server/routes/{anuncios,mensajes,podcasts,news,subscriptions,booksearch,geosearch,authors,recommendations,public,users}.js`
+   - `server/services/{newsFetcher,mailer}.js` · `server/scripts/setup_stripe.js`
+   - `src/pages/{Dashboard,Statistics,Settings,Subscriptions,VenderLibro,Chat,Community,Podcasts,TallerNovela,PublicShelf}.jsx`
+   - `src/components/{Typeahead,AuthorAutocomplete,BookSearchAutocomplete,AddressAutocomplete,ReadingGoal,Recommendations,Achievements,Sidebar,BookModal,OffersFeed,MiniPlayer}.jsx`
+   - `src/context/{PlayerContext,AuthContext,NotificationContext}.jsx` · `src/App.jsx` · `src/config.js`
+5. Las piezas más sutiles: **privacidad de la dirección** (anuncios) y de la **estantería pública** (solo datos seguros), **filtro de noticias**, el **webhook de Stripe** (body crudo, montado antes de `express.json`), y la **normalización al agrupar** (géneros/autores).
+```
