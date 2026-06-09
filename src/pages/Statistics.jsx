@@ -10,6 +10,7 @@ import {
 import { BookOpen, Layers, Target, Library, Star } from 'lucide-react';
 import Calendar from '../components/Calendar';
 import ReadBooksModal from '../components/ReadBooksModal';
+import Achievements from '../components/Achievements';
 import './Statistics.css';
 
 const COLORS = ['#7b61ff', '#2ecc71', '#f1c40f', '#e74c3c', '#00C49F', '#FFBB28', '#FF8042'];
@@ -83,16 +84,17 @@ const Statistics = () => {
 
         // Genre Data for Pie Chart — guardamos también los títulos por género
         const genreMap = books.reduce((acc, book) => {
-            const genre = book.genre || t('uncategorized');
-            if (!acc[genre]) acc[genre] = [];
-            acc[genre].push({ title: book.title, author: book.author });
+            const label = (book.genre || '').trim() || t('uncategorized');
+            const key = label.toLocaleLowerCase(); // agrupa ignorando mayúsculas y espacios sobrantes
+            if (!acc[key]) acc[key] = { label, titles: [] };
+            acc[key].titles.push({ title: book.title, author: book.author });
             return acc;
         }, {});
 
-        const genreData = Object.keys(genreMap).map(name => ({
-            name,
-            value: genreMap[name].length,
-            titles: genreMap[name],
+        const genreData = Object.values(genreMap).map(({ label, titles }) => ({
+            name: label,
+            value: titles.length,
+            titles,
         })).sort((a, b) => b.value - a.value);
 
         // Status Data for Bar Chart
@@ -262,6 +264,8 @@ const Statistics = () => {
                     </div>
                 </div>
             </div>
+
+            <Achievements />
 
             <div className="charts-grid-main">
                 {/* 1. Libros por género */}

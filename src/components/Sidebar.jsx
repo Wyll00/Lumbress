@@ -1,33 +1,16 @@
-import { useContext, useState, useEffect } from 'react';
+import { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
 import { BookOpen, LayoutDashboard, BarChart3, Library, Globe, LogOut, Settings, Users, Clock, CreditCard, Headphones, MessagesSquare, Feather } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
-import { API_URL, withAuth } from '../config';
+import { NotificationContext } from '../context/NotificationContext';
 import './Sidebar.css';
 
 const Sidebar = () => {
     const { t, language, toggleLanguage } = useContext(LanguageContext);
-    const { logout, user, isAuthenticated } = useContext(AuthContext);
+    const { logout, user } = useContext(AuthContext);
+    const { unreadTotal } = useContext(NotificationContext);
     const initials = user?.username ? user.username.substring(0, 2).toUpperCase() : '?';
-    const [unread, setUnread] = useState(0);
-
-    useEffect(() => {
-        if (!isAuthenticated) return;
-        let active = true;
-        const fetchUnread = async () => {
-            try {
-                const res = await fetch(`${API_URL}/api/mensajes/no-leidos`, withAuth());
-                if (res.ok && active) {
-                    const data = await res.json();
-                    setUnread(data.total || 0);
-                }
-            } catch (err) { /* silencio */ }
-        };
-        fetchUnread();
-        const interval = setInterval(fetchUnread, 15000);
-        return () => { active = false; clearInterval(interval); };
-    }, [isAuthenticated]);
 
     return (
         <nav className="sidebar glass-panel">
@@ -81,7 +64,7 @@ const Sidebar = () => {
                     <NavLink to="/mensajes" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         <MessagesSquare size={20} />
                         <span>Mensajes</span>
-                        {unread > 0 && <span className="nav-badge">{unread > 9 ? '9+' : unread}</span>}
+                        {unreadTotal > 0 && <span className="nav-badge">{unreadTotal > 9 ? '9+' : unreadTotal}</span>}
                     </NavLink>
                 </li>
                 <li>
@@ -131,7 +114,7 @@ const Sidebar = () => {
                 <button
                     onClick={logout}
                     className="action-btn-inline delete-btn"
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', fontSize: '0.8rem' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '6px 12px', fontSize: '0.8rem', width: 'auto', height: 'auto' }}
                     title={language === 'es' ? 'Cerrar Sesión' : 'Logout'}
                 >
                     <LogOut size={16} />
