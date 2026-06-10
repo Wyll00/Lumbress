@@ -18,13 +18,13 @@ const Sidebar = () => {
                 <div className="logo-container">
                     <img
                         src="/logo.png"
-                        alt="Códice"
+                        alt="Lumbres"
                         className="logo-img"
                         onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }}
                     />
                     <div className="logo-fallback" style={{ display: 'none' }}>
                         <BookOpen size={28} />
-                        <h1>Códice</h1>
+                        <h1>Lumbres</h1>
                     </div>
                 </div>
             </div>

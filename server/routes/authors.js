@@ -17,7 +17,7 @@ router.get('/search', async (req, res) => {
         const timer = setTimeout(() => controller.abort(), 6000);
 
         const r = await fetch(url, {
-            headers: { 'User-Agent': 'Codice/0.9 (lecturas-sociales)' },
+            headers: { 'User-Agent': 'Lumbres/0.9 (lecturas-sociales)' },
             signal: controller.signal,
         });
         clearTimeout(timer);

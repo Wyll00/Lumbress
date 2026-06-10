@@ -185,7 +185,7 @@ const Statistics = () => {
                 </header>
                 <PremiumGate
                     title="Estadísticas de lectura"
-                    text="Gráficas por género, valoraciones, autores top, calendario y logros: todo tu año lector, con Códice Premium."
+                    text="Gráficas por género, valoraciones, autores top, calendario y logros: todo tu año lector, con Lumbres Premium."
                 />
             </div>
         );

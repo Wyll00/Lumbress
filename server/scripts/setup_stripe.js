@@ -1,4 +1,4 @@
-// Crea el producto "Códice Premium" con precio mensual y anual en Stripe (modo TEST),
+// Crea el producto "Lumbres Premium" con precio mensual y anual en Stripe (modo TEST),
 // y deja configurado el Customer Portal (gestionar/cancelar sin tocar el Dashboard).
 // Uso: desde la carpeta server/  ->  node scripts/setup_stripe.js
 // Requiere STRIPE_SECRET_KEY (sk_test_...) en server/.env
@@ -13,10 +13,10 @@ if (!stripeKey) {
 const stripe = require('stripe')(stripeKey);
 
 (async () => {
-    console.log('Creando "Códice Premium" (mensual + anual) en Stripe...\n');
+    console.log('Creando "Lumbres Premium" (mensual + anual) en Stripe...\n');
 
     const product = await stripe.products.create({
-        name: 'Códice Premium',
+        name: 'Lumbres Premium',
         description: 'Biblioteca ilimitada, anotaciones, sincronización y estadísticas.',
     });
 
@@ -41,7 +41,7 @@ const stripe = require('stripe')(stripeKey);
 
     // Customer Portal: permitir cancelar y cambiar entre mensual/anual
     await stripe.billingPortal.configurations.create({
-        business_profile: { headline: 'Códice — gestiona tu suscripción' },
+        business_profile: { headline: 'Lumbres — gestiona tu suscripción' },
         features: {
             customer_update: { enabled: true, allowed_updates: ['email'] },
             invoice_history: { enabled: true },

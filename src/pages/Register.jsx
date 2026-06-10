@@ -59,7 +59,7 @@ const Register = () => {
                 <div className="auth-header">
                     <img
                         src="/logo.png"
-                        alt="Códice"
+                        alt="Lumbres"
                         className="auth-logo"
                         onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'block'; }}
                     />

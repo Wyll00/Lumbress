@@ -6,7 +6,7 @@ import {
 import { API_URL, withAuth } from "../config";
 
 /* ===========================================================================
-   Taller de Novela — módulo Códice
+   Taller de Novela — módulo Lumbres
    Persistencia: GET/PUT /api/taller (un JSON por usuario)
 =========================================================================== */
 

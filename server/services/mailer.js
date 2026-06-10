@@ -34,17 +34,17 @@ async function sendNewMessageEmail({ toEmail, toName, fromName, preview } = {}) 
     if (!toEmail) return;
 
     const appUrl = process.env.APP_URL || 'http://localhost:5173';
-    const from = process.env.MAIL_FROM || 'Códice <no-reply@codice.app>';
+    const from = process.env.MAIL_FROM || 'Lumbres <no-reply@lumbres.app>';
     const sender = fromName || 'alguien';
     const snippet = (preview || '').slice(0, 160);
 
-    const subject = `🔴 URGENTE: Nuevo mensaje de @${sender} en Códice`;
+    const subject = `🔴 URGENTE: Nuevo mensaje de @${sender} en Lumbres`;
 
     const text =
         `Hola ${toName || ''},\n\n` +
-        `Tienes un nuevo mensaje URGENTE de @${sender} en Códice:\n\n` +
+        `Tienes un nuevo mensaje URGENTE de @${sender} en Lumbres:\n\n` +
         `"${snippet}"\n\n` +
-        `Ábrelo aquí: ${appUrl}/mensajes\n\n— Códice`;
+        `Ábrelo aquí: ${appUrl}/mensajes\n\n— Lumbres`;
 
     const html = `
     <div style="font-family:Inter,Arial,sans-serif;background:#1a1410;padding:24px;color:#f5efe6">
@@ -64,7 +64,7 @@ async function sendNewMessageEmail({ toEmail, toName, fromName, preview } = {}) 
           </a>
         </div>
       </div>
-      <p style="text-align:center;color:#6b5e4a;font-size:12px;margin-top:16px">Códice · Lecturas Sociales</p>
+      <p style="text-align:center;color:#6b5e4a;font-size:12px;margin-top:16px">Lumbres · Lecturas Sociales</p>
     </div>`;
 
     try {

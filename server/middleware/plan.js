@@ -24,7 +24,7 @@ function requirePremium(req, res, next) {
     getPlan(req.user.id)
         .then(({ plan }) => {
             if (plan !== 'premium') {
-                return res.status(402).json({ code: 'PREMIUM_REQUIRED', message: 'Esta función es de Códice Premium.' });
+                return res.status(402).json({ code: 'PREMIUM_REQUIRED', message: 'Esta función es de Lumbres Premium.' });
             }
             next();
         })

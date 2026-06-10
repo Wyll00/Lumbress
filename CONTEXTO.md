@@ -1,4 +1,4 @@
-# 📒 CÓDICE — Resumen del proyecto (snapshot)
+# 🔥 LUMBRES — Resumen del proyecto (snapshot)
 
 > Documento de referencia para retomar el desarrollo sin perder hilo.
 
@@ -6,10 +6,10 @@
 
 ## 1. Identidad
 
-- **Nombre:** Códice — *"Lecturas Sociales"*
+- **Nombre:** Lumbres — *"Lecturas Sociales"*
 - **Versión actual:** v0.11.0 *(sesión 2026-06-07: reto de lectura, recomendaciones, logros, estantería pública, refactor a `<Typeahead>`)*
 - **Idiomas UI:** ES (principal) / EN
-- **Logo:** `public/logo.png` (círculo dorado sobre negro, *EST · MMXXVI*)
+- **Logo:** llama dorada en círculo sobre negro — `public/logo.png` (512px, login/sidebar) + `public/favicon.png` (48px, pestaña). *(Rebrand 2026-06-10: antes "Códice")*
 - **Tipografías:** Inter + Fraunces (global), Plus Jakarta Sans + Spectral (Taller de Novela)
 - **Paleta tema oscuro:** negro/marrón cálido + acento dorado `#f1c40f` / ámbar `#e0a93b`
 
@@ -36,8 +36,8 @@
 
 ```
 biblioteca-personal/
-├── public/logo.png              ← logo de Códice (favicon + sidebar/login)
-├── index.html                   ← <title>Códice</title>
+├── public/logo.png              ← logo de Lumbres (favicon + sidebar/login)
+├── index.html                   ← <title>Lumbres</title>
 ├── vite.config.js               ← proxy /api + /uploads, manualChunks
 ├── .env                         ← VITE_API_URL (vacío en dev)
 ├── server/
@@ -49,7 +49,7 @@ biblioteca-personal/
 │   ├── utils/cookies.js         ← COOKIE_NAME + cookieOptions (httpOnly, sameSite)
 │   ├── services/newsFetcher.js  ← RSS + filtros literarios + og:image fallback
 │   ├── services/mailer.js       ← nodemailer: aviso "urgente" de mensaje nuevo (a prueba de fallos)
-│   ├── scripts/setup_stripe.js  ← crea "Códice Premium" (precio mes+año) y configura el Customer Portal
+│   ├── scripts/setup_stripe.js  ← crea "Lumbres Premium" (precio mes+año) y configura el Customer Portal
 │   ├── middleware/plan.js       ← getPlan/requirePremium + límites por plan (free: 5 libros)
 │   ├── routes/                  ← auth, books, categories, users, posts, events, podcasts,
 │   │                              news, uploads, anuncios, mensajes, taller, authors,
@@ -234,7 +234,7 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 - ✅ Marketplace de libros con dirección privada + teléfono click-to-call + edición + marcar vendido
 - ✅ Chat 1-a-1 entre usuarios con polling + badge no-leídos, **enlazado al anuncio**
 - ✅ Taller de Novela (8 secciones, autosave JSON en BD)
-- ✅ i18n ES/EN, sidebar con scroll, logo Códice
+- ✅ i18n ES/EN, sidebar con scroll, logo Lumbres
 - ✅ **Notificaciones de mensajes**: badge sidebar + contador en título de pestaña + Web Notifications del navegador (`NotificationContext`) + aviso por email (nodemailer, OFF sin clave SMTP)
 - ✅ **Autocompletados** (gratis, sin key): autor; título → autorrellena autor/portada/páginas (Open Library); dirección → CP/ciudad/provincia/país (Photon)
 - ✅ **Suscripciones con Stripe** (modo TEST): Checkout alojado, `/sync` tras pagar, tabla `suscripciones`, plan activo mostrado en la UI

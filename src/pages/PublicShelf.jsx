@@ -32,7 +32,7 @@ const PublicShelf = () => {
             <div className="ps-wrap ps-center">
                 <h1>📚</h1>
                 <p>Esta estantería no existe o es privada.</p>
-                <Link to="/" className="btn-primary">Ir a Códice</Link>
+                <Link to="/" className="btn-primary">Ir a Lumbres</Link>
             </div>
         );
     }
@@ -76,7 +76,7 @@ const PublicShelf = () => {
             )}
 
             <footer className="ps-footer">
-                <Link to="/">Hecho con 📒 Códice</Link>
+                <Link to="/">Hecho con 📒 Lumbres</Link>
             </footer>
         </div>
     );

@@ -2,7 +2,7 @@ import { Lock, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // Panel de bloqueo para funciones Premium (estadísticas, objetivos…), con CTA a /subscriptions.
-const PremiumGate = ({ title = 'Función Premium', text = 'Desbloquea esta función con Códice Premium.', compact = false }) => (
+const PremiumGate = ({ title = 'Función Premium', text = 'Desbloquea esta función con Lumbres Premium.', compact = false }) => (
     <div
         className="glass-panel"
         style={{

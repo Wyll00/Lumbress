@@ -38,7 +38,7 @@ const ReadingGoal = ({ books = [] }) => {
             <PremiumGate
                 compact
                 title={`${t('rgTitle')} ${year}`}
-                text="Fija tu reto anual de libros y sigue tu ritmo con Códice Premium."
+                text="Fija tu reto anual de libros y sigue tu ritmo con Lumbres Premium."
             />
         );
     }

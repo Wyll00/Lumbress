@@ -93,7 +93,7 @@ const Subscriptions = () => {
     return (
         <div className="subscriptions-page animate-fade-in">
             <header className="subscriptions-header">
-                <h1 className="gradient-text">Códice Premium</h1>
+                <h1 className="gradient-text">Lumbres Premium</h1>
                 <p>La comunidad siempre es gratis. Premium es para el lector ávido: biblioteca sin límites, estadísticas y tu reto anual.</p>
                 <div className="header-perks">
                     <span>👥 Comunidad gratis para siempre</span>
@@ -235,7 +235,7 @@ const Subscriptions = () => {
                         <span className="idea-emoji"><Feather size={20} /></span>
                         <div>
                             <h4>Plan Autor — próximamente</h4>
-                            <p>Taller ilimitado, exportar tu manuscrito y vender tu ebook en Códice.</p>
+                            <p>Taller ilimitado, exportar tu manuscrito y vender tu ebook en Lumbres.</p>
                         </div>
                     </div>
                 </div>

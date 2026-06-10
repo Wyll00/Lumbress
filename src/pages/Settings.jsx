@@ -337,7 +337,7 @@ const Settings = () => {
                     <section className="settings-card glass-panel">
                         <h2><Bell size={18} /> Notificaciones</h2>
                         <p style={{ color: 'var(--text-secondary)', marginBottom: '15px' }}>
-                            Recibe un aviso del navegador cuando te lleguen mensajes nuevos, aunque tengas Códice en segundo plano o en otra pestaña.
+                            Recibe un aviso del navegador cuando te lleguen mensajes nuevos, aunque tengas Lumbres en segundo plano o en otra pestaña.
                         </p>
                         {!notifSupported ? (
                             <div className="settings-alert error">

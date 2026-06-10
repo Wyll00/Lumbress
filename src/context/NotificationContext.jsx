@@ -76,7 +76,7 @@ export const NotificationProvider = ({ children }) => {
 
     // Contador en el título de la pestaña.
     useEffect(() => {
-        document.title = unreadTotal > 0 ? `(${unreadTotal}) Códice` : 'Códice';
+        document.title = unreadTotal > 0 ? `(${unreadTotal}) Lumbres` : 'Lumbres';
     }, [unreadTotal]);
 
     const enableNotifications = useCallback(async () => {

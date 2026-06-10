@@ -4,7 +4,7 @@ export const translations = {
         dashboard: "Inicio",
         myLibrary: "Mi Biblioteca",
         statistics: "Estadísticas",
-        appVersion: "Códice v0.9.1",
+        appVersion: "Lumbres v0.9.1",
 
         // Dashboard
         welcomeBack: "Bienvenido de nuevo",
@@ -104,7 +104,7 @@ export const translations = {
         dashboard: "Home",
         myLibrary: "My Library",
         statistics: "Statistics",
-        appVersion: "Códice v0.9.1",
+        appVersion: "Lumbres v0.9.1",
 
         // Dashboard
         welcomeBack: "Welcome back",
