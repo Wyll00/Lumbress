@@ -1,10 +1,23 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 const pool = require('../db');
 const auth = require('../middleware/auth');
 const { getPlan } = require('../middleware/plan');
 
 router.use(auth);
+
+// Borra el archivo físico (EPUB/PDF) de un libro y descuenta su tamaño del almacenamiento del usuario.
+async function removeBookFile(relUrl, userId) {
+    if (!relUrl || !/^\/uploads\/books\/[\w.-]+$/.test(relUrl)) return;
+    const filePath = path.join(__dirname, '..', relUrl);
+    try {
+        const { size } = fs.statSync(filePath);
+        fs.unlinkSync(filePath);
+        await pool.query('UPDATE usuarios SET storage_used_bytes = GREATEST(0, storage_used_bytes - ?) WHERE id = ?', [size, userId]);
+    } catch { /* el archivo ya no existe */ }
+}
 
 // GET /api/books
 router.get('/', async (req, res) => {
@@ -34,6 +47,8 @@ router.get('/', async (req, res) => {
             fecha_inicio: b.fecha_inicio,
             fecha_fin: b.fecha_fin,
             coverUrl: b.portada_url,
+            fileUrl: b.archivo_url,
+            fileType: b.archivo_tipo,
             notes: b.notas ? (typeof b.notas === 'string' ? JSON.parse(b.notas) : b.notas) : [],
             categories: b.categorias ? b.categorias.split('||') : []
         }));
@@ -58,15 +73,15 @@ router.post('/', async (req, res) => {
             }
         }
 
-        const { title, author, genre, formato, status, impacto_emocional, cita_memorable, rating, totalPages, pagesRead, fecha_inicio, fecha_fin, coverUrl, notes, categoryIds } = req.body;
-        
+        const { title, author, genre, formato, status, impacto_emocional, cita_memorable, rating, totalPages, pagesRead, fecha_inicio, fecha_fin, coverUrl, fileUrl, fileType, notes, categoryIds } = req.body;
+
         const stringifiedNotes = notes ? JSON.stringify(notes) : '[]';
         const trimStr = (v) => (typeof v === 'string' ? v.trim() : v);
 
         const [result] = await pool.query(
-            `INSERT INTO libros (usuario_id, titulo, autor, genero, formato, estado_lectura, impacto_emocional, cita_memorable, calificacion, numero_paginas, paginas_leidas, fecha_inicio, fecha_fin, portada_url, notas)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [req.user.id, trimStr(title), trimStr(author), trimStr(genre) || '', formato || '', status || 'Pendiente', impacto_emocional || '', cita_memorable || '', rating || 0, totalPages || 0, pagesRead || 0, fecha_inicio || null, fecha_fin || null, coverUrl || '', stringifiedNotes]
+            `INSERT INTO libros (usuario_id, titulo, autor, genero, formato, estado_lectura, impacto_emocional, cita_memorable, calificacion, numero_paginas, paginas_leidas, fecha_inicio, fecha_fin, portada_url, archivo_url, archivo_tipo, notas)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [req.user.id, trimStr(title), trimStr(author), trimStr(genre) || '', formato || '', status || 'Pendiente', impacto_emocional || '', cita_memorable || '', rating || 0, totalPages || 0, pagesRead || 0, fecha_inicio || null, fecha_fin || null, coverUrl || '', fileUrl || null, fileType || null, stringifiedNotes]
         );
         
         const newBookId = result.insertId;
@@ -95,6 +110,8 @@ router.post('/', async (req, res) => {
             fecha_inicio: b.fecha_inicio,
             fecha_fin: b.fecha_fin,
             coverUrl: b.portada_url,
+            fileUrl: b.archivo_url,
+            fileType: b.archivo_tipo,
             notes: b.notas ? (typeof b.notas === 'string' ? JSON.parse(b.notas) : b.notas) : [],
             categories: b.categorias ? b.categorias.split('||') : []
         });
@@ -160,7 +177,16 @@ router.put('/:id', async (req, res) => {
         if (updates.fecha_inicio !== undefined) { fields.push('fecha_inicio=?'); values.push(updates.fecha_inicio); }
         if (updates.fecha_fin !== undefined) { fields.push('fecha_fin=?'); values.push(updates.fecha_fin); }
         if (updates.coverUrl !== undefined) { fields.push('portada_url=?'); values.push(updates.coverUrl); }
-        
+
+        // Archivo del libro (EPUB/PDF): si se reemplaza o se quita, borrar el físico anterior
+        if (updates.fileUrl !== undefined) {
+            const [prev] = await pool.query('SELECT archivo_url FROM libros WHERE id = ? AND usuario_id = ?', [bookId, req.user.id]);
+            const oldUrl = prev[0]?.archivo_url;
+            if (oldUrl && oldUrl !== updates.fileUrl) await removeBookFile(oldUrl, req.user.id);
+            fields.push('archivo_url=?'); values.push(updates.fileUrl || null);
+            fields.push('archivo_tipo=?'); values.push(updates.fileType || null);
+        }
+
         if (updates.notes !== undefined) { 
             fields.push('notas=?'); 
             values.push(updates.notes ? JSON.stringify(updates.notes) : '[]'); 
@@ -200,6 +226,8 @@ router.put('/:id', async (req, res) => {
             fecha_inicio: b.fecha_inicio,
             fecha_fin: b.fecha_fin,
             coverUrl: b.portada_url,
+            fileUrl: b.archivo_url,
+            fileType: b.archivo_tipo,
             notes: b.notas ? (typeof b.notas === 'string' ? JSON.parse(b.notas) : b.notas) : [],
             categories: b.categorias ? b.categorias.split('||') : []
         });
@@ -213,11 +241,15 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const bookId = req.params.id;
+        const [prev] = await pool.query('SELECT archivo_url FROM libros WHERE id = ? AND usuario_id = ?', [bookId, req.user.id]);
         const [result] = await pool.query('DELETE FROM libros WHERE id = ? AND usuario_id = ?', [bookId, req.user.id]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Libro no encontrado o sin permisos' });
         }
+
+        // Liberar el archivo EPUB/PDF asociado (y su cuota de almacenamiento)
+        if (prev[0]?.archivo_url) await removeBookFile(prev[0].archivo_url, req.user.id);
 
         res.json({ message: 'Libro eliminado con éxito', id: bookId });
     } catch (err) {

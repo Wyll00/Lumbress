@@ -22,8 +22,10 @@ server/.env.local
 # Archivos subidos por usuarios (audio de podcasts, portadas)
 server/uploads/audio/*
 server/uploads/covers/*
+server/uploads/books/*
 !server/uploads/audio/.gitkeep
 !server/uploads/covers/.gitkeep
+!server/uploads/books/.gitkeep
 
 # Editor directories and files
 .vscode/*

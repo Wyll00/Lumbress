@@ -23,9 +23,11 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
-// Archivos subidos (audio de podcasts, portadas) servidos estáticamente
+// Archivos subidos (audio de podcasts, portadas, libros EPUB/PDF) servidos estáticamente.
+// ACAO necesario: el lector (epub.js/PDF.js) los descarga con fetch desde el frontend (:5173).
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
     maxAge: '7d',
+    setHeaders: (res) => res.setHeader('Access-Control-Allow-Origin', '*'),
 }));
 
 // CORS — restrict to known origins.

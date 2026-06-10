@@ -1,7 +1,8 @@
 import { useState, useEffect, useContext, useRef } from 'react';
-import { X, Plus, Trash2, Upload, Star } from 'lucide-react';
+import { X, Plus, Trash2, Upload, Star, FileText } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { LibraryContext } from '../context/LibraryContext';
+import { uploadFile } from '../config';
 import AuthorAutocomplete from './AuthorAutocomplete';
 import BookSearchAutocomplete from './BookSearchAutocomplete';
 import './BookModal.css';
@@ -14,6 +15,8 @@ const INITIAL_STATE = {
     impacto_emocional: '',
     cita_memorable: '',
     coverUrl: '',
+    fileUrl: '',
+    fileType: '',
     totalPages: '',
     pagesRead: '',
     fecha_inicio: '',
@@ -41,6 +44,8 @@ const BookModal = ({ isOpen, onClose, onSave, editingBook }) => {
     const [newNote, setNewNote] = useState('');
     const [hoverRating, setHoverRating] = useState(0);
     const fileInputRef = useRef(null);
+    const bookFileRef = useRef(null);
+    const [bookUpload, setBookUpload] = useState({ busy: false, progress: 0, error: '' });
 
     useEffect(() => {
         if (editingBook) {
@@ -128,6 +133,21 @@ const BookModal = ({ isOpen, onClose, onSave, editingBook }) => {
                 img.src = reader.result;
             };
             reader.readAsDataURL(file);
+        }
+    };
+
+    // Sube el EPUB/PDF al backend (cuenta para el almacenamiento del plan) y lo asocia al formulario
+    const handleBookFileUpload = async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+        setBookUpload({ busy: true, progress: 0, error: '' });
+        try {
+            const data = await uploadFile('books', file, (p) => setBookUpload(prev => ({ ...prev, progress: p })));
+            setFormData(prev => ({ ...prev, fileUrl: data.url, fileType: data.fileType }));
+            setBookUpload({ busy: false, progress: 0, error: '' });
+        } catch (err) {
+            setBookUpload({ busy: false, progress: 0, error: err.message || 'No se pudo subir el archivo' });
         }
     };
 
@@ -444,6 +464,44 @@ const BookModal = ({ isOpen, onClose, onSave, editingBook }) => {
                                 />
                             </div>
                         </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label>📖 Libro digital (EPUB / PDF)</label>
+                        <input
+                            type="file"
+                            accept=".epub,.pdf,application/epub+zip,application/pdf"
+                            ref={bookFileRef}
+                            onChange={handleBookFileUpload}
+                            style={{ display: 'none' }}
+                        />
+                        {formData.fileUrl ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: 600 }}>
+                                    <FileText size={16} /> {formData.fileType?.toUpperCase()} adjunto — podrás leerlo desde la biblioteca
+                                </span>
+                                <button type="button" className="btn-secondary" onClick={() => bookFileRef.current?.click()} disabled={bookUpload.busy} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
+                                    Reemplazar
+                                </button>
+                                <button type="button" className="btn-secondary" onClick={() => setFormData(prev => ({ ...prev, fileUrl: '', fileType: '' }))} disabled={bookUpload.busy} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
+                                    Quitar
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={() => bookFileRef.current?.click()}
+                                disabled={bookUpload.busy}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 16px' }}
+                            >
+                                <Upload size={16} />
+                                {bookUpload.busy ? `Subiendo… ${bookUpload.progress}%` : 'Subir EPUB o PDF desde tu ordenador'}
+                            </button>
+                        )}
+                        {bookUpload.error && (
+                            <p style={{ color: '#e74c3c', fontSize: '0.8rem', margin: '6px 0 0' }}>{bookUpload.error}</p>
+                        )}
                     </div>
 
                     {formData.status === 'Read' && (

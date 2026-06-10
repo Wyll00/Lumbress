@@ -1,11 +1,13 @@
 import { useContext } from 'react';
-import { Edit2, Trash2, Quote, Star, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Edit2, Trash2, Quote, Star, X, BookOpen } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { LibraryContext } from '../context/LibraryContext';
 import './BookCard.css';
 
 const BookCard = ({ book, onEdit, onDelete, onUpdateProgress, onOpenNotes }) => {
     const { t } = useContext(LanguageContext);
+    const navigate = useNavigate();
     const { updateBook, removeCategory, categories } = useContext(LibraryContext);
 
     const progressPercentage = book.totalPages > 0
@@ -114,6 +116,16 @@ const BookCard = ({ book, onEdit, onDelete, onUpdateProgress, onOpenNotes }) => 
 
                 <div className="book-card-footer">
                     <div className="book-card-actions-inline">
+                        {book.fileUrl && (
+                            <button
+                                onClick={() => navigate(`/reader/${book.id}`)}
+                                className="action-btn-inline notes-btn"
+                                title={`Leer ${book.fileType?.toUpperCase() || ''}`}
+                                style={{ color: 'var(--accent-color, #e0a93b)' }}
+                            >
+                                <BookOpen size={16} />
+                            </button>
+                        )}
                         <button onClick={() => onOpenNotes(book)} className="action-btn-inline notes-btn" title={t('notesLabel') || "Notes"}>
                             <Quote size={16} />
                         </button>

@@ -18,6 +18,7 @@ const TallerNovela = lazy(() => import('./pages/TallerNovela'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const PublicShelf = lazy(() => import('./pages/PublicShelf'));
+const Reader = lazy(() => import('./pages/Reader'));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
@@ -42,6 +43,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/library" element={<MyLibrary />} />
+                    <Route path="/reader/:bookId" element={<Reader />} />
                     <Route path="/statistics" element={<Statistics />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/community" element={<Community />} />
