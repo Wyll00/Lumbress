@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
             `SELECT a.id, a.usuario_id, a.titulo_libro, a.autor, a.precio, a.moneda,
                     a.estado_libro, a.genero, a.descripcion, a.imagen_url, a.contacto, a.telefono,
                     a.ciudad, a.provincia, a.pais, a.ubicacion, a.vendido, a.created_at,
-                    u.username AS vendedor, u.profile_image AS vendedor_avatar
+                    u.username AS vendedor, u.profile_image AS vendedor_avatar, u.is_verified AS vendedor_verificado
              FROM anuncios a
              JOIN usuarios u ON a.usuario_id = u.id
              ${soloDisponibles ? 'WHERE a.vendido = 0' : ''}
@@ -100,7 +100,7 @@ router.post('/', async (req, res) => {
         );
 
         const [rows] = await pool.query(
-            `SELECT a.*, u.username AS vendedor, u.profile_image AS vendedor_avatar
+            `SELECT a.*, u.username AS vendedor, u.profile_image AS vendedor_avatar, u.is_verified AS vendedor_verificado
              FROM anuncios a JOIN usuarios u ON a.usuario_id = u.id WHERE a.id = ?`,
             [result.insertId]
         );
@@ -133,7 +133,7 @@ router.put('/:id', async (req, res) => {
             return res.status(404).json({ message: 'Anuncio no encontrado o sin permisos' });
         }
         const [rows] = await pool.query(
-            `SELECT a.*, u.username AS vendedor, u.profile_image AS vendedor_avatar
+            `SELECT a.*, u.username AS vendedor, u.profile_image AS vendedor_avatar, u.is_verified AS vendedor_verificado
              FROM anuncios a JOIN usuarios u ON a.usuario_id = u.id WHERE a.id = ?`,
             [req.params.id]
         );

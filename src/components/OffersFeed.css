@@ -299,3 +299,55 @@
     margin: 0;
     max-width: 360px;
 }
+
+/* My Actions */
+.offer-my-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.offer-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    flex: 1;
+}
+
+.offer-action-btn.sold-btn {
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border-color: rgba(46, 204, 113, 0.3);
+}
+
+.offer-action-btn.sold-btn:hover {
+    background: rgba(46, 204, 113, 0.25);
+}
+
+.offer-action-btn.relist-btn {
+    background: rgba(241, 196, 15, 0.15);
+    color: #f1c40f;
+    border-color: rgba(241, 196, 15, 0.3);
+}
+
+.offer-action-btn.relist-btn:hover {
+    background: rgba(241, 196, 15, 0.25);
+}
+
+.offer-action-btn.delete-btn {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border-color: rgba(231, 76, 60, 0.3);
+}
+
+.offer-action-btn.delete-btn:hover {
+    background: rgba(231, 76, 60, 0.25);
+}

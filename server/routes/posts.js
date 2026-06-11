@@ -13,7 +13,7 @@ router.get('/', auth, async (req, res) => {
         const [posts] = await pool.query(`
             SELECT 
                 p.id, p.tipo, p.titulo, p.contenido, p.imagen, p.created_at,
-                u.id AS autor_id, u.username AS autor_username, u.profile_image AS autor_avatar,
+                u.id AS autor_id, u.username AS autor_username, u.profile_image AS autor_avatar, u.is_verified AS autor_verificado,
                 COUNT(DISTINCT pl.usuario_id) AS likes_count,
                 MAX(CASE WHEN pl.usuario_id = ? THEN 1 ELSE 0 END) AS liked_by_me
             FROM posts p
@@ -52,7 +52,7 @@ router.post('/', auth, async (req, res) => {
         const [rows] = await pool.query(`
             SELECT 
                 p.id, p.tipo, p.titulo, p.contenido, p.imagen, p.created_at,
-                u.id AS autor_id, u.username AS autor_username, u.profile_image AS autor_avatar,
+                u.id AS autor_id, u.username AS autor_username, u.profile_image AS autor_avatar, u.is_verified AS autor_verificado,
                 0 AS likes_count,
                 0 AS liked_by_me
             FROM posts p

@@ -2,7 +2,7 @@ import { useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { API_URL, withAuth } from '../config';
-import { Heart, Trash2, ImagePlus, X, Send, Users, AlertTriangle, Newspaper, Tag, BookPlus } from 'lucide-react';
+import { Heart, Trash2, ImagePlus, X, Send, Users, AlertTriangle, Newspaper, Tag, BookPlus, BadgeCheck } from 'lucide-react';
 import NewsFeed from '../components/NewsFeed';
 import OffersFeed from '../components/OffersFeed';
 import './Community.css';
@@ -79,7 +79,10 @@ function PostCard({ post, currentUserId, onDelete, onLike }) {
       <div className="post-card-header">
         <Avatar username={post.autor_username} profile_image={post.autor_avatar} />
         <div className="post-meta">
-          <span className="post-author">@{post.autor_username}</span>
+          <span className="post-author" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            @{post.autor_username}
+            {post.autor_verificado ? <BadgeCheck size={14} color="#1DA1F2" /> : null}
+          </span>
           <span className="post-time">{timeAgo(post.created_at)}</span>
         </div>
         <span className="post-tipo-badge" style={{ '--tipo-color': tipo.color }}>

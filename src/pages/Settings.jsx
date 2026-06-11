@@ -2,7 +2,7 @@ import { useContext, useState, useEffect, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
 import { API_URL, withAuth } from '../config';
-import { Camera, User, Mail, Phone, Lock, Eye, EyeOff, Save, CheckCircle, XCircle, Clock, Bell, Share2, Copy } from 'lucide-react';
+import { Camera, User, Mail, Phone, Lock, Eye, EyeOff, Save, CheckCircle, XCircle, Clock, Bell, Share2, Copy, BadgeCheck } from 'lucide-react';
 import './Settings.css';
 
 const API = `${API_URL}/api/users`;
@@ -67,7 +67,8 @@ const Settings = () => {
                         email: data.email || '',
                         phone: data.phone || '',
                         profile_image: data.profile_image || '',
-                        reading_hours: data.reading_hours || 0
+                        reading_hours: data.reading_hours || 0,
+                        is_verified: data.is_verified || 0
                     });
                 }
             } catch (err) {
@@ -221,7 +222,10 @@ const Settings = () => {
                         </button>
 
                         <div className="avatar-user-info">
-                            <p className="avatar-username">@{profile.username || '...'}</p>
+                            <p className="avatar-username" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                {profile.username || '...'}
+                                {profile.is_verified || user?.is_verified ? <BadgeCheck size={18} color="#1DA1F2" /> : null}
+                            </p>
                             <div className="reading-hours-badge">
                                 <Clock size={14} />
                                 <span>{profile.reading_hours} horas leídas</span>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, MapPin, Tag, User, Phone, Eye, Home, MessageSquare } from 'lucide-react';
+import { BookOpen, MapPin, Tag, User, Phone, Eye, Home, MessageSquare, Trash2, CheckCircle, BadgeCheck } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { API_URL, withAuth, mediaUrl } from '../config';
 import './OffersFeed.css';
@@ -74,6 +74,38 @@ const OffersFeed = () => {
         };
         fetchOffers();
     }, [isAuthenticated]);
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("¿Seguro que quieres eliminar este anuncio?")) return;
+        try {
+            const res = await fetch(`${API_URL}/api/anuncios/${id}`, withAuth({ method: 'DELETE' }));
+            if (res.ok) {
+                setOffers(prev => prev.filter(o => o.id !== id));
+            } else {
+                alert("Error eliminando el anuncio");
+            }
+        } catch (err) {
+            console.error('Error eliminando anuncio', err);
+        }
+    };
+
+    const handleToggleSold = async (id, currentlySold) => {
+        const newStatus = !currentlySold;
+        try {
+            const res = await fetch(`${API_URL}/api/anuncios/${id}`, withAuth({ 
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vendido: newStatus })
+            }));
+            if (res.ok) {
+                setOffers(prev => prev.map(o => o.id === id ? { ...o, vendido: newStatus ? 1 : 0 } : o));
+            } else {
+                alert("Error actualizando el anuncio");
+            }
+        } catch (err) {
+            console.error('Error actualizando anuncio', err);
+        }
+    };
 
     if (loading) {
         return (
@@ -158,10 +190,30 @@ const OffersFeed = () => {
                             </button>
                         )}
 
+                        {o.usuario_id === user?.id && (
+                            <div className="offer-my-actions">
+                                <button
+                                    className={`offer-action-btn ${o.vendido ? 'relist-btn' : 'sold-btn'}`}
+                                    onClick={() => handleToggleSold(o.id, !!o.vendido)}
+                                >
+                                    <CheckCircle size={14} /> {o.vendido ? 'Marcar disponible' : 'Marcar vendido'}
+                                </button>
+                                <button
+                                    className="offer-action-btn delete-btn"
+                                    onClick={() => handleDelete(o.id)}
+                                >
+                                    <Trash2 size={14} /> Eliminar
+                                </button>
+                            </div>
+                        )}
+
                         <div className="offer-footer">
                             <div className="offer-seller">
                                 <Avatar name={o.vendedor} image={o.vendedor_avatar} />
-                                <span>@{o.vendedor}</span>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                    @{o.vendedor}
+                                    {o.vendedor_verificado ? <BadgeCheck size={14} color="#1DA1F2" /> : null}
+                                </span>
                             </div>
                             {o.contacto && !o.vendido && (
                                 <span className="offer-contact" title={o.contacto}>
