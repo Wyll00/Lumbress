@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Feather, UserRound, MapPin, Sparkles, Languages, Package, Clock, Network, BookOpen,
-  Plus, Trash2, X, Save, Search, ChevronRight, ChevronDown,
+  Plus, Trash2, X, Save, Search, ChevronRight, ChevronDown, Pencil,
 } from "lucide-react";
 import { API_URL, withAuth } from "../config";
 
@@ -652,6 +652,7 @@ function SimpleCollection({ title, emptyHint, items, factory, fields, add, updat
 
 function Chapters({ data, addTo, updateIn, removeFrom }) {
   const [selId, setSelId] = useState(null);
+  const titleRef = useRef(null);
   const sel = data.chapters.find((c) => c.id === selId);
   const add = () => {
     const c = newChapter(data.chapters.length + 1);
@@ -680,8 +681,17 @@ function Chapters({ data, addTo, updateIn, removeFrom }) {
           {!sel ? <EmptyState icon={Feather} hint="Selecciona o crea un capítulo para escribir." /> : (
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <input value={sel.title} onChange={(e) => updateIn("chapters", sel.id, { title: e.target.value })}
-                  style={{ ...inputStyle, fontSize: 19, fontWeight: 800, background: "transparent", border: "none", padding: 0, flex: 1 }} />
+                <input ref={titleRef} value={sel.title} onChange={(e) => updateIn("chapters", sel.id, { title: e.target.value })}
+                  title="Haz clic para renombrar el capítulo"
+                  onFocus={(e) => { e.target.style.borderBottom = `1px dashed ${C.amber}`; }}
+                  onBlur={(e) => { e.target.style.borderBottom = "1px dashed transparent"; }}
+                  style={{ ...inputStyle, fontSize: 19, fontWeight: 800, background: "transparent", border: "none",
+                    borderBottom: "1px dashed transparent", borderRadius: 0, padding: 0, flex: 1 }} />
+                <button onClick={() => { titleRef.current?.focus(); titleRef.current?.select(); }}
+                  title="Renombrar capítulo"
+                  style={{ background: "transparent", border: `1px solid ${C.border}`, borderRadius: 9, padding: 9, cursor: "pointer", color: C.textDim, display: "flex" }}>
+                  <Pencil size={16} />
+                </button>
                 <select value={sel.status} onChange={(e) => updateIn("chapters", sel.id, { status: e.target.value })}
                   style={{ ...inputStyle, width: "auto", cursor: "pointer" }}>
                   {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v} style={{ background: C.panel }}>{l}</option>)}
