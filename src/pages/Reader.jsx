@@ -1,16 +1,26 @@
 import { useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, Highlighter, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Highlighter, Trash2, X, Pencil, Check } from 'lucide-react';
 import { ReactReader } from 'react-reader';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { LibraryContext } from '../context/LibraryContext';
+import { AuthContext } from '../context/AuthContext';
 import { API_URL, withAuth, mediaUrl } from '../config';
 
 // Worker de PDF.js servido por Vite desde node_modules
 pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
 
-// Estilo del subrayado (dorado Lumbres) pintado por epub.js como SVG
-const HL_STYLE = { fill: '#e0a93b', 'fill-opacity': '0.32', 'mix-blend-mode': 'multiply' };
+// Paleta de subrayado: 5 colores con significado por defecto, personalizable por el usuario.
+const HL_COLORS = {
+    amber:  { hex: '#e0a93b', defaultLabel: 'Me encanta' },
+    red:    { hex: '#e74c3c', defaultLabel: 'Amor' },
+    green:  { hex: '#2ecc71', defaultLabel: 'Inspirador' },
+    blue:   { hex: '#4aa3df', defaultLabel: 'Reflexión' },
+    purple: { hex: '#9b59b6', defaultLabel: 'Tristeza' },
+};
+const hexFor = (color) => (HL_COLORS[color] || HL_COLORS.amber).hex;
+// Estilo SVG que pinta epub.js sobre el texto
+const styleFor = (color) => ({ fill: hexFor(color), 'fill-opacity': '0.32', 'mix-blend-mode': 'multiply' });
 
 // Lector integrado de EPUB (epub.js) y PDF (PDF.js).
 // Posición de lectura en localStorage; subrayados persistidos en BD (tabla subrayados).
@@ -18,8 +28,18 @@ const Reader = () => {
     const { bookId } = useParams();
     const navigate = useNavigate();
     const { books } = useContext(LibraryContext);
+    const { user, refreshUser } = useContext(AuthContext);
     const book = books.find((b) => String(b.id) === String(bookId));
     const posKey = `lumbres-reader-pos-${bookId}`;
+
+    // Significados de los colores: los del usuario (BD) sobre los por defecto
+    const labels = (() => {
+        const base = Object.fromEntries(Object.entries(HL_COLORS).map(([k, v]) => [k, v.defaultLabel]));
+        try {
+            const saved = user?.highlight_labels ? JSON.parse(user.highlight_labels) : {};
+            return { ...base, ...Object.fromEntries(Object.entries(saved).filter(([k, v]) => k in base && v)) };
+        } catch { return base; }
+    })();
 
     // EPUB: posición (CFI) · PDF: número de página
     const [location, setLocation] = useState(() => localStorage.getItem(posKey) || null);
@@ -33,6 +53,8 @@ const Reader = () => {
     const [pending, setPending] = useState(null); // { cfiRange, text } selección sin guardar
     const [panelOpen, setPanelOpen] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [editLabels, setEditLabels] = useState(null); // null | { amber: '...', ... } en edición
+    const [savingLabels, setSavingLabels] = useState(false);
     const appliedRef = useRef(new Set()); // ids ya pintados en el rendition
 
     const fileUrl = book?.fileUrl ? mediaUrl(book.fileUrl) : null;
@@ -73,19 +95,19 @@ const Reader = () => {
             if (appliedRef.current.has(h.id)) return;
             appliedRef.current.add(h.id);
             try {
-                rendition.annotations.add('highlight', h.cfi_range, {}, undefined, 'lumbres-hl', HL_STYLE);
+                rendition.annotations.add('highlight', h.cfi_range, {}, undefined, 'lumbres-hl', styleFor(h.color));
             } catch { /* CFI inválido: lo ignoramos */ }
         });
     }, [rendition, highlights]);
 
-    const saveHighlight = async () => {
+    const saveHighlight = async (color) => {
         if (!pending || saving) return;
         setSaving(true);
         try {
             const res = await fetch(`${API_URL}/api/books/${bookId}/highlights`, withAuth({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cfiRange: pending.cfiRange, text: pending.text }),
+                body: JSON.stringify({ cfiRange: pending.cfiRange, text: pending.text, color }),
             }));
             if (res.ok) {
                 const h = await res.json();
@@ -97,6 +119,22 @@ const Reader = () => {
             }
         } catch { alert('Error de conexión.'); }
         finally { setSaving(false); }
+    };
+
+    // Guardar los significados personalizados de los colores
+    const saveLabels = async () => {
+        if (!editLabels || savingLabels) return;
+        setSavingLabels(true);
+        try {
+            const res = await fetch(`${API_URL}/api/users/me/highlight-labels`, withAuth({
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ labels: editLabels }),
+            }));
+            if (res.ok) { await refreshUser(); setEditLabels(null); }
+            else alert('No se pudieron guardar las etiquetas.');
+        } catch { alert('Error de conexión.'); }
+        finally { setSavingLabels(false); }
     };
 
     const removeHighlight = async (h) => {
@@ -190,15 +228,31 @@ const Reader = () => {
             {pending && (
                 <div className="glass-panel" style={{
                     display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', marginBottom: 10,
-                    borderLeft: '4px solid var(--accent-color, #e0a93b)',
+                    borderLeft: '4px solid var(--accent-color, #e0a93b)', flexWrap: 'wrap',
                 }}>
                     <Highlighter size={18} style={{ color: 'var(--accent-color)', flexShrink: 0 }} />
-                    <span style={{ flex: 1, fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        «{pending.text.length > 120 ? pending.text.slice(0, 120) + '…' : pending.text}»
+                    <span style={{ flex: 1, minWidth: 160, fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        «{pending.text.length > 90 ? pending.text.slice(0, 90) + '…' : pending.text}»
                     </span>
-                    <button className="btn-primary" onClick={saveHighlight} disabled={saving} style={{ padding: '7px 14px', fontSize: '0.85rem' }}>
-                        {saving ? 'Guardando…' : 'Subrayar'}
-                    </button>
+                    {/* Elegir color = guardar con ese significado */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {Object.entries(HL_COLORS).map(([key, c]) => (
+                            <button
+                                key={key}
+                                onClick={() => saveHighlight(key)}
+                                disabled={saving}
+                                title={labels[key]}
+                                style={{
+                                    width: 26, height: 26, borderRadius: '50%', cursor: 'pointer',
+                                    background: c.hex, border: '2px solid rgba(255,255,255,0.25)',
+                                    opacity: saving ? 0.5 : 1, transition: 'transform 0.15s',
+                                    flexShrink: 0,
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.2)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                            />
+                        ))}
+                    </div>
                     <button className="btn-secondary" onClick={() => setPending(null)} style={{ padding: '7px 10px' }} title="Cancelar">
                         <X size={15} />
                     </button>
@@ -249,19 +303,63 @@ const Reader = () => {
                             <strong style={{ color: 'var(--text)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <Highlighter size={15} style={{ color: 'var(--accent-color)' }} /> Tus subrayados
                             </strong>
-                            <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex' }}>
-                                <X size={16} />
-                            </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <button
+                                    onClick={() => setEditLabels(editLabels ? null : { ...labels })}
+                                    title="Personalizar el significado de cada color"
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: editLabels ? 'var(--accent-color)' : 'var(--text-secondary)', display: 'flex' }}
+                                >
+                                    <Pencil size={15} />
+                                </button>
+                                <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex' }}>
+                                    <X size={16} />
+                                </button>
+                            </div>
                         </div>
+
+                        {/* Editor de significados de los colores */}
+                        {editLabels && (
+                            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--card-border, rgba(255,255,255,0.08))' }}>
+                                <p style={{ margin: '0 0 10px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                    ¿Qué significa cada color para ti?
+                                </p>
+                                {Object.entries(HL_COLORS).map(([key, c]) => (
+                                    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
+                                        <span style={{ width: 16, height: 16, borderRadius: '50%', background: c.hex, flexShrink: 0 }} />
+                                        <input
+                                            value={editLabels[key]}
+                                            maxLength={30}
+                                            onChange={(e) => setEditLabels((prev) => ({ ...prev, [key]: e.target.value }))}
+                                            style={{
+                                                flex: 1, background: 'rgba(255,255,255,0.05)', color: 'var(--text)',
+                                                border: '1px solid var(--card-border, rgba(255,255,255,0.12))',
+                                                borderRadius: 8, padding: '6px 9px', fontSize: '0.8rem', outline: 'none',
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                                <button
+                                    className="btn-primary"
+                                    onClick={saveLabels}
+                                    disabled={savingLabels}
+                                    style={{ width: '100%', marginTop: 6, padding: '8px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                                >
+                                    <Check size={14} /> {savingLabels ? 'Guardando…' : 'Guardar significados'}
+                                </button>
+                            </div>
+                        )}
+
                         <div style={{ flex: 1, overflow: 'auto', padding: 10 }}>
                             {highlights.length === 0 ? (
                                 <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: 24, padding: '0 10px' }}>
-                                    Selecciona una frase del libro y pulsa "Subrayar" para guardarla aquí. 🖍
+                                    Selecciona una frase del libro y elige un color para guardarla aquí. 🖍
                                 </p>
                             ) : highlights.map((h) => (
                                 <div key={h.id} style={{
                                     padding: '10px 12px', marginBottom: 8, borderRadius: 10,
-                                    background: 'rgba(224, 169, 59, 0.07)', border: '1px solid rgba(224, 169, 59, 0.18)',
+                                    background: `${hexFor(h.color)}12`,
+                                    border: `1px solid ${hexFor(h.color)}30`,
+                                    borderLeft: `4px solid ${hexFor(h.color)}`,
                                 }}>
                                     <p
                                         onClick={() => goToHighlight(h)}
@@ -271,16 +369,21 @@ const Reader = () => {
                                         «{h.texto?.length > 160 ? h.texto.slice(0, 160) + '…' : h.texto}»
                                     </p>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
-                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                                            {h.created_at ? new Date(h.created_at).toLocaleDateString('es-ES') : ''}
+                                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: hexFor(h.color) }}>
+                                            {labels[h.color] || labels.amber}
                                         </span>
-                                        <button
-                                            onClick={() => removeHighlight(h)}
-                                            title="Eliminar subrayado"
-                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 2 }}
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                                                {h.created_at ? new Date(h.created_at).toLocaleDateString('es-ES') : ''}
+                                            </span>
+                                            <button
+                                                onClick={() => removeHighlight(h)}
+                                                title="Eliminar subrayado"
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 2 }}
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </span>
                                     </div>
                                 </div>
                             ))}

@@ -126,7 +126,7 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 
 | Tabla | Para qué |
 |---|---|
-| `usuarios` | id, username, email, password (bcrypt), phone, profile_image (base64), reading_hours, podcast_seconds, **reading_goal** (meta anual), **public_shelf** (estantería pública on/off), **plan** (`free`\|`premium`, lo mantienen webhook/sync de Stripe), **plan_status**, **storage_used_bytes** |
+| `usuarios` | id, username, email, password (bcrypt), phone, profile_image (base64), reading_hours, podcast_seconds, **reading_goal** (meta anual), **public_shelf** (estantería pública on/off), **plan** (`free`\|`premium`, lo mantienen webhook/sync de Stripe), **plan_status**, **storage_used_bytes**, **is_verified** (insignia), **highlight_labels** (JSON: significado de cada color de subrayado) |
 | `libros` | titulo, autor, genero, formato, estado_lectura, impacto_emocional, cita_memorable, calificacion, paginas_leidas, numero_paginas, **fecha_inicio**, **fecha_fin**, portada_url, notas (JSON), **created_at** |
 | `etiquetas_literarias` | (usuario_id, nombre) categorías personalizadas, máx **4 por libro** |
 | `libros_etiquetas` | tabla pivote libro ↔ etiqueta |
@@ -252,7 +252,7 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 
 - ✅ ~~Notificaciones en navegador~~ · ✅ ~~Chat enlazado al anuncio~~ · ✅ ~~Suscripciones~~ *(hechos esta sesión)*
 - 🟡 **Stripe para prod**: webhook con la **Stripe CLI** (`stripe listen` → da `whsec_`) para renovaciones/cancelaciones automáticas. Hoy el alta funciona vía `/sync`; el Customer Portal ya está configurado (setup_stripe.js).
-- 🟡 **Fase 2 del doc de estrategia (lo que queda)**: sync de posición contra el backend (hoy localStorage), subrayados en PDF (hoy solo EPUB), catálogo legal (Standard Ebooks/Gutenberg), plan Autor, términos de uso + notice-and-takedown. *(Subrayados EPUB: ✅ hechos 2026-06-11 — tabla `subrayados`, endpoints en books.js `/:id/highlights`, selección → barra "Subrayar" → SVG dorado persistente + panel lateral. Por el doc de estrategia serían Premium: para activar el gate basta `requirePremium` en los endpoints.)*
+- 🟡 **Fase 2 del doc de estrategia (lo que queda)**: sync de posición contra el backend (hoy localStorage), subrayados en PDF (hoy solo EPUB), catálogo legal (Standard Ebooks/Gutenberg), plan Autor, términos de uso + notice-and-takedown. *(Subrayados EPUB: ✅ hechos 2026-06-11 — tabla `subrayados`, endpoints en books.js `/:id/highlights`, selección → paleta de 5 colores (amber/red/green/blue/purple) → SVG del color elegido, persistente + panel lateral con tarjetas por color. Significado de cada color personalizable por usuario: `usuarios.highlight_labels` JSON + PUT `/users/me/highlight-labels`, editor en el panel (lápiz). Por el doc de estrategia serían Premium: para activar el gate basta `requirePremium` en los endpoints.)*
 - 🟡 **Email de mensajes**: reactivar (app-password válida en `SMTP_PASS`) y, en prod, enviar solo si el destinatario lleva rato sin leer/desconectado (anti-spam) en vez de en cada mensaje.
 - ✅ ~~Refactor de autocompletados a `<Typeahead>`~~ *(hecho)* — quedan **3 CSS huérfanos** sin importar (`AuthorAutocomplete.css`, `BookSearchAutocomplete.css`, `AddressAutocomplete.css`), borrables.
 - 🟡 Rotar password de MySQL (sigue siendo `root` vacío en local)

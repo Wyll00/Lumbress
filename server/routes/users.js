@@ -8,7 +8,7 @@ const auth = require('../middleware/auth');
 router.get('/me', auth, async (req, res) => {
     try {
         const [rows] = await pool.query(
-            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf, plan, plan_status, storage_used_bytes, is_verified FROM usuarios WHERE id = ?',
+            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf, plan, plan_status, storage_used_bytes, is_verified, highlight_labels FROM usuarios WHERE id = ?',
             [req.user.id]
         );
         if (rows.length === 0) {
@@ -43,7 +43,7 @@ router.put('/me', auth, async (req, res) => {
         );
 
         const [updated] = await pool.query(
-            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf, plan, plan_status, storage_used_bytes, is_verified FROM usuarios WHERE id = ?',
+            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf, plan, plan_status, storage_used_bytes, is_verified, highlight_labels FROM usuarios WHERE id = ?',
             [req.user.id]
         );
 
@@ -112,7 +112,7 @@ router.put('/me/reading-hours', auth, async (req, res) => {
 
         // Fetch updated user
         const [updated] = await pool.query(
-            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf, plan, plan_status, storage_used_bytes, is_verified FROM usuarios WHERE id = ?',
+            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf, plan, plan_status, storage_used_bytes, is_verified, highlight_labels FROM usuarios WHERE id = ?',
             [req.user.id]
         );
 
@@ -178,12 +178,32 @@ router.put('/me/public-shelf', auth, async (req, res) => {
         const enabled = req.body.enabled ? 1 : 0;
         await pool.query('UPDATE usuarios SET public_shelf = ? WHERE id = ?', [enabled, req.user.id]);
         const [updated] = await pool.query(
-            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf, plan, plan_status, storage_used_bytes, is_verified FROM usuarios WHERE id = ?',
+            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf, plan, plan_status, storage_used_bytes, is_verified, highlight_labels FROM usuarios WHERE id = ?',
             [req.user.id]
         );
         res.json({ message: 'Estantería actualizada', user: updated[0] });
     } catch (err) {
         console.error('Error toggling public shelf:', err);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+});
+
+// PUT /api/users/me/highlight-labels — significado personalizado de los colores de subrayado
+router.put('/me/highlight-labels', auth, async (req, res) => {
+    try {
+        const ALLOWED_KEYS = ['amber', 'red', 'green', 'blue', 'purple'];
+        const input = req.body.labels;
+        if (!input || typeof input !== 'object' || Array.isArray(input)) {
+            return res.status(400).json({ message: 'Etiquetas no válidas.' });
+        }
+        const labels = {};
+        for (const k of ALLOWED_KEYS) {
+            if (typeof input[k] === 'string') labels[k] = input[k].trim().slice(0, 30);
+        }
+        await pool.query('UPDATE usuarios SET highlight_labels = ? WHERE id = ?', [JSON.stringify(labels), req.user.id]);
+        res.json({ message: 'Etiquetas actualizadas', highlight_labels: labels });
+    } catch (err) {
+        console.error('Error setting highlight labels:', err);
         res.status(500).json({ message: 'Error interno del servidor' });
     }
 });
@@ -197,7 +217,7 @@ router.put('/me/reading-goal', auth, async (req, res) => {
         }
         await pool.query('UPDATE usuarios SET reading_goal = ? WHERE id = ?', [goal, req.user.id]);
         const [updated] = await pool.query(
-            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf, plan, plan_status, storage_used_bytes, is_verified FROM usuarios WHERE id = ?',
+            'SELECT id, username, email, phone, profile_image, reading_hours, podcast_seconds, reading_goal, public_shelf, plan, plan_status, storage_used_bytes, is_verified, highlight_labels FROM usuarios WHERE id = ?',
             [req.user.id]
         );
         res.json({ message: 'Meta actualizada', user: updated[0] });
