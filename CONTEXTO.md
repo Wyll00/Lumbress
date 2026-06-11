@@ -239,6 +239,7 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 - ✅ **Autocompletados** (gratis, sin key): autor; título → autorrellena autor/portada/páginas (Open Library); dirección → CP/ciudad/provincia/país (Photon)
 - ✅ **Suscripciones con Stripe** (modo TEST): Checkout alojado, `/sync` tras pagar, tabla `suscripciones`, plan activo mostrado en la UI
 - ✅ **Modelo Free+Premium con gating** (doc "Estrategia de suscripción"): página de precios Lector/Lector+ (toggle mes/año, comparativa), `usuarios.plan` mantenido por webhook+sync, **límite 5 libros en free** (402 al exceder, alert en UI), **PremiumGate** en Estadísticas y Reto de lectura, Customer Portal configurado por API. La comunidad/marketplace/chat siempre gratis. Cuenta demo free: `freetester@test.local` / `pruebas1234`
+- ✅ **Lector EPUB/PDF integrado y VERIFICADO** (2026-06-11): subir archivo en BookModal → botón "Leer" en la tarjeta → `/reader/:bookId` (react-reader para EPUB con TOC y paginación; react-pdf con paginador y flechas del teclado). Cuota por plan al subir (free 500 MB / premium 20 GB) con contador `storage_used_bytes` exacto en subida/reemplazo/borrado. *(El "bug" de la vista en blanco era el navegador del preview sin pintar frames — rAF congelado — no era del código.)* Libros demo en cuenta freetester: id 15 EPUB real, id 16 PDF.
 - ✅ **Reto de lectura** (Dashboard): meta anual + progreso (leídos este año = `Read` con `fecha_fin` del año) + ritmo + celebración
 - ✅ **Recomendaciones** (Dashboard): "más de tus autores favoritos" vía Open Library, descarta los que ya tienes, botón "Añadir"
 - ✅ **Logros/insignias** (Estadísticas): 10 badges calculados en vivo desde libros/perfil (sin BD)
@@ -251,7 +252,7 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 
 - ✅ ~~Notificaciones en navegador~~ · ✅ ~~Chat enlazado al anuncio~~ · ✅ ~~Suscripciones~~ *(hechos esta sesión)*
 - 🟡 **Stripe para prod**: webhook con la **Stripe CLI** (`stripe listen` → da `whsec_`) para renovaciones/cancelaciones automáticas. Hoy el alta funciona vía `/sync`; el Customer Portal ya está configurado (setup_stripe.js).
-- 🟡 **Fase 2 del doc de estrategia**: lector EPUB/PDF (react-reader/react-pdf) con sync de posición, catálogo legal (Standard Ebooks/Gutenberg), contador real de `storage_used_bytes` al subir archivos, plan Autor, términos de uso + notice-and-takedown.
+- 🟡 **Fase 2 del doc de estrategia (lo que queda)**: anotaciones/subrayados + sync de posición contra el backend (hoy localStorage), catálogo legal (Standard Ebooks/Gutenberg), plan Autor, términos de uso + notice-and-takedown.
 - 🟡 **Email de mensajes**: reactivar (app-password válida en `SMTP_PASS`) y, en prod, enviar solo si el destinatario lleva rato sin leer/desconectado (anti-spam) en vez de en cada mensaje.
 - ✅ ~~Refactor de autocompletados a `<Typeahead>`~~ *(hecho)* — quedan **3 CSS huérfanos** sin importar (`AuthorAutocomplete.css`, `BookSearchAutocomplete.css`, `AddressAutocomplete.css`), borrables.
 - 🟡 Rotar password de MySQL (sigue siendo `root` vacío en local)

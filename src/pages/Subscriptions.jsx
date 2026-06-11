@@ -64,18 +64,19 @@ const Subscriptions = () => {
         'Comunidad completa: feed, reseñas, chat y perfiles',
         'Marketplace de segunda mano (comprar y vender)',
         'Biblioteca personal: hasta 5 libros',
+        'Lector EPUB/PDF integrado (sube tus propios libros)',
         'Reseñas, valoraciones y notas en tus libros',
         '1 proyecto en el Taller de Novela',
         'Estantería pública para compartir',
     ];
     const premiumFeatures = [
-        'Biblioteca ilimitada y privada',
+        'Biblioteca ilimitada y privada (20 GB para tus EPUB/PDF)',
         'Estadísticas de lectura completas y logros',
         'Reto de lectura anual y seguimiento de ritmo',
         'Importación de libros en lote',
         'Insignia Premium en tu perfil',
         'Soporte prioritario',
-        'Próximamente: lector EPUB/PDF con anotaciones y sincronización',
+        'Próximamente: anotaciones y sincronización en el lector',
     ];
 
     // Comparativa rápida (del documento de estrategia)
@@ -83,6 +84,7 @@ const Subscriptions = () => {
         ['Comunidad (feed, reseñas, chat)', true, true],
         ['Marketplace 2ª mano', true, true],
         ['Biblioteca propia', '5 libros', 'Ilimitada'],
+        ['Lector EPUB/PDF', '500 MB', '20 GB'],
         ['Estadísticas y logros', false, true],
         ['Reto de lectura anual', false, true],
         ['Importar libros en lote', true, true],
