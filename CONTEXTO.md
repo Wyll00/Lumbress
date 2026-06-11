@@ -256,7 +256,7 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 - 🟡 **Email de mensajes**: reactivar (app-password válida en `SMTP_PASS`) y, en prod, enviar solo si el destinatario lleva rato sin leer/desconectado (anti-spam) en vez de en cada mensaje.
 - ✅ ~~Refactor de autocompletados a `<Typeahead>`~~ *(hecho)* — quedan **3 CSS huérfanos** sin importar (`AuthorAutocomplete.css`, `BookSearchAutocomplete.css`, `AddressAutocomplete.css`), borrables.
 - 🟡 Rotar password de MySQL (sigue siendo `root` vacío en local)
-- 🟡 Antes de deploy prod: `NODE_ENV=production`, regenerar `JWT_SECRET`, `ALLOWED_ORIGINS` con dominio real, claves Stripe **live**
+- 🟡 **Deploy al VPS de Hostinger (acordado, pendiente de ejecutar)**: kit completo en `deploy/` — **leer `deploy/DESPLIEGUE.md`** (runbook + checklist de lo que falta pedir: IP, usuario SSH, ruta de la clave, dominio con DNS A apuntado, y si se copia la BD o va limpia). Build de prod verificado; `lumbres-setup.sh` aprovisiona el VPS; nginx + certbot + pm2 listos; cookie `sameSite` ajustada a `lax` (mismo dominio).
 - 🟡 Migrar uploads de disco local a S3/Cloudflare R2 cuando despliegues
 - 🟡 Limpiar datos de prueba (mensajes/suscripción de test) y el espacio en `usuarios.username` "Alberto "
 
