@@ -111,7 +111,11 @@ const MyLibrary = () => {
                         <p>{books.length === 1 ? t('bookTotal', { count: books.length }) : t('booksTotal', { count: books.length })}</p>
                     </div>
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <button className="btn-secondary" onClick={() => setImportOpen(true)}>
+                        <button
+                            className="btn-secondary"
+                            onClick={() => setImportOpen(true)}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                        >
                             <Upload size={18} />
                             <span>Importar</span>
                         </button>
