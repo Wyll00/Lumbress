@@ -2,6 +2,7 @@ import { useState, useContext, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { AuthContext } from '../context/AuthContext';
+import { LanguageContext } from '../context/LanguageContext';
 import { API_URL, withAuth } from '../config';
 import { BookMarked, Eye, EyeOff } from 'lucide-react';
 import './AuthForm.css';
@@ -12,6 +13,7 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
+    const { t } = useContext(LanguageContext);
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
     const cardRef = useRef(null);
@@ -84,7 +86,7 @@ const Login = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || 'Error al iniciar sesión');
+                throw new Error(data.message || t('authLoginError'));
             }
 
             login(data.user);
@@ -107,15 +109,15 @@ const Login = () => {
                         onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'block'; }}
                     />
                     <BookMarked size={48} color="var(--accent-color)" style={{ display: 'none' }} />
-                    <h1>Bienvenido de nuevo</h1>
-                    <p>Inicia sesión en tu biblioteca personal</p>
+                    <h1>{t('authWelcome')}</h1>
+                    <p>{t('authLoginSub')}</p>
                 </div>
 
                 {error && <div className="auth-error">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="auth-form">
                     <div className="form-group">
-                        <label>Correo Electrónico</label>
+                        <label>{t('authEmail')}</label>
                         <input
                             type="email"
                             name="email"
@@ -125,7 +127,7 @@ const Login = () => {
                         />
                     </div>
                     <div className="form-group">
-                        <label>Contraseña</label>
+                        <label>{t('authPassword')}</label>
                         <div className="password-input-wrapper">
                             <input
                                 type={showPassword ? "text" : "password"}
@@ -145,12 +147,12 @@ const Login = () => {
                         </div>
                     </div>
                     <button type="submit" className="primary-btn auth-submit" disabled={isLoading}>
-                        {isLoading ? 'Iniciando...' : 'Iniciar Sesión'}
+                        {isLoading ? t('authLoggingIn') : t('authLoginBtn')}
                     </button>
                 </form>
 
                 <div className="auth-footer">
-                    <p>¿No tienes una cuenta? <Link to="/register">Regístrate aquí</Link></p>
+                    <p>{t('authNoAccount')} <Link to="/register">{t('authRegisterLink')}</Link></p>
                 </div>
             </div>
         </div>

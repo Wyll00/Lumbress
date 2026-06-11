@@ -57,32 +57,32 @@ const Sidebar = () => {
                 <li>
                     <NavLink to="/community" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         <Users size={20} />
-                        <span>Comunidad</span>
+                        <span>{t('community')}</span>
                     </NavLink>
                 </li>
                 <li>
                     <NavLink to="/mensajes" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         <MessagesSquare size={20} />
-                        <span>Mensajes</span>
+                        <span>{t('messages')}</span>
                         {unreadTotal > 0 && <span className="nav-badge">{unreadTotal > 9 ? '9+' : unreadTotal}</span>}
                     </NavLink>
                 </li>
                 <li>
                     <NavLink to="/taller" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         <Feather size={20} />
-                        <span>Taller de novela</span>
+                        <span>{t('workshop')}</span>
                     </NavLink>
                 </li>
                 <li>
                     <NavLink to="/subscriptions" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         <CreditCard size={20} />
-                        <span>Suscripciones</span>
+                        <span>{t('subscriptionsNav')}</span>
                     </NavLink>
                 </li>
                 <li>
                     <NavLink to="/settings" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         <Settings size={20} />
-                        <span>Ajustes</span>
+                        <span>{t('settingsNav')}</span>
                     </NavLink>
                 </li>
             </ul>

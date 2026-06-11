@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { BookMarked, Eye, EyeOff } from 'lucide-react';
+import { LanguageContext } from '../context/LanguageContext';
 import { API_URL, withAuth } from '../config';
 import './AuthForm.css';
 
@@ -11,6 +12,7 @@ const Register = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    const { t } = useContext(LanguageContext);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -22,7 +24,7 @@ const Register = () => {
         setError('');
 
         if (formData.password !== formData.confirmPassword) {
-            return setError('Las contraseñas no coinciden');
+            return setError(t('authPasswordMismatch'));
         }
 
         setIsLoading(true);
@@ -41,7 +43,7 @@ const Register = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || 'Error en el registro');
+                throw new Error(data.message || t('authRegisterError'));
             }
 
             // Redirect to login after successful registration
@@ -64,15 +66,15 @@ const Register = () => {
                         onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'block'; }}
                     />
                     <BookMarked size={48} color="var(--accent-color)" style={{ display: 'none' }} />
-                    <h1>Crea tu cuenta</h1>
-                    <p>Empieza a organizar tu biblioteca personal</p>
+                    <h1>{t('authCreateAccount')}</h1>
+                    <p>{t('authRegisterSub')}</p>
                 </div>
 
                 {error && <div className="auth-error">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="auth-form">
                     <div className="form-group">
-                        <label>Nombre de Usuario</label>
+                        <label>{t('authUsername')}</label>
                         <input
                             type="text"
                             name="username"
@@ -82,7 +84,7 @@ const Register = () => {
                         />
                     </div>
                     <div className="form-group">
-                        <label>Correo Electrónico</label>
+                        <label>{t('authEmail')}</label>
                         <input
                             type="email"
                             name="email"
@@ -92,7 +94,7 @@ const Register = () => {
                         />
                     </div>
                     <div className="form-group">
-                        <label>Contraseña</label>
+                        <label>{t('authPassword')}</label>
                         <div className="password-input-wrapper">
                             <input
                                 type={showPassword ? "text" : "password"}
@@ -113,7 +115,7 @@ const Register = () => {
                         </div>
                     </div>
                     <div className="form-group">
-                        <label>Confirmar Contraseña</label>
+                        <label>{t('authConfirmPassword')}</label>
                         <div className="password-input-wrapper">
                             <input
                                 type={showConfirmPassword ? "text" : "password"}
@@ -133,12 +135,12 @@ const Register = () => {
                         </div>
                     </div>
                     <button type="submit" className="primary-btn auth-submit" disabled={isLoading}>
-                        {isLoading ? 'Registrando...' : 'Registrarse'}
+                        {isLoading ? t('authRegistering') : t('authRegisterBtn')}
                     </button>
                 </form>
 
                 <div className="auth-footer">
-                    <p>¿Ya tienes cuenta? <Link to="/login">Inicia Sesión</Link></p>
+                    <p>{t('authHaveAccount')} <Link to="/login">{t('authLoginLink')}</Link></p>
                 </div>
             </div>
         </div>
