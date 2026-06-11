@@ -252,7 +252,7 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 
 - ✅ ~~Notificaciones en navegador~~ · ✅ ~~Chat enlazado al anuncio~~ · ✅ ~~Suscripciones~~ *(hechos esta sesión)*
 - 🟡 **Stripe para prod**: webhook con la **Stripe CLI** (`stripe listen` → da `whsec_`) para renovaciones/cancelaciones automáticas. Hoy el alta funciona vía `/sync`; el Customer Portal ya está configurado (setup_stripe.js).
-- 🟡 **Fase 2 del doc de estrategia (lo que queda)**: anotaciones/subrayados + sync de posición contra el backend (hoy localStorage), catálogo legal (Standard Ebooks/Gutenberg), plan Autor, términos de uso + notice-and-takedown.
+- 🟡 **Fase 2 del doc de estrategia (lo que queda)**: sync de posición contra el backend (hoy localStorage), subrayados en PDF (hoy solo EPUB), catálogo legal (Standard Ebooks/Gutenberg), plan Autor, términos de uso + notice-and-takedown. *(Subrayados EPUB: ✅ hechos 2026-06-11 — tabla `subrayados`, endpoints en books.js `/:id/highlights`, selección → barra "Subrayar" → SVG dorado persistente + panel lateral. Por el doc de estrategia serían Premium: para activar el gate basta `requirePremium` en los endpoints.)*
 - 🟡 **Email de mensajes**: reactivar (app-password válida en `SMTP_PASS`) y, en prod, enviar solo si el destinatario lleva rato sin leer/desconectado (anti-spam) en vez de en cada mensaje.
 - ✅ ~~Refactor de autocompletados a `<Typeahead>`~~ *(hecho)* — quedan **3 CSS huérfanos** sin importar (`AuthorAutocomplete.css`, `BookSearchAutocomplete.css`, `AddressAutocomplete.css`), borrables.
 - 🟡 Rotar password de MySQL (sigue siendo `root` vacío en local)

@@ -237,6 +237,63 @@ router.put('/:id', async (req, res) => {
     }
 });
 
+// === Subrayados del lector (EPUB) ===
+
+// GET /api/books/:id/highlights — subrayados del usuario en este libro
+router.get('/:id/highlights', async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            `SELECT s.id, s.cfi_range, s.texto, s.color, s.created_at
+             FROM subrayados s JOIN libros l ON s.libro_id = l.id
+             WHERE s.libro_id = ? AND l.usuario_id = ?
+             ORDER BY s.created_at`,
+            [req.params.id, req.user.id]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error('Error obteniendo subrayados:', err);
+        res.status(500).json({ message: 'Error obteniendo subrayados' });
+    }
+});
+
+// POST /api/books/:id/highlights { cfiRange, text, color }
+router.post('/:id/highlights', async (req, res) => {
+    try {
+        const [own] = await pool.query('SELECT id FROM libros WHERE id = ? AND usuario_id = ?', [req.params.id, req.user.id]);
+        if (own.length === 0) return res.status(404).json({ message: 'Libro no encontrado o sin permisos' });
+
+        const cfiRange = String(req.body.cfiRange || '').slice(0, 500);
+        if (!cfiRange) return res.status(400).json({ message: 'Falta la posición del subrayado' });
+        const texto = String(req.body.text || '').slice(0, 1000);
+        const color = String(req.body.color || 'amber').slice(0, 20);
+
+        const [result] = await pool.query(
+            'INSERT INTO subrayados (usuario_id, libro_id, cfi_range, texto, color) VALUES (?, ?, ?, ?, ?)',
+            [req.user.id, req.params.id, cfiRange, texto, color]
+        );
+        const [rows] = await pool.query('SELECT id, cfi_range, texto, color, created_at FROM subrayados WHERE id = ?', [result.insertId]);
+        res.status(201).json(rows[0]);
+    } catch (err) {
+        console.error('Error guardando subrayado:', err);
+        res.status(500).json({ message: 'Error guardando el subrayado' });
+    }
+});
+
+// DELETE /api/books/:id/highlights/:hid
+router.delete('/:id/highlights/:hid', async (req, res) => {
+    try {
+        const [result] = await pool.query(
+            'DELETE FROM subrayados WHERE id = ? AND libro_id = ? AND usuario_id = ?',
+            [req.params.hid, req.params.id, req.user.id]
+        );
+        if (result.affectedRows === 0) return res.status(404).json({ message: 'Subrayado no encontrado' });
+        res.json({ message: 'Subrayado eliminado', id: Number(req.params.hid) });
+    } catch (err) {
+        console.error('Error eliminando subrayado:', err);
+        res.status(500).json({ message: 'Error eliminando el subrayado' });
+    }
+});
+
 // DELETE /api/books/:id
 router.delete('/:id', async (req, res) => {
     try {
