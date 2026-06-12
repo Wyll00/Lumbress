@@ -404,6 +404,7 @@
 .compare-table-wrap {
     padding: 24px 26px;
     margin: 26px 0 0;
+    overflow-x: auto;
 }
 
 .compare-table-wrap h3 {
