@@ -98,6 +98,7 @@ const bookSearchRoutes = require('./routes/booksearch');
 const geoSearchRoutes = require('./routes/geosearch');
 const recommendationsRoutes = require('./routes/recommendations');
 const publicRoutes = require('./routes/public');
+const adminRoutes = require('./routes/admin');
 const { startNewsScheduler } = require('./services/newsFetcher');
 
 app.use('/api/auth', authLimiter, authRoutes);
@@ -117,6 +118,7 @@ app.use('/api/book-search', apiLimiter, bookSearchRoutes);
 app.use('/api/geo-search', apiLimiter, geoSearchRoutes);
 app.use('/api/recommendations', apiLimiter, recommendationsRoutes);
 app.use('/api/public', apiLimiter, publicRoutes);
+app.use('/api/admin', apiLimiter, adminRoutes);
 app.use('/api/subscriptions', apiLimiter, subscriptionsModule.router);
 
 // Arranca el scheduler de noticias (fetch inicial + cada 60 min)

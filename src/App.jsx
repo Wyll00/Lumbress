@@ -19,6 +19,7 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const PublicShelf = lazy(() => import('./pages/PublicShelf'));
 const Reader = lazy(() => import('./pages/Reader'));
+const Admin = lazy(() => import('./pages/Admin'));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
@@ -52,6 +53,7 @@ function App() {
                     <Route path="/mensajes" element={<Chat />} />
                     <Route path="/taller" element={<TallerNovela />} />
                     <Route path="/subscriptions" element={<Subscriptions />} />
+                    <Route path="/admin" element={<Admin />} />
                   </Routes>
                 </Suspense>
               </main>

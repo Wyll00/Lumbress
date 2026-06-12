@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
-import { BookOpen, LayoutDashboard, BarChart3, Library, Globe, LogOut, Settings, Users, Clock, CreditCard, Headphones, MessagesSquare, Feather } from 'lucide-react';
+import { BookOpen, LayoutDashboard, BarChart3, Library, Globe, LogOut, Settings, Users, Clock, CreditCard, Headphones, MessagesSquare, Feather, ShieldCheck } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
@@ -85,6 +85,14 @@ const Sidebar = () => {
                         <span>{t('settingsNav')}</span>
                     </NavLink>
                 </li>
+                {!!user?.is_admin && (
+                    <li>
+                        <NavLink to="/admin" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                            <ShieldCheck size={20} />
+                            <span>Admin</span>
+                        </NavLink>
+                    </li>
+                )}
             </ul>
 
             <div className="sidebar-footer" style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
