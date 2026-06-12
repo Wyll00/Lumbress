@@ -149,6 +149,10 @@
 }
 
 .sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
     padding: 0 24px;
     font-size: 0.8rem;
     color: var(--sidebar-muted);
@@ -176,16 +180,34 @@
     box-shadow: 0 0 16px rgba(193, 138, 47, 0.3);
 }
 
+/* El botón "Más" y su panel solo existen en móvil */
+.nav-more-li,
+.mobile-more,
+.mobile-more-backdrop {
+    display: none;
+}
+
+.nav-more-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    width: 100%;
+}
+
 @media (max-width: 768px) {
+    /* Barra inferior con 4 ítems esenciales + Más */
     .sidebar {
-        width: calc(100% - 32px);
-        height: 70px;
+        width: calc(100% - 24px);
+        height: 64px;
         top: auto;
-        bottom: 16px;
+        bottom: 12px;
+        left: 12px;
         flex-direction: row;
         padding: 0;
         align-items: center;
-        border-radius: 20px;
+        border-radius: 18px;
+        overflow: visible;
     }
 
     .sidebar-header,
@@ -193,20 +215,114 @@
         display: none;
     }
 
+    /* Los ítems secundarios salen de la barra (viven en el panel "Más") */
+    .nav-links .nav-extra {
+        display: none;
+    }
+
+    .nav-more-li {
+        display: block;
+        flex: 1;
+    }
+
     .nav-links {
         flex-direction: row;
         justify-content: space-around;
-        padding: 0 8px;
+        align-items: stretch;
+        gap: 0;
+        padding: 0 4px;
         width: 100%;
     }
 
+    .nav-links > li {
+        flex: 1;
+        min-width: 0;
+    }
+
     .nav-item {
-        padding: 12px;
+        padding: 8px 2px;
         flex-direction: column;
-        gap: 4px;
+        justify-content: center;
+        gap: 3px;
+        height: 64px;
+        border-radius: 14px;
     }
 
     .nav-item span {
-        font-size: 0.7rem;
+        font-size: 0.62rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    /* El badge de mensajes, como puntito sobre el icono */
+    .nav-badge {
+        position: absolute;
+        top: 6px;
+        right: 50%;
+        transform: translateX(16px);
+        margin-left: 0;
+        z-index: 2;
+    }
+
+    /* Panel "Más" */
+    .mobile-more-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 110;
+    }
+
+    .mobile-more {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: 88px;
+        z-index: 120;
+        padding: 14px;
+        border-radius: 18px;
+        background: var(--sidebar-bg, #1a1410);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        animation: mobileMoreIn 0.18s ease-out;
+    }
+
+    .mobile-more .nav-item {
+        flex-direction: row;
+        height: auto;
+        padding: 12px 14px;
+        gap: 10px;
+        justify-content: flex-start;
+    }
+
+    .mobile-more .nav-item span {
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .mobile-more-footer {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 8px;
+        padding-top: 12px;
+        border-top: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+    }
+
+    .mobile-more-footer .sidebar-user-avatar {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+    }
+
+    @keyframes mobileMoreIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 }

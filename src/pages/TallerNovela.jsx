@@ -121,6 +121,8 @@ export default function TallerNovela() {
   const removeFrom = (key, id) =>
     persist({ ...data, [key]: data[key].filter((x) => x.id !== id) });
 
+  const isMobile = useIsMobile();
+
   const moduleNav = [
     { id: "dashboard", label: "Resumen", icon: BookOpen },
     { id: "characters", label: "Personajes", icon: UserRound, count: data.characters.length },
@@ -142,30 +144,38 @@ export default function TallerNovela() {
   }
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 80px)", background: C.bg,
-      fontFamily: FONT, color: C.text, borderRadius: 14, overflow: "hidden",
+    <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row",
+      height: isMobile ? "auto" : "calc(100vh - 80px)", minHeight: isMobile ? "calc(100dvh - 140px)" : undefined,
+      background: C.bg, fontFamily: FONT, color: C.text, borderRadius: 14, overflow: "hidden",
       border: `1px solid ${C.border}` }}>
       <FontInjector />
 
-      {/* Navegación interna del módulo */}
-      <nav style={{ width: 196, background: C.panel, borderRight: `1px solid ${C.borderSoft}`,
-        padding: "18px 10px", flexShrink: 0, display: "flex", flexDirection: "column", gap: 3 }}>
-        <div style={{ padding: "2px 10px 14px", fontSize: 11, fontWeight: 700,
-          letterSpacing: 1.2, textTransform: "uppercase", color: C.textDim }}>
-          Taller de novela
-        </div>
+      {/* Navegación interna del módulo (en móvil: pestañas horizontales con scroll) */}
+      <nav style={isMobile
+        ? { width: "100%", background: C.panel, borderBottom: `1px solid ${C.borderSoft}`,
+            padding: "8px 8px", flexShrink: 0, display: "flex", flexDirection: "row",
+            gap: 4, overflowX: "auto", WebkitOverflowScrolling: "touch" }
+        : { width: 196, background: C.panel, borderRight: `1px solid ${C.borderSoft}`,
+            padding: "18px 10px", flexShrink: 0, display: "flex", flexDirection: "column", gap: 3 }}>
+        {!isMobile && (
+          <div style={{ padding: "2px 10px 14px", fontSize: 11, fontWeight: 700,
+            letterSpacing: 1.2, textTransform: "uppercase", color: C.textDim }}>
+            Taller de novela
+          </div>
+        )}
         {moduleNav.map((m) => (
           <button key={m.id} onClick={() => setSection(m.id)}
             style={{
-              display: "flex", alignItems: "center", gap: 10, width: "100%",
-              padding: "9px 11px", borderRadius: 9, border: "none", cursor: "pointer",
-              fontFamily: FONT, fontSize: 13.5, fontWeight: section === m.id ? 700 : 500,
+              display: "flex", alignItems: "center", gap: isMobile ? 6 : 10,
+              width: isMobile ? "auto" : "100%", flexShrink: 0,
+              padding: isMobile ? "8px 12px" : "9px 11px", borderRadius: 9, border: "none", cursor: "pointer",
+              fontFamily: FONT, fontSize: isMobile ? 12.5 : 13.5, fontWeight: section === m.id ? 700 : 500,
               background: section === m.id ? C.amberPill : "transparent",
               color: section === m.id ? C.amber : C.textMuted,
-              transition: "background .15s",
+              transition: "background .15s", whiteSpace: "nowrap",
             }}>
-            <m.icon size={17} strokeWidth={section === m.id ? 2.4 : 2} />
-            <span style={{ flex: 1, textAlign: "left" }}>{m.label}</span>
+            <m.icon size={isMobile ? 15 : 17} strokeWidth={section === m.id ? 2.4 : 2} />
+            <span style={{ flex: isMobile ? "none" : 1, textAlign: "left" }}>{m.label}</span>
             {typeof m.count === "number" && m.count > 0 && (
               <span style={{ fontSize: 11, fontWeight: 700,
                 color: section === m.id ? C.amber : C.textDim }}>{m.count}</span>
@@ -173,8 +183,8 @@ export default function TallerNovela() {
           </button>
         ))}
 
-        <div style={{ flex: 1 }} />
-        <SaveBadge state={saveState} />
+        {!isMobile && <div style={{ flex: 1 }} />}
+        {!isMobile && <SaveBadge state={saveState} />}
       </nav>
 
       {/* Panel principal */}
@@ -231,6 +241,24 @@ export default function TallerNovela() {
     </div>
   );
 }
+
+/* ------------------------------------------------------------------ */
+// Móvil: el taller pasa de dos columnas (raíl + ficha) a apilado vertical.
+function useIsMobile() {
+  const [m, setM] = useState(typeof window !== "undefined" && window.innerWidth <= 768);
+  useEffect(() => {
+    const onR = () => setM(window.innerWidth <= 768);
+    window.addEventListener("resize", onR);
+    return () => window.removeEventListener("resize", onR);
+  }, []);
+  return m;
+}
+const splitRow = (mobile) => mobile
+  ? { display: "flex", flexDirection: "column", height: "auto" }
+  : { display: "flex", height: "calc(100% - 95px)" };
+const railStyle = (mobile, w) => mobile
+  ? { width: "100%", maxHeight: 240, borderBottom: `1px solid ${C.borderSoft}`, padding: 12, overflow: "auto", flexShrink: 0 }
+  : { width: w, borderRight: `1px solid ${C.borderSoft}`, padding: 14, overflow: "auto" };
 
 /* ------------------------------------------------------------------ */
 function SaveBadge({ state }) {
@@ -373,6 +401,7 @@ function Dashboard({ data, persist, go }) {
 }
 
 function Characters({ data, addTo, updateIn, removeFrom }) {
+  const isMobile = useIsMobile();
   const [selectedId, setSelectedId] = useState(null);
   const [tab, setTab] = useState("appearance");
   const [q, setQ] = useState("");
@@ -400,8 +429,8 @@ function Characters({ data, addTo, updateIn, removeFrom }) {
       <Header title="Personajes" subtitle="Fichas detalladas de cada personaje de tu novela."
         action={<AddButton onClick={add} label="Nuevo personaje" />} />
 
-      <div style={{ display: "flex", height: "calc(100% - 95px)" }}>
-        <div style={{ width: 280, borderRight: `1px solid ${C.borderSoft}`, padding: 16, overflow: "auto" }}>
+      <div style={splitRow(isMobile)}>
+        <div style={railStyle(isMobile, 280)}>
           <div style={{ position: "relative", marginBottom: 14 }}>
             <Search size={15} color={C.textDim} style={{ position: "absolute", left: 11, top: 11 }} />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar…"
@@ -526,6 +555,7 @@ function FieldFor({ obj, k, sub, label, upd, area, span }) {
 }
 
 function Locations({ data, addTo, updateIn, removeFrom }) {
+  const isMobile = useIsMobile();
   const [selId, setSelId] = useState(null);
   const [expanded, setExpanded] = useState({});
   const sel = data.locations.find((l) => l.id === selId);
@@ -568,8 +598,8 @@ function Locations({ data, addTo, updateIn, removeFrom }) {
     <div>
       <Header title="Ubicaciones" subtitle="Lugares de tu mundo con sububicaciones anidadas."
         action={<AddButton onClick={addRoot} label="Nueva ubicación" />} />
-      <div style={{ display: "flex", height: "calc(100% - 95px)" }}>
-        <div style={{ width: 300, borderRight: `1px solid ${C.borderSoft}`, padding: 14, overflow: "auto" }}>
+      <div style={splitRow(isMobile)}>
+        <div style={railStyle(isMobile, 300)}>
           {roots.length === 0 && <p style={{ color: C.textDim, fontSize: 13, textAlign: "center", marginTop: 30 }}>Sin ubicaciones aún.</p>}
           {roots.map((l) => <TreeNode key={l.id} loc={l} depth={0} />)}
         </div>
@@ -603,14 +633,15 @@ function Locations({ data, addTo, updateIn, removeFrom }) {
 }
 
 function SimpleCollection({ title, emptyHint, items, factory, fields, add, update, remove, icon }) {
+  const isMobile = useIsMobile();
   const [selId, setSelId] = useState(null);
   const sel = items.find((i) => i.id === selId);
   const create = () => { const it = factory(); add(it); setSelId(it.id); };
   return (
     <div>
       <Header title={title} subtitle={emptyHint} action={<AddButton onClick={create} label="Nuevo" />} />
-      <div style={{ display: "flex", height: "calc(100% - 95px)" }}>
-        <div style={{ width: 260, borderRight: `1px solid ${C.borderSoft}`, padding: 14, overflow: "auto" }}>
+      <div style={splitRow(isMobile)}>
+        <div style={railStyle(isMobile, 260)}>
           {items.length === 0 && <p style={{ color: C.textDim, fontSize: 13, textAlign: "center", marginTop: 30 }}>Vacío.</p>}
           {items.map((it) => (
             <button key={it.id} onClick={() => setSelId(it.id)}
@@ -651,6 +682,7 @@ function SimpleCollection({ title, emptyHint, items, factory, fields, add, updat
 }
 
 function Chapters({ data, addTo, updateIn, removeFrom }) {
+  const isMobile = useIsMobile();
   const [selId, setSelId] = useState(null);
   const titleRef = useRef(null);
   const sel = data.chapters.find((c) => c.id === selId);
@@ -662,8 +694,8 @@ function Chapters({ data, addTo, updateIn, removeFrom }) {
     <div>
       <Header title="Capítulos" subtitle="Escribe tu novela. El contenido se guarda solo."
         action={<AddButton onClick={add} label="Nuevo capítulo" />} />
-      <div style={{ display: "flex", height: "calc(100% - 95px)" }}>
-        <div style={{ width: 260, borderRight: `1px solid ${C.borderSoft}`, padding: 14, overflow: "auto" }}>
+      <div style={splitRow(isMobile)}>
+        <div style={railStyle(isMobile, 260)}>
           {data.chapters.length === 0 && <p style={{ color: C.textDim, fontSize: 13, textAlign: "center", marginTop: 30 }}>Sin capítulos aún.</p>}
           {data.chapters.map((c) => (
             <button key={c.id} onClick={() => setSelId(c.id)}

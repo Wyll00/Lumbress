@@ -18,8 +18,13 @@
 
   .main-content {
     margin-left: 0;
-    margin-bottom: 80px;
-    /* Space for mobile nav */
-    padding: 16px;
+    margin-bottom: 88px;
+    /* Space for mobile bottom nav (64px + 12px + margen) */
+    padding: 14px;
+  }
+
+  /* Títulos de página más contenidos en pantallas pequeñas */
+  .page-header h1 {
+    font-size: 1.45rem;
   }
 }

@@ -59,6 +59,7 @@ const Reader = () => {
 
     const fileUrl = book?.fileUrl ? mediaUrl(book.fileUrl) : null;
     const isPdf = book?.fileType === 'pdf';
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
     const onEpubLocation = useCallback((loc) => {
         setLocation(loc);
@@ -192,8 +193,8 @@ const Reader = () => {
     }
 
     return (
-        <div className="reader-page animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)' }}>
-            <header style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+        <div className="reader-page animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: isMobile ? 'calc(100dvh - 130px)' : 'calc(100vh - 48px)' }}>
+            <header style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 14, marginBottom: 10, flexWrap: 'wrap' }}>
                 <button
                     className="btn-secondary"
                     onClick={() => navigate('/library')}
@@ -271,7 +272,7 @@ const Reader = () => {
                         >
                             <Page
                                 pageNumber={page}
-                                width={Math.min(880, window.innerWidth - 380)}
+                                width={isMobile ? window.innerWidth - 32 : Math.min(880, window.innerWidth - 380)}
                                 renderTextLayer={false}
                                 renderAnnotationLayer={false}
                             />
@@ -295,7 +296,7 @@ const Reader = () => {
                 {/* Panel lateral de subrayados */}
                 {panelOpen && !isPdf && (
                     <div style={{
-                        position: 'absolute', top: 0, right: 0, bottom: 0, width: 300, zIndex: 5,
+                        position: 'absolute', top: 0, right: 0, bottom: 0, width: isMobile ? '100%' : 300, zIndex: 5,
                         background: 'var(--card-bg, #1f1a14)', borderLeft: '1px solid var(--card-border, rgba(255,255,255,0.1))',
                         display: 'flex', flexDirection: 'column',
                     }}>
