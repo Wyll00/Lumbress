@@ -23,7 +23,8 @@ async function removeBookFile(relUrl, userId) {
 router.get('/', async (req, res) => {
     try {
         const [books] = await pool.query(`
-            SELECT l.*, GROUP_CONCAT(e.nombre SEPARATOR '||') as categorias
+            SELECT l.*, GROUP_CONCAT(e.nombre SEPARATOR '||') as categorias,
+                   (SELECT GROUP_CONCAT(el.estanteria_id) FROM estanterias_libros el WHERE el.libro_id = l.id) AS estanteria_ids
             FROM libros l
             LEFT JOIN libros_etiquetas le ON l.id = le.libro_id
             LEFT JOIN etiquetas_literarias e ON le.etiqueta_id = e.id
@@ -50,7 +51,8 @@ router.get('/', async (req, res) => {
             fileUrl: b.archivo_url,
             fileType: b.archivo_tipo,
             notes: b.notas ? (typeof b.notas === 'string' ? JSON.parse(b.notas) : b.notas) : [],
-            categories: b.categorias ? b.categorias.split('||') : []
+            categories: b.categorias ? b.categorias.split('||') : [],
+            shelfIds: b.estanteria_ids ? b.estanteria_ids.split(',').map(Number) : []
         }));
         res.json(mappedBooks);
     } catch (err) {

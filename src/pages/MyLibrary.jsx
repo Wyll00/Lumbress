@@ -5,21 +5,55 @@ import BookCard from '../components/BookCard';
 import BookModal from '../components/BookModal';
 import NotesPanel from '../components/NotesPanel';
 import ImportBooksModal from '../components/ImportBooksModal';
-import { Plus, Search, Filter, Upload } from 'lucide-react';
+import ShelfPicker from '../components/ShelfPicker';
+import { Plus, Search, Filter, Upload, Pencil, Trash2, Check, X } from 'lucide-react';
 import './MyLibrary.css';
 
 const MyLibrary = () => {
-    const { books, addBook, updateBook, deleteBook, updateProgress, refetchBooks } = useContext(LibraryContext);
+    const { books, addBook, updateBook, deleteBook, updateProgress, refetchBooks,
+            shelves, createShelf, renameShelf, deleteShelf } = useContext(LibraryContext);
     const { t } = useContext(LanguageContext);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingBook, setEditingBook] = useState(null);
     const [selectedBookForNotes, setSelectedBookForNotes] = useState(null);
     const [importOpen, setImportOpen] = useState(false);
+    const [shelfPickerBook, setShelfPickerBook] = useState(null);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('All');
     const [filterFormat, setFilterFormat] = useState('All');
     const [sortBy, setSortBy] = useState('Date Added');
+
+    // Estanterías
+    const [activeShelf, setActiveShelf] = useState(null); // id de estantería o null = todas
+    const [showNewShelf, setShowNewShelf] = useState(false);
+    const [newShelfName, setNewShelfName] = useState('');
+    const [renaming, setRenaming] = useState(false);
+    const [renameVal, setRenameVal] = useState('');
+
+    const activeShelfObj = shelves.find(s => s.id === activeShelf) || null;
+
+    const doCreateShelf = async () => {
+        const name = newShelfName.trim();
+        if (!name) return;
+        const shelf = await createShelf(name);
+        setNewShelfName(''); setShowNewShelf(false);
+        if (shelf) setActiveShelf(shelf.id);
+    };
+
+    const handleDeleteShelf = () => {
+        if (!activeShelfObj) return;
+        if (window.confirm(`¿Eliminar la estantería "${activeShelfObj.nombre}"? Tus libros NO se borran, solo se quitan de ella.`)) {
+            deleteShelf(activeShelf);
+            setActiveShelf(null);
+        }
+    };
+
+    const saveRename = () => {
+        const v = renameVal.trim();
+        if (v && v !== activeShelfObj?.nombre) renameShelf(activeShelf, { nombre: v });
+        setRenaming(false);
+    };
 
     const filteredAndSortedBooks = useMemo(() => {
         let result = books;
@@ -42,6 +76,11 @@ const MyLibrary = () => {
             result = result.filter(book => (book.formato || '') === filterFormat);
         }
 
+        // Filter by shelf
+        if (activeShelf) {
+            result = result.filter(book => (book.shelfIds || []).includes(activeShelf));
+        }
+
         // Sort
         result = [...result].sort((a, b) => {
             switch (sortBy) {
@@ -61,7 +100,7 @@ const MyLibrary = () => {
         });
 
         return result;
-    }, [books, searchTerm, filterStatus, filterFormat, sortBy]);
+    }, [books, searchTerm, filterStatus, filterFormat, sortBy, activeShelf]);
 
     const handleOpenModal = (book = null) => {
         setEditingBook(book);
@@ -125,6 +164,59 @@ const MyLibrary = () => {
                         </button>
                     </div>
                 </header>
+
+                {/* Estanterías */}
+                <div className="shelf-tabs">
+                    <button className={`shelf-tab ${!activeShelf ? 'active' : ''}`} onClick={() => { setActiveShelf(null); setRenaming(false); }}>
+                        📚 Todas <span className="shelf-tab-count">{books.length}</span>
+                    </button>
+                    {shelves.map((s) => (
+                        <button key={s.id} className={`shelf-tab ${activeShelf === s.id ? 'active' : ''}`} onClick={() => { setActiveShelf(s.id); setRenaming(false); }}>
+                            <span>{s.emoji}</span> {s.nombre} <span className="shelf-tab-count">{s.libros}</span>
+                        </button>
+                    ))}
+                    {showNewShelf ? (
+                        <span className="shelf-new-inline">
+                            <input
+                                autoFocus value={newShelfName} maxLength={60} placeholder="Nombre…"
+                                onChange={(e) => setNewShelfName(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') doCreateShelf(); if (e.key === 'Escape') { setShowNewShelf(false); setNewShelfName(''); } }}
+                            />
+                            <button onClick={doCreateShelf} title="Crear"><Check size={15} /></button>
+                            <button onClick={() => { setShowNewShelf(false); setNewShelfName(''); }} title="Cancelar"><X size={15} /></button>
+                        </span>
+                    ) : (
+                        <button className="shelf-tab shelf-tab-add" onClick={() => setShowNewShelf(true)}>
+                            <Plus size={15} /> Nueva estantería
+                        </button>
+                    )}
+                </div>
+
+                {/* Gestión de la estantería activa */}
+                {activeShelfObj && (
+                    <div className="shelf-manage">
+                        {renaming ? (
+                            <span className="shelf-new-inline">
+                                <input
+                                    autoFocus value={renameVal} maxLength={60}
+                                    onChange={(e) => setRenameVal(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') saveRename(); if (e.key === 'Escape') setRenaming(false); }}
+                                />
+                                <button onClick={saveRename} title="Guardar"><Check size={15} /></button>
+                                <button onClick={() => setRenaming(false)} title="Cancelar"><X size={15} /></button>
+                            </span>
+                        ) : (
+                            <>
+                                <button onClick={() => { setRenaming(true); setRenameVal(activeShelfObj.nombre); }}>
+                                    <Pencil size={14} /> Renombrar
+                                </button>
+                                <button onClick={handleDeleteShelf}>
+                                    <Trash2 size={14} /> Eliminar estantería
+                                </button>
+                            </>
+                        )}
+                    </div>
+                )}
 
                 <div className="controls-bar glass-panel">
                     <div className="search-box">
@@ -190,6 +282,7 @@ const MyLibrary = () => {
                                 onDelete={handleDeleteBook}
                                 onUpdateProgress={updateProgress}
                                 onOpenNotes={handleOpenNotes}
+                                onOpenShelves={setShelfPickerBook}
                             />
                         ))}
                     </div>
@@ -216,6 +309,10 @@ const MyLibrary = () => {
                 onClose={() => setImportOpen(false)}
                 onImported={refetchBooks}
             />
+
+            {shelfPickerBook && (
+                <ShelfPicker book={shelfPickerBook} onClose={() => setShelfPickerBook(null)} />
+            )}
         </div>
     );
 };

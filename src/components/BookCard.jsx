@@ -1,11 +1,11 @@
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit2, Trash2, Quote, Star, X, BookOpen } from 'lucide-react';
+import { Edit2, Trash2, Quote, Star, X, BookOpen, Library } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { LibraryContext } from '../context/LibraryContext';
 import './BookCard.css';
 
-const BookCard = ({ book, onEdit, onDelete, onUpdateProgress, onOpenNotes }) => {
+const BookCard = ({ book, onEdit, onDelete, onUpdateProgress, onOpenNotes, onOpenShelves }) => {
     const { t } = useContext(LanguageContext);
     const navigate = useNavigate();
     const { updateBook, removeCategory, categories } = useContext(LibraryContext);
@@ -129,6 +129,11 @@ const BookCard = ({ book, onEdit, onDelete, onUpdateProgress, onOpenNotes }) => 
                         <button onClick={() => onOpenNotes(book)} className="action-btn-inline notes-btn" title={t('notesLabel') || "Notes"}>
                             <Quote size={16} />
                         </button>
+                        {onOpenShelves && (
+                            <button onClick={() => onOpenShelves(book)} className="action-btn-inline notes-btn" title="Añadir a estantería">
+                                <Library size={16} />
+                            </button>
+                        )}
                         <button onClick={() => onEdit(book)} className="action-btn-inline edit-btn" title={t('editBook') || "Edit"}>
                             <Edit2 size={16} />
                         </button>

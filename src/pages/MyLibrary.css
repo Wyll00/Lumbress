@@ -4,6 +4,116 @@
     align-items: flex-start;
 }
 
+/* ===== Estanterías (pestañas de filtro) ===== */
+.shelf-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.shelf-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--card-border, rgba(255, 255, 255, 0.1));
+    background: transparent;
+    color: var(--text-secondary, #9b8e78);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.shelf-tab:hover {
+    color: var(--text, #f5efe6);
+    border-color: var(--accent-color, #e0a93b);
+}
+
+.shelf-tab.active {
+    background: rgba(224, 169, 59, 0.14);
+    border-color: var(--accent-color, #e0a93b);
+    color: var(--accent-color, #e0a93b);
+    font-weight: 700;
+}
+
+.shelf-tab-count {
+    font-size: 0.7rem;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0 7px;
+    border-radius: 999px;
+}
+
+.shelf-tab.active .shelf-tab-count {
+    background: rgba(224, 169, 59, 0.25);
+}
+
+.shelf-tab-add {
+    border-style: dashed;
+}
+
+.shelf-new-inline {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.shelf-new-inline input {
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--accent-color, #e0a93b);
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text, #f5efe6);
+    outline: none;
+    font-size: 0.85rem;
+    font-family: inherit;
+}
+
+.shelf-new-inline button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: var(--accent-color, #e0a93b);
+    color: #1a1410;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.shelf-new-inline button:last-child {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary, #9b8e78);
+}
+
+.shelf-manage {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.shelf-manage button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--text-secondary, #9b8e78);
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+}
+
+.shelf-manage button:hover {
+    color: var(--accent-color, #e0a93b);
+}
+
 .mylibrary-main {
     flex: 1;
     min-width: 0;

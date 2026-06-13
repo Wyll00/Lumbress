@@ -6,11 +6,13 @@ export const LibraryContext = createContext();
 
 const API_URL = `${BASE_URL}/api/books`;
 const CATEGORIES_URL = `${BASE_URL}/api/categories`;
+const SHELVES_URL = `${BASE_URL}/api/shelves`;
 
 export const LibraryProvider = ({ children }) => {
   const { isAuthenticated } = useContext(AuthContext);
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [shelves, setShelves] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,6 +20,7 @@ export const LibraryProvider = ({ children }) => {
       if (!isAuthenticated) {
         setBooks([]);
         setCategories([]);
+        setShelves([]);
         setLoading(false);
         return;
       }
@@ -34,6 +37,11 @@ export const LibraryProvider = ({ children }) => {
         if (resCat.ok) {
           const catData = await resCat.json();
           setCategories(catData);
+        }
+
+        const resShelves = await fetch(SHELVES_URL, withAuth());
+        if (resShelves.ok) {
+          setShelves(await resShelves.json());
         }
       } catch (err) {
         console.error("Error connecting to server:", err);
@@ -202,6 +210,57 @@ export const LibraryProvider = ({ children }) => {
     }
   };
 
+  // ===== Estanterías =====
+  const createShelf = async (nombre, emoji = '📚') => {
+    try {
+      const res = await fetch(SHELVES_URL, {
+        ...withAuth(), method: 'POST', headers: jsonHeaders,
+        body: JSON.stringify({ nombre, emoji })
+      });
+      const data = await res.json();
+      if (res.ok) { setShelves(prev => [...prev, data].sort((a, b) => a.nombre.localeCompare(b.nombre))); return data; }
+      alert(data.message || 'No se pudo crear la estantería.');
+    } catch (err) { console.error('Error creando estantería:', err); }
+    return null;
+  };
+
+  const renameShelf = async (id, fields) => {
+    setShelves(prev => prev.map(s => s.id === id ? { ...s, ...fields } : s));
+    try {
+      await fetch(`${SHELVES_URL}/${id}`, {
+        ...withAuth(), method: 'PUT', headers: jsonHeaders, body: JSON.stringify(fields)
+      });
+    } catch (err) { console.error('Error renombrando estantería:', err); }
+  };
+
+  const deleteShelf = async (id) => {
+    setShelves(prev => prev.filter(s => s.id !== id));
+    setBooks(prev => prev.map(b => ({ ...b, shelfIds: (b.shelfIds || []).filter(sid => sid !== id) })));
+    try {
+      await fetch(`${SHELVES_URL}/${id}`, { ...withAuth(), method: 'DELETE' });
+    } catch (err) { console.error('Error eliminando estantería:', err); }
+  };
+
+  // Añade o quita un libro de una estantería (actualiza shelfIds del libro y el contador)
+  const toggleBookInShelf = async (shelfId, bookId, add) => {
+    setBooks(prev => prev.map(b => {
+      if (b.id !== bookId) return b;
+      const ids = new Set(b.shelfIds || []);
+      add ? ids.add(shelfId) : ids.delete(shelfId);
+      return { ...b, shelfIds: [...ids] };
+    }));
+    setShelves(prev => prev.map(s => s.id === shelfId ? { ...s, libros: Math.max(0, (s.libros || 0) + (add ? 1 : -1)) } : s));
+    try {
+      if (add) {
+        await fetch(`${SHELVES_URL}/${shelfId}/books`, {
+          ...withAuth(), method: 'POST', headers: jsonHeaders, body: JSON.stringify({ libro_id: Number(bookId) })
+        });
+      } else {
+        await fetch(`${SHELVES_URL}/${shelfId}/books/${bookId}`, { ...withAuth(), method: 'DELETE' });
+      }
+    } catch (err) { console.error('Error actualizando estantería del libro:', err); }
+  };
+
   const updateProgress = (id, pagesRead) => {
     const bookToUpdate = books.find(b => b.id === id);
     if (!bookToUpdate) return;
@@ -220,18 +279,23 @@ export const LibraryProvider = ({ children }) => {
   };
 
   return (
-    <LibraryContext.Provider value={{ 
-        books, 
+    <LibraryContext.Provider value={{
+        books,
         categories,
-        loading, 
-        addBook, 
-        updateBook, 
-        deleteBook, 
+        shelves,
+        loading,
+        addBook,
+        updateBook,
+        deleteBook,
         updateProgress,
         createCategory,
         deleteCategory,
         assignCategory,
         removeCategory,
+        createShelf,
+        renameShelf,
+        deleteShelf,
+        toggleBookInShelf,
         refetchBooks
     }}>
       {children}
