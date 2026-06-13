@@ -38,10 +38,13 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
     .filter(Boolean);
 
 const isLocalhost = (origin) => /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+// Origen de la app nativa (Capacitor/Ionic): capacitor://localhost, https://localhost, etc.
+const isNativeApp = (origin) => /^(capacitor|ionic|https?):\/\/localhost$/.test(origin);
 
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin) return callback(null, true);
+        if (isNativeApp(origin)) return callback(null, true);
         if (!isProduction && isLocalhost(origin)) return callback(null, true);
         if (allowedOrigins.includes(origin)) return callback(null, true);
         return callback(new Error('Origin not allowed by CORS policy'));

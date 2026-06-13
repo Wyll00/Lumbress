@@ -71,7 +71,7 @@ router.post('/register', async (req, res) => {
         const newUser = { id: newUserId, username, email };
         const token = issueToken(newUser);
         res.cookie(COOKIE_NAME, token, cookieOptions());
-        res.status(201).json({ message: 'Usuario registrado exitosamente', user: newUser });
+        res.status(201).json({ message: 'Usuario registrado exitosamente', user: newUser, token });
 
     } catch (err) {
         console.error('Error in register:', err);
@@ -107,7 +107,8 @@ router.post('/login', async (req, res) => {
                 id: user.id,
                 username: user.username,
                 email: user.email
-            }
+            },
+            token // usado por la app nativa (auth por cabecera); la web ignora esto y usa la cookie
         });
 
     } catch (err) {

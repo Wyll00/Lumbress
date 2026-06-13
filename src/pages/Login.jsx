@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
-import { API_URL, withAuth } from '../config';
+import { API_URL, withAuth, saveToken } from '../config';
 import { BookMarked, Eye, EyeOff } from 'lucide-react';
 import './AuthForm.css';
 
@@ -89,6 +89,7 @@ const Login = () => {
                 throw new Error(data.message || t('authLoginError'));
             }
 
+            saveToken(data.token); // app nativa: guarda el token de sesión
             login(data.user);
             navigate('/');
         } catch (err) {

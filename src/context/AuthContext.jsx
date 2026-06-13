@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useCallback } from 'react';
-import { API_URL, withAuth } from '../config';
+import { API_URL, withAuth, clearToken } from '../config';
 
 export const AuthContext = createContext();
 
@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }) => {
         } catch (err) {
             console.error('Error logging out', err);
         }
+        clearToken();
         setUser(null);
     };
 
