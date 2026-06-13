@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Lumbres</string>
+    <string name="title_activity_main">Lumbres</string>
+    <string name="package_name">com.lumbres.app</string>
+    <string name="custom_url_scheme">com.lumbres.app</string>
+</resources>
