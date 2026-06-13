@@ -251,6 +251,11 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 
 ## 11. Pendientes / decisiones a futuro
 
+### 🎯 TAREAS PARA LA PRÓXIMA SESIÓN (pedidas por William el 2026-06-12)
+
+1. **📚 Estanterías para organizar los libros** — colecciones con nombre propio ("Favoritos del verano", "Pendientes de reseña"…) donde agrupar libros, con su vista en Mi Biblioteca. *Notas: ya existen `etiquetas_literarias` (máx. 4 por libro, tipo tag) — las estanterías serían un nivel superior: colección navegable con portada/listado propio. Según el doc de estrategia, "estanterías personalizadas y colecciones" es feature Premium (decidir gate). Probable tabla `estanterias` + pivote `estanterias_libros`.*
+2. **📖 Diccionario integrado en el lector** — al seleccionar una palabra o frase en el EPUB, además de subrayar, opción "¿Qué significa?" con la definición. *Notas: encaja en la barra de selección existente del Reader (junto a los 5 colores). Fuente gratuita sin API key vía proxy del backend (patrón de Open Library): Wikcionario español (`es.wiktionary.org/w/api.php`) o `api.dictionaryapi.dev`. Mostrar definición en popover/panel; quizá guardar "palabras aprendidas".*
+
 - ✅ ~~Notificaciones en navegador~~ · ✅ ~~Chat enlazado al anuncio~~ · ✅ ~~Suscripciones~~ *(hechos esta sesión)*
 - 🟡 **Stripe para prod**: webhook con la **Stripe CLI** (`stripe listen` → da `whsec_`) para renovaciones/cancelaciones automáticas. Hoy el alta funciona vía `/sync`; el Customer Portal ya está configurado (setup_stripe.js).
 - 🟡 **Fase 2 del doc de estrategia (lo que queda)**: sync de posición contra el backend (hoy localStorage), subrayados en PDF (hoy solo EPUB), catálogo legal (Standard Ebooks/Gutenberg), plan Autor, términos de uso + notice-and-takedown. *(Subrayados EPUB: ✅ hechos 2026-06-11 — tabla `subrayados`, endpoints en books.js `/:id/highlights`, selección → paleta de 5 colores (amber/red/green/blue/purple) → SVG del color elegido, persistente + panel lateral con tarjetas por color. Significado de cada color personalizable por usuario: `usuarios.highlight_labels` JSON + PUT `/users/me/highlight-labels`, editor en el panel (lápiz). Por el doc de estrategia serían Premium: para activar el gate basta `requirePremium` en los endpoints.)*
