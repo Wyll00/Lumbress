@@ -235,6 +235,7 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 - ✅ Chat 1-a-1 entre usuarios con polling + badge no-leídos, **enlazado al anuncio**
 - ✅ Taller de Novela (8 secciones, autosave JSON en BD)
 - ✅ i18n ES/EN, sidebar con scroll, logo Lumbres
+- ✅ **Vista móvil (2026-06-12)**: barra inferior con 4 ítems esenciales + panel "Más" (resto del menú + avatar/idioma/Salir), Taller con pestañas horizontales y secciones apiladas (`useIsMobile` en TallerNovela.jsx), lector adaptado (PDF a ancho de pantalla, panel de subrayados fullscreen). Ojo: estilos inline pisan los `@media` — el footer del sidebar se movió a CSS por eso.
 - ✅ **Notificaciones de mensajes**: badge sidebar + contador en título de pestaña + Web Notifications del navegador (`NotificationContext`) + aviso por email (nodemailer, OFF sin clave SMTP)
 - ✅ **Autocompletados** (gratis, sin key): autor; título → autorrellena autor/portada/páginas (Open Library); dirección → CP/ciudad/provincia/país (Photon)
 - ✅ **Suscripciones con Stripe** (modo TEST): Checkout alojado, `/sync` tras pagar, tabla `suscripciones`, plan activo mostrado en la UI
