@@ -66,12 +66,11 @@ export const LibraryProvider = ({ children }) => {
 
   const addBook = async (bookData) => {
     try {
-      const res = await fetch(API_URL, {
-        ...withAuth(),
+      const res = await fetch(API_URL, withAuth({
         method: 'POST',
         headers: jsonHeaders,
         body: JSON.stringify(bookData)
-      });
+      }));
       if (res.ok) {
         const savedBook = await res.json();
         setBooks(prev => [savedBook, ...prev]);
@@ -91,12 +90,11 @@ export const LibraryProvider = ({ children }) => {
     ));
 
     try {
-      await fetch(`${API_URL}/${id}`, {
-        ...withAuth(),
+      await fetch(`${API_URL}/${id}`, withAuth({
         method: 'PUT',
         headers: jsonHeaders,
         body: JSON.stringify(updatedFields)
-      });
+      }));
     } catch (err) {
       console.error("Error updating book:", err);
     }
@@ -116,12 +114,11 @@ export const LibraryProvider = ({ children }) => {
 
   const createCategory = async (nombre) => {
     try {
-      const res = await fetch(CATEGORIES_URL, {
-        ...withAuth(),
+      const res = await fetch(CATEGORIES_URL, withAuth({
         method: 'POST',
         headers: jsonHeaders,
         body: JSON.stringify({ nombre })
-      });
+      }));
       if (res.ok) {
         const newCat = await res.json();
         setCategories(prev => [...prev, { id: newCat.id, nombre: newCat.nombre, usuario_id: newCat.usuario_id }]);
@@ -160,12 +157,11 @@ export const LibraryProvider = ({ children }) => {
 
   const assignCategory = async (libro_id, etiqueta_id) => {
     try {
-      const res = await fetch(`${CATEGORIES_URL}/assign`, {
-        ...withAuth(),
+      const res = await fetch(`${CATEGORIES_URL}/assign`, withAuth({
         method: 'POST',
         headers: jsonHeaders,
         body: JSON.stringify({ libro_id, etiqueta_id })
-      });
+      }));
       if (res.ok) {
         setBooks(prev => prev.map(book => {
           if (book.id === libro_id) {
@@ -187,12 +183,11 @@ export const LibraryProvider = ({ children }) => {
 
   const removeCategory = async (libro_id, etiqueta_id) => {
     try {
-      const res = await fetch(`${CATEGORIES_URL}/remove`, {
-        ...withAuth(),
+      const res = await fetch(`${CATEGORIES_URL}/remove`, withAuth({
         method: 'POST',
         headers: jsonHeaders,
         body: JSON.stringify({ libro_id, etiqueta_id })
-      });
+      }));
       if (res.ok) {
         setBooks(prev => prev.map(book => {
           if (book.id === libro_id) {
@@ -213,10 +208,10 @@ export const LibraryProvider = ({ children }) => {
   // ===== Estanterías =====
   const createShelf = async (nombre, emoji = '📚') => {
     try {
-      const res = await fetch(SHELVES_URL, {
-        ...withAuth(), method: 'POST', headers: jsonHeaders,
+      const res = await fetch(SHELVES_URL, withAuth({
+        method: 'POST', headers: jsonHeaders,
         body: JSON.stringify({ nombre, emoji })
-      });
+      }));
       const data = await res.json();
       if (res.ok) { setShelves(prev => [...prev, data].sort((a, b) => a.nombre.localeCompare(b.nombre))); return data; }
       alert(data.message || 'No se pudo crear la estantería.');
@@ -227,9 +222,9 @@ export const LibraryProvider = ({ children }) => {
   const renameShelf = async (id, fields) => {
     setShelves(prev => prev.map(s => s.id === id ? { ...s, ...fields } : s));
     try {
-      await fetch(`${SHELVES_URL}/${id}`, {
-        ...withAuth(), method: 'PUT', headers: jsonHeaders, body: JSON.stringify(fields)
-      });
+      await fetch(`${SHELVES_URL}/${id}`, withAuth({
+        method: 'PUT', headers: jsonHeaders, body: JSON.stringify(fields)
+      }));
     } catch (err) { console.error('Error renombrando estantería:', err); }
   };
 
@@ -252,9 +247,9 @@ export const LibraryProvider = ({ children }) => {
     setShelves(prev => prev.map(s => s.id === shelfId ? { ...s, libros: Math.max(0, (s.libros || 0) + (add ? 1 : -1)) } : s));
     try {
       if (add) {
-        await fetch(`${SHELVES_URL}/${shelfId}/books`, {
-          ...withAuth(), method: 'POST', headers: jsonHeaders, body: JSON.stringify({ libro_id: Number(bookId) })
-        });
+        await fetch(`${SHELVES_URL}/${shelfId}/books`, withAuth({
+          method: 'POST', headers: jsonHeaders, body: JSON.stringify({ libro_id: Number(bookId) })
+        }));
       } else {
         await fetch(`${SHELVES_URL}/${shelfId}/books/${bookId}`, { ...withAuth(), method: 'DELETE' });
       }
