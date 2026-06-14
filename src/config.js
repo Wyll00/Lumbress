@@ -49,6 +49,9 @@ export const uploadFile = async (kind, file, onProgress) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', `${API_URL}/api/uploads/${kind}`);
         xhr.withCredentials = true;
+        // App nativa: autenticación por token (no hay cookie en el WebView)
+        const token = getToken();
+        if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
         if (onProgress) {
             xhr.upload.addEventListener('progress', (e) => {
