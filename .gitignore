@@ -37,3 +37,6 @@ server/uploads/books/*
 *.njsproj
 *.sln
 *.sw?
+
+# Assets fuente de la app (iconos/splash de @capacitor/assets)
+!assets/
