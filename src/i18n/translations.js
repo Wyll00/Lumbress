@@ -123,6 +123,15 @@ export const translations = {
         authLoginError: "Error al iniciar sesión",
         authRegisterError: "Error en el registro",
         authPasswordMismatch: "Las contraseñas no coinciden",
+        verifyTitle: "Verifica tu cuenta",
+        verifySub: "Introduce el código de 6 dígitos que enviamos a tu correo",
+        verifyEmailLabel: "Correo Electrónico",
+        verifyCodeLabel: "Código de verificación",
+        verifyBtn: "Verificar",
+        verifyVerifying: "Verificando...",
+        verifyResend: "Reenviar código",
+        verifyResent: "Código reenviado ✓",
+        verifyBackToLogin: "Volver a inicio de sesión",
     },
     en: {
         // Sidebar
@@ -253,5 +262,14 @@ export const translations = {
         authLoginError: "Could not sign in",
         authRegisterError: "Registration error",
         authPasswordMismatch: "Passwords don't match",
+        verifyTitle: "Verify your account",
+        verifySub: "Enter the 6-digit code we sent to your email",
+        verifyEmailLabel: "Email",
+        verifyCodeLabel: "Verification code",
+        verifyBtn: "Verify",
+        verifyVerifying: "Verifying...",
+        verifyResend: "Resend code",
+        verifyResent: "Code resent ✓",
+        verifyBackToLogin: "Back to sign in",
     }
 };

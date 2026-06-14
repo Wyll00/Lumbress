@@ -17,6 +17,7 @@ const Chat = lazy(() => import('./pages/Chat'));
 const TallerNovela = lazy(() => import('./pages/TallerNovela'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const PublicShelf = lazy(() => import('./pages/PublicShelf'));
 const Reader = lazy(() => import('./pages/Reader'));
 const Admin = lazy(() => import('./pages/Admin'));
@@ -33,6 +34,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify" element={<VerifyEmail />} />
         <Route path="/u/:username" element={<PublicShelf />} />
 
         <Route path="/*" element={

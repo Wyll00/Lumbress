@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../db');
 const { COOKIE_NAME, cookieOptions } = require('../utils/cookies');
+const { sendVerificationCode } = require('../services/mailer');
 
 if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET environment variable is required');
@@ -14,6 +15,10 @@ const issueToken = (user) => jwt.sign(
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
 );
+
+// Código de verificación de 6 dígitos + caducidad (15 min)
+const genCode = () => String(Math.floor(100000 + Math.random() * 900000));
+const codeExpiry = () => new Date(Date.now() + 15 * 60 * 1000);
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -68,10 +73,19 @@ router.post('/register', async (req, res) => {
             );
         }
 
-        const newUser = { id: newUserId, username, email };
-        const token = issueToken(newUser);
-        res.cookie(COOKIE_NAME, token, cookieOptions());
-        res.status(201).json({ message: 'Usuario registrado exitosamente', user: newUser, token });
+        // Cuenta sin verificar: generamos código, lo guardamos y lo enviamos por email.
+        const code = genCode();
+        await pool.query(
+            'UPDATE usuarios SET verification_code = ?, verification_expires = ? WHERE id = ?',
+            [code, codeExpiry(), newUserId]
+        );
+        await sendVerificationCode({ toEmail: email, toName: username, code });
+
+        res.status(201).json({
+            message: 'Cuenta creada. Revisa tu correo e introduce el código de verificación.',
+            needsVerification: true,
+            email,
+        });
 
     } catch (err) {
         console.error('Error in register:', err);
@@ -99,6 +113,21 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Credenciales inválidas' });
         }
 
+        // Cuenta sin verificar: reenviamos un código y pedimos al cliente que vaya a verificar.
+        if (!user.email_verified) {
+            const code = genCode();
+            await pool.query(
+                'UPDATE usuarios SET verification_code = ?, verification_expires = ? WHERE id = ?',
+                [code, codeExpiry(), user.id]
+            );
+            await sendVerificationCode({ toEmail: user.email, toName: user.username, code });
+            return res.status(403).json({
+                code: 'NEEDS_VERIFICATION',
+                message: 'Tu cuenta no está verificada. Te enviamos un código al correo.',
+                email: user.email,
+            });
+        }
+
         const token = issueToken(user);
         res.cookie(COOKIE_NAME, token, cookieOptions());
 
@@ -113,6 +142,71 @@ router.post('/login', async (req, res) => {
 
     } catch (err) {
         console.error('Error in login:', err);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+});
+
+// POST /api/auth/verify-email { email, code } — valida el código y deja al usuario dentro
+router.post('/verify-email', async (req, res) => {
+    try {
+        const email = String(req.body.email || '').trim();
+        const code = String(req.body.code || '').trim();
+        if (!email || !code) return res.status(400).json({ message: 'Faltan datos.' });
+
+        const [users] = await pool.query('SELECT * FROM usuarios WHERE email = ?', [email]);
+        if (users.length === 0) return res.status(404).json({ message: 'Cuenta no encontrada.' });
+        const user = users[0];
+
+        if (user.email_verified) {
+            return res.status(400).json({ message: 'Esta cuenta ya está verificada. Inicia sesión.' });
+        }
+        if (!user.verification_code || !user.verification_expires) {
+            return res.status(400).json({ message: 'No hay ningún código pendiente. Pide uno nuevo.' });
+        }
+        if (new Date(user.verification_expires) < new Date()) {
+            return res.status(400).json({ code: 'EXPIRED', message: 'El código ha caducado. Pide uno nuevo.' });
+        }
+        if (String(user.verification_code) !== code) {
+            return res.status(400).json({ message: 'Código incorrecto.' });
+        }
+
+        await pool.query(
+            'UPDATE usuarios SET email_verified = 1, verification_code = NULL, verification_expires = NULL WHERE id = ?',
+            [user.id]
+        );
+
+        const token = issueToken(user);
+        res.cookie(COOKIE_NAME, token, cookieOptions());
+        res.json({
+            message: '¡Cuenta verificada!',
+            user: { id: user.id, username: user.username, email: user.email },
+            token,
+        });
+    } catch (err) {
+        console.error('Error in verify-email:', err);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+});
+
+// POST /api/auth/resend-code { email } — reenvía un código nuevo (no revela si la cuenta existe)
+router.post('/resend-code', async (req, res) => {
+    try {
+        const email = String(req.body.email || '').trim();
+        if (!email) return res.status(400).json({ message: 'Falta el correo.' });
+
+        const [users] = await pool.query('SELECT id, username, email_verified FROM usuarios WHERE email = ?', [email]);
+        // Respuesta uniforme aunque no exista / ya esté verificada (evita enumerar cuentas)
+        if (users.length > 0 && !users[0].email_verified) {
+            const code = genCode();
+            await pool.query(
+                'UPDATE usuarios SET verification_code = ?, verification_expires = ? WHERE id = ?',
+                [code, codeExpiry(), users[0].id]
+            );
+            await sendVerificationCode({ toEmail: email, toName: users[0].username, code });
+        }
+        res.json({ message: 'Si la cuenta existe y no está verificada, te hemos enviado un código.' });
+    } catch (err) {
+        console.error('Error in resend-code:', err);
         res.status(500).json({ message: 'Error interno del servidor' });
     }
 });

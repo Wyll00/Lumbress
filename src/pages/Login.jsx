@@ -86,6 +86,11 @@ const Login = () => {
             const data = await response.json();
 
             if (!response.ok) {
+                // Cuenta sin verificar: llevar a la pantalla del código
+                if (data.code === 'NEEDS_VERIFICATION') {
+                    navigate('/verify', { state: { email: credentials.email } });
+                    return;
+                }
                 throw new Error(data.message || t('authLoginError'));
             }
 

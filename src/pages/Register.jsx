@@ -46,8 +46,8 @@ const Register = () => {
                 throw new Error(data.message || t('authRegisterError'));
             }
 
-            // Redirect to login after successful registration
-            navigate('/login');
+            // Cuenta creada: ir a verificar con el código enviado al correo
+            navigate('/verify', { state: { email: formData.email } });
         } catch (err) {
             setError(err.message);
         } finally {
