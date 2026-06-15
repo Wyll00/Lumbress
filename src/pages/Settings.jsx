@@ -1,8 +1,8 @@
 import { useContext, useState, useEffect, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
-import { API_URL, withAuth } from '../config';
-import { Camera, User, Mail, Phone, Lock, Eye, EyeOff, Save, CheckCircle, XCircle, Clock, Bell, Share2, Copy, BadgeCheck } from 'lucide-react';
+import { API_URL, withAuth, isNative } from '../config';
+import { Camera, User, Mail, Phone, Lock, Eye, EyeOff, Save, CheckCircle, XCircle, Clock, Bell, Share2, Copy, BadgeCheck, Smartphone, Download } from 'lucide-react';
 import './Settings.css';
 
 const API = `${API_URL}/api/users`;
@@ -478,6 +478,25 @@ const Settings = () => {
                             </button>
                         </form>
                     </section>
+
+                    {/* Descargar la app Android (solo en web, no dentro de la propia app) */}
+                    {!isNative && (
+                        <section className="settings-card glass-panel">
+                            <h2><Smartphone size={18} /> App para Android</h2>
+                            <p style={{ color: 'var(--text-secondary)', margin: '0 0 16px', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                                Lleva Lumbres en tu móvil. Descarga la app de Android e instálala
+                                (al abrir el archivo, permite "instalar de orígenes desconocidos" — es normal en apps fuera de Play Store).
+                            </p>
+                            <a
+                                href="https://lumbress.com/lumbres.apk"
+                                download
+                                className="btn-primary settings-save-btn"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
+                            >
+                                <Download size={16} /> Descargar app (Android)
+                            </a>
+                        </section>
+                    )}
             </div>
         </div>
     );

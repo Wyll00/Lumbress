@@ -1,5 +1,5 @@
 // ¿Estamos dentro de la app nativa (Capacitor)?
-const isNative = typeof window !== 'undefined' && !!window.Capacitor?.isNativePlatform?.();
+export const isNative = typeof window !== 'undefined' && !!window.Capacitor?.isNativePlatform?.();
 
 // App nativa: los assets van empaquetados y la API vive en producción.
 // Web: VITE_API_URL vacío => mismo origen (proxy de nginx).
