@@ -56,22 +56,8 @@ router.post('/register', async (req, res) => {
         
         const newUserId = result.insertId;
 
-        // Auto-seed Categories for this new user!
-        const massiveTags = [
-            'Drama 🎭', 'Ciencia Ficción 🚀', 'Novela Negra 🕶️', 'Poesía ✒️', 
-            'Fantasía Épica 🐉', 'Romance ✨', 'Misterio & Thriller 🕵️‍♂️',
-            'Novela Histórica 🏛️', 'Crecimiento Personal 📈', 'Terror / Horror 👻',
-            'Biografía & Memorias 📖', 'Aventura 🗺️', 'Realismo Mágico 🦋',
-            'Ensayo / Filosofía 🧠', 'Comedia / Humor 😂', 'Clásicos Inmortales 📜',
-            'Distopía 🌆', 'Favoritos ⭐', 'Para Llorar a Mares 😭', 'Mejores del Año 🏆', 'Lecturas Ligeras ☕'
-        ];
-        
-        for (const tag of massiveTags) {
-            await pool.query(
-                'INSERT IGNORE INTO etiquetas_literarias (usuario_id, nombre) VALUES (?, ?)',
-                [newUserId, tag]
-            );
-        }
+        // NB: las categorías por defecto NO se siembran aquí, sino al verificar / primer uso
+        // (las auto-crea GET /api/categories). Así una cuenta sin verificar no deja datos basura.
 
         // Cuenta sin verificar: generamos código, lo guardamos y lo enviamos por email.
         const code = genCode();

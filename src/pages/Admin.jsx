@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState, useCallback } from 'react';
-import { ShieldCheck, Users, BookOpen, FileText, MessagesSquare, Store, CreditCard, Highlighter, HardDrive, RefreshCw, BadgeCheck } from 'lucide-react';
+import { ShieldCheck, Users, BookOpen, FileText, MessagesSquare, Store, CreditCard, Highlighter, HardDrive, RefreshCw, BadgeCheck, MailWarning } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { API_URL, withAuth } from '../config';
 
@@ -76,7 +76,8 @@ const Admin = () => {
 
             {stats && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, margin: '18px 0 26px' }}>
-                    <StatCard icon={Users} label="Usuarios" value={stats.usuarios} hint={stats.usuariosUltimos7d > 0 ? `+${stats.usuariosUltimos7d} esta semana` : null} />
+                    <StatCard icon={Users} label="Usuarios verificados" value={stats.usuarios} hint={stats.usuariosUltimos7d > 0 ? `+${stats.usuariosUltimos7d} esta semana` : null} />
+                    <StatCard icon={MailWarning} label="Sin verificar" value={stats.usuariosSinVerificar} hint={stats.usuariosSinVerificar > 0 ? 'se borran en 24h' : null} />
                     <StatCard icon={CreditCard} label="Suscripciones activas" value={stats.suscripcionesActivas} />
                     <StatCard icon={BookOpen} label="Libros" value={stats.libros} hint={stats.librosConArchivo > 0 ? `${stats.librosConArchivo} con EPUB/PDF` : null} />
                     <StatCard icon={Highlighter} label="Subrayados" value={stats.subrayados} />
@@ -104,7 +105,12 @@ const Admin = () => {
                                     <td style={{ padding: '9px 10px', color: 'var(--text)', borderBottom: '1px solid var(--card-border, rgba(255,255,255,0.06))' }}>
                                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                                             {u.username}
-                                            {!!u.is_verified && <BadgeCheck size={14} style={{ color: 'var(--accent-color)' }} title="Verificado" />}
+                                            {!!u.is_verified && <BadgeCheck size={14} style={{ color: 'var(--accent-color)' }} title="Cuenta verificada (sello)" />}
+                                            {!u.email_verified && (
+                                                <span title="Email sin verificar — se borra a las 24h" style={{ fontSize: '0.62rem', fontWeight: 700, color: '#e0a93b', background: 'rgba(224,169,59,0.12)', border: '1px solid rgba(224,169,59,0.3)', borderRadius: 999, padding: '1px 7px' }}>
+                                                    sin verificar
+                                                </span>
+                                            )}
                                         </span>
                                     </td>
                                     <td style={{ padding: '9px 10px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--card-border, rgba(255,255,255,0.06))' }}>{u.email}</td>

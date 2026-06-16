@@ -104,6 +104,7 @@ const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
 const shelvesRoutes = require('./routes/shelves');
 const { startNewsScheduler } = require('./services/newsFetcher');
+const { startCleanupScheduler } = require('./services/cleanup');
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/books', apiLimiter, booksRoutes);
@@ -128,6 +129,9 @@ app.use('/api/subscriptions', apiLimiter, subscriptionsModule.router);
 
 // Arranca el scheduler de noticias (fetch inicial + cada 60 min)
 startNewsScheduler();
+
+// Limpieza periódica de cuentas sin verificar (registros abandonados/falsos)
+startCleanupScheduler();
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });

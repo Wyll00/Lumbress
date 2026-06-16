@@ -20,11 +20,12 @@ router.get('/stats', async (req, res) => {
     try {
         const q = async (sql) => (await pool.query(sql))[0][0];
         const [
-            usuarios, usuarios7d, libros, conArchivo, posts, anuncios,
+            usuarios, usuarios7d, sinVerificar, libros, conArchivo, posts, anuncios,
             mensajes, suscripciones, subrayados, almacenamiento,
         ] = await Promise.all([
-            q('SELECT COUNT(*) n FROM usuarios'),
-            q('SELECT COUNT(*) n FROM usuarios WHERE created_at >= NOW() - INTERVAL 7 DAY'),
+            q('SELECT COUNT(*) n FROM usuarios WHERE email_verified = 1'),
+            q('SELECT COUNT(*) n FROM usuarios WHERE email_verified = 1 AND created_at >= NOW() - INTERVAL 7 DAY'),
+            q('SELECT COUNT(*) n FROM usuarios WHERE email_verified = 0'),
             q('SELECT COUNT(*) n FROM libros'),
             q('SELECT COUNT(*) n FROM libros WHERE archivo_url IS NOT NULL'),
             q('SELECT COUNT(*) n FROM posts'),
@@ -37,6 +38,7 @@ router.get('/stats', async (req, res) => {
         res.json({
             usuarios: usuarios.n,
             usuariosUltimos7d: usuarios7d.n,
+            usuariosSinVerificar: sinVerificar.n,
             libros: libros.n,
             librosConArchivo: conArchivo.n,
             posts: posts.n,
@@ -56,7 +58,7 @@ router.get('/stats', async (req, res) => {
 router.get('/users', async (req, res) => {
     try {
         const [rows] = await pool.query(`
-            SELECT u.id, u.username, u.email, u.plan, u.is_verified, u.created_at,
+            SELECT u.id, u.username, u.email, u.plan, u.is_verified, u.email_verified, u.created_at,
                    COUNT(DISTINCT l.id) AS libros,
                    COALESCE(u.storage_used_bytes, 0) AS storage_bytes
             FROM usuarios u
