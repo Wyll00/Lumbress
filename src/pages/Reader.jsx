@@ -1,6 +1,6 @@
 import { useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, Highlighter, Trash2, X, Pencil, Check } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Highlighter, Trash2, X, Pencil, Check, BookA, Search, Volume2, Loader2, Bookmark, BookmarkCheck, Maximize, Minimize } from 'lucide-react';
 import { ReactReader } from 'react-reader';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { LibraryContext } from '../context/LibraryContext';
@@ -57,6 +57,16 @@ const Reader = () => {
     const [savingLabels, setSavingLabels] = useState(false);
     const appliedRef = useRef(new Set()); // ids ya pintados en el rendition
 
+    // Diccionario
+    const [dict, setDict] = useState(null); // null | { word, loading, error, data, saved, lang }
+    const [wordsOpen, setWordsOpen] = useState(false); // panel "Mis palabras"
+    const [savedWords, setSavedWords] = useState([]);
+
+    // Pantalla completa
+    const containerRef = useRef(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const fsSupported = typeof document !== 'undefined' && (document.fullscreenEnabled || document.webkitFullscreenEnabled);
+
     const fileUrl = book?.fileUrl ? mediaUrl(book.fileUrl) : null;
     const isPdf = book?.fileType === 'pdf';
     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
@@ -69,7 +79,7 @@ const Reader = () => {
     // Al seleccionar texto en el EPUB, ofrecer subrayar
     const onTextSelected = useCallback((cfiRange, contents) => {
         const text = contents.window.getSelection()?.toString().trim();
-        if (text) setPending({ cfiRange, text });
+        if (text) { setPending({ cfiRange, text }); setDict(null); }
     }, []);
 
     const onRendition = useCallback((r) => {
@@ -153,6 +163,91 @@ const Reader = () => {
         try { rendition?.display(h.cfi_range); } catch { /* noop */ }
     };
 
+    // === Diccionario: palabras aprendidas ===
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/dictionary/saved`, withAuth());
+                if (res.ok) setSavedWords(await res.json());
+            } catch { /* noop */ }
+        })();
+    }, []);
+
+    // Busca el significado de la palabra/frase seleccionada (se muestra inline en la barra).
+    const lookupWord = async (text, lang = 'es') => {
+        setDict({ word: text, loading: true, error: '', data: null, saved: false, lang });
+        try {
+            const res = await fetch(`${API_URL}/api/dictionary/define?word=${encodeURIComponent(text)}&lang=${lang}`, withAuth());
+            const json = await res.json().catch(() => ({}));
+            if (res.ok && json.found) setDict({ word: json.word || text, loading: false, error: '', data: json, saved: false, lang });
+            else setDict({ word: text, loading: false, error: json.message || 'No encontramos una definición.', data: null, saved: false, lang });
+        } catch {
+            setDict({ word: text, loading: false, error: 'Error de conexión con el diccionario.', data: null, saved: false, lang });
+        }
+    };
+
+    // Pronunciación con la voz del navegador (sin internet ni claves)
+    const speakWord = (text, lang) => {
+        try {
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = lang === 'es' ? 'es-ES' : lang;
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(u);
+        } catch { /* navegador sin TTS */ }
+    };
+
+    // Guarda en "Mis palabras" la definición que se está mostrando
+    const saveDictWord = async () => {
+        if (!dict?.data || dict.saved) return;
+        const first = dict.data.meanings[0];
+        const definition = [
+            first.partOfSpeech ? `(${first.partOfSpeech})` : '',
+            first.definitions.slice(0, 2).join(' · '),
+        ].filter(Boolean).join(' ');
+        try {
+            const res = await fetch(`${API_URL}/api/dictionary/saved`, withAuth({
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ word: dict.data.word, definition, lang: dict.data.lang, bookId }),
+            }));
+            if (res.ok) { onWordSaved(await res.json()); setDict((d) => ({ ...d, saved: true })); }
+            else { const j = await res.json().catch(() => ({})); alert(j.message || 'No se pudo guardar la palabra.'); }
+        } catch { alert('Error de conexión.'); }
+    };
+
+    // Al guardar (desde aquí) la metemos al principio de la lista (sin duplicar)
+    const onWordSaved = (w) => {
+        setSavedWords((prev) => [w, ...prev.filter((x) => x.id !== w.id)]);
+    };
+
+    const removeSavedWord = async (id) => {
+        try {
+            const res = await fetch(`${API_URL}/api/dictionary/saved/${id}`, withAuth({ method: 'DELETE' }));
+            if (res.ok) setSavedWords((prev) => prev.filter((x) => x.id !== id));
+        } catch { /* noop */ }
+    };
+
+    // === Pantalla completa ===
+    const toggleFullscreen = () => {
+        const el = containerRef.current;
+        if (!el) return;
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
+        } else {
+            (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+        }
+    };
+
+    useEffect(() => {
+        const onFsChange = () => setIsFullscreen(!!(document.fullscreenElement || document.webkitFullscreenElement));
+        document.addEventListener('fullscreenchange', onFsChange);
+        document.addEventListener('webkitfullscreenchange', onFsChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', onFsChange);
+            document.removeEventListener('webkitfullscreenchange', onFsChange);
+        };
+    }, []);
+
     const goPage = (delta) => {
         setPage((p) => {
             const next = Math.min(Math.max(1, p + delta), numPages || 1);
@@ -193,7 +288,15 @@ const Reader = () => {
     }
 
     return (
-        <div className="reader-page animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: isMobile ? 'calc(100dvh - 130px)' : 'calc(100vh - 48px)' }}>
+        <div
+            ref={containerRef}
+            className="reader-page animate-fade-in"
+            style={{
+                display: 'flex', flexDirection: 'column',
+                height: isFullscreen ? '100vh' : (isMobile ? 'calc(100dvh - 130px)' : 'calc(100vh - 48px)'),
+                ...(isFullscreen ? { background: 'var(--bg, #161410)', padding: isMobile ? 12 : 20, boxSizing: 'border-box' } : {}),
+            }}
+        >
             <header style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 14, marginBottom: 10, flexWrap: 'wrap' }}>
                 <button
                     className="btn-secondary"
@@ -206,57 +309,158 @@ const Reader = () => {
                     <h2 style={{ margin: 0, fontSize: '1.05rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{book.title}</h2>
                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{book.author} · {book.fileType?.toUpperCase()}</p>
                 </div>
-                {!isPdf && (
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    {/* Pantalla completa */}
+                    {fsSupported && (
+                        <button
+                            className="btn-secondary"
+                            onClick={toggleFullscreen}
+                            title={isFullscreen ? 'Salir de pantalla completa' : 'Leer en pantalla completa'}
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', color: isFullscreen ? 'var(--accent-color)' : undefined }}
+                        >
+                            {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+                        </button>
+                    )}
+
+                    {/* Mis palabras (diccionario) — disponible en EPUB y PDF */}
                     <button
                         className="btn-secondary"
-                        onClick={() => setPanelOpen((o) => !o)}
-                        title="Tus frases subrayadas"
-                        style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', color: panelOpen ? 'var(--accent-color)' : undefined }}
+                        onClick={() => setWordsOpen(true)}
+                        title="Tus palabras guardadas del diccionario"
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', color: wordsOpen ? 'var(--accent-color)' : undefined }}
                     >
-                        <Highlighter size={16} /> Subrayados ({highlights.length})
+                        <BookA size={16} /> {isMobile ? `(${savedWords.length})` : `Palabras (${savedWords.length})`}
                     </button>
-                )}
-                {isPdf && numPages && (
-                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <button className="btn-secondary" onClick={() => goPage(-1)} disabled={page <= 1} style={{ padding: '6px 10px' }}><ChevronLeft size={16} /></button>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{page} / {numPages}</span>
-                        <button className="btn-secondary" onClick={() => goPage(1)} disabled={page >= numPages} style={{ padding: '6px 10px' }}><ChevronRight size={16} /></button>
-                    </div>
-                )}
+
+                    {!isPdf && (
+                        <button
+                            className="btn-secondary"
+                            onClick={() => setPanelOpen((o) => !o)}
+                            title="Tus frases subrayadas"
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', color: panelOpen ? 'var(--accent-color)' : undefined }}
+                        >
+                            <Highlighter size={16} /> {isMobile ? `(${highlights.length})` : `Subrayados (${highlights.length})`}
+                        </button>
+                    )}
+
+                    {isPdf && numPages && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <button className="btn-secondary" onClick={() => goPage(-1)} disabled={page <= 1} style={{ padding: '6px 10px' }}><ChevronLeft size={16} /></button>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{page} / {numPages}</span>
+                            <button className="btn-secondary" onClick={() => goPage(1)} disabled={page >= numPages} style={{ padding: '6px 10px' }}><ChevronRight size={16} /></button>
+                        </div>
+                    )}
+                </div>
             </header>
 
             {/* Barra de selección pendiente: aparece al seleccionar texto en el EPUB */}
             {pending && (
                 <div className="glass-panel" style={{
-                    display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', marginBottom: 10,
-                    borderLeft: '4px solid var(--accent-color, #e0a93b)', flexWrap: 'wrap',
+                    padding: '10px 16px', marginBottom: 10,
+                    borderLeft: '4px solid var(--accent-color, #e0a93b)',
                 }}>
-                    <Highlighter size={18} style={{ color: 'var(--accent-color)', flexShrink: 0 }} />
-                    <span style={{ flex: 1, minWidth: 160, fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        «{pending.text.length > 90 ? pending.text.slice(0, 90) + '…' : pending.text}»
-                    </span>
-                    {/* Elegir color = guardar con ese significado */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {Object.entries(HL_COLORS).map(([key, c]) => (
-                            <button
-                                key={key}
-                                onClick={() => saveHighlight(key)}
-                                disabled={saving}
-                                title={labels[key]}
-                                style={{
-                                    width: 26, height: 26, borderRadius: '50%', cursor: 'pointer',
-                                    background: c.hex, border: '2px solid rgba(255,255,255,0.25)',
-                                    opacity: saving ? 0.5 : 1, transition: 'transform 0.15s',
-                                    flexShrink: 0,
-                                }}
-                                onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.2)'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-                            />
-                        ))}
+                    {/* Fila de acciones */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                        <Highlighter size={18} style={{ color: 'var(--accent-color)', flexShrink: 0 }} />
+                        <span style={{ flex: 1, minWidth: 140, fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            «{pending.text.length > 90 ? pending.text.slice(0, 90) + '…' : pending.text}»
+                        </span>
+                        {/* Buscar el significado en el diccionario (se muestra aquí abajo) */}
+                        <button
+                            className="btn-secondary"
+                            onClick={() => lookupWord(pending.text)}
+                            title="Buscar el significado en el diccionario"
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', flexShrink: 0, whiteSpace: 'nowrap', color: dict ? 'var(--accent-color)' : undefined }}
+                        >
+                            <Search size={15} /> ¿Qué significa?
+                        </button>
+                        {/* Elegir color = guardar con ese significado */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            {Object.entries(HL_COLORS).map(([key, c]) => (
+                                <button
+                                    key={key}
+                                    onClick={() => saveHighlight(key)}
+                                    disabled={saving}
+                                    title={labels[key]}
+                                    style={{
+                                        width: 26, height: 26, borderRadius: '50%', cursor: 'pointer',
+                                        background: c.hex, border: '2px solid rgba(255,255,255,0.25)',
+                                        opacity: saving ? 0.5 : 1, transition: 'transform 0.15s',
+                                        flexShrink: 0,
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.2)'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                                />
+                            ))}
+                        </div>
+                        <button className="btn-secondary" onClick={() => { setPending(null); setDict(null); }} style={{ padding: '7px 10px' }} title="Cancelar">
+                            <X size={15} />
+                        </button>
                     </div>
-                    <button className="btn-secondary" onClick={() => setPending(null)} style={{ padding: '7px 10px' }} title="Cancelar">
-                        <X size={15} />
-                    </button>
+
+                    {/* Definición inline del diccionario */}
+                    {dict && (
+                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--card-border, rgba(255,255,255,0.1))', maxHeight: isMobile ? '38vh' : 220, overflowY: 'auto' }}>
+                            {dict.loading && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                                    <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Buscando definición…
+                                </div>
+                            )}
+
+                            {!dict.loading && dict.error && (
+                                <div>
+                                    <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{dict.error}</p>
+                                    <div style={{ display: 'flex', gap: 14, marginTop: 7, flexWrap: 'wrap' }}>
+                                        {dict.lang === 'es' && (
+                                            <button onClick={() => lookupWord(dict.word, 'en')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--accent-color)', fontSize: '0.82rem', fontWeight: 600 }}>
+                                                Buscar en inglés →
+                                            </button>
+                                        )}
+                                        {dict.word.trim().split(/\s+/).length > 1 && (
+                                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>💡 Prueba con una sola palabra.</span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {!dict.loading && dict.data && (
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                        <BookA size={16} style={{ color: 'var(--accent-color)', flexShrink: 0 }} />
+                                        <strong style={{ color: 'var(--text)', fontSize: '1rem', textTransform: 'capitalize' }}>{dict.data.word}</strong>
+                                        {dict.data.phonetic && <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', fontStyle: 'italic' }}>{dict.data.phonetic}</span>}
+                                        <button onClick={() => speakWord(dict.data.word, dict.data.lang)} title="Escuchar pronunciación" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 2 }}>
+                                            <Volume2 size={16} />
+                                        </button>
+                                        <button
+                                            onClick={saveDictWord}
+                                            disabled={dict.saved}
+                                            title="Guardar en Mis palabras"
+                                            style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: dict.saved ? 'default' : 'pointer', color: dict.saved ? 'var(--accent-color)' : 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}
+                                        >
+                                            {dict.saved ? <><BookmarkCheck size={15} /> Guardada</> : <><Bookmark size={15} /> Guardar</>}
+                                        </button>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                                        {dict.data.meanings.map((m, i) => (
+                                            <div key={i}>
+                                                {m.partOfSpeech && (
+                                                    <span style={{ display: 'inline-block', fontSize: '0.68rem', fontWeight: 700, color: 'var(--accent-color)', background: 'rgba(224,169,59,0.12)', borderRadius: 999, padding: '1px 9px', marginBottom: 5 }}>
+                                                        {m.partOfSpeech}
+                                                    </span>
+                                                )}
+                                                <ol style={{ margin: 0, paddingLeft: 18, color: 'var(--text)', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                                    {m.definitions.map((d, j) => (
+                                                        <li key={j} style={{ fontSize: '0.86rem', lineHeight: 1.45 }}>{d}</li>
+                                                    ))}
+                                                </ol>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -392,6 +596,44 @@ const Reader = () => {
                     </div>
                 )}
             </div>
+
+            {/* Modal: Mis palabras (diccionario) */}
+            {wordsOpen && (
+                <div
+                    onClick={() => setWordsOpen(false)}
+                    style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, backdropFilter: 'blur(2px)' }}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="glass-panel"
+                        style={{ width: '100%', maxWidth: 460, maxHeight: '82vh', display: 'flex', flexDirection: 'column', borderRadius: 16, background: 'var(--card-bg, #1f1a14)', border: '1px solid var(--card-border, rgba(255,255,255,0.12))' }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--card-border, rgba(255,255,255,0.08))' }}>
+                            <strong style={{ color: 'var(--text)', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <BookA size={18} style={{ color: 'var(--accent-color)' }} /> Mis palabras ({savedWords.length})
+                            </strong>
+                            <button onClick={() => setWordsOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex' }}><X size={20} /></button>
+                        </div>
+                        <div style={{ flex: 1, overflow: 'auto', padding: 14 }}>
+                            {savedWords.length === 0 ? (
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textAlign: 'center', margin: '24px 0', padding: '0 10px', lineHeight: 1.5 }}>
+                                    Aún no has guardado palabras. Selecciona una palabra del libro y pulsa <strong>«¿Qué significa?»</strong> para añadirla aquí. 📖
+                                </p>
+                            ) : savedWords.map((w) => (
+                                <div key={w.id} style={{ padding: '10px 12px', marginBottom: 8, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid var(--card-border, rgba(255,255,255,0.08))' }}>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                                        <strong style={{ color: 'var(--text)', fontSize: '0.95rem', textTransform: 'capitalize' }}>{w.palabra}</strong>
+                                        <button onClick={() => removeSavedWord(w.id)} title="Quitar palabra" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 2, flexShrink: 0 }}>
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                    {w.definicion && <p style={{ margin: '4px 0 0', fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>{w.definicion}</p>}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

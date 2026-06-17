@@ -7,7 +7,7 @@
 ## 1. Identidad
 
 - **Nombre:** Lumbres — *"Lecturas Sociales"*
-- **Versión actual:** v0.13.0 *(2026-06: **en producción** https://lumbress.com — app **Android (APK)** + **PWA** (iPhone/escritorio); estanterías, lector EPUB/PDF con subrayados por colores, suscripciones Stripe, **verificación de email por código** (Resend), panel de **admin**, limpieza de cuentas sin verificar)*
+- **Versión actual:** v0.14.0 *(2026-06: **en producción** https://lumbress.com — app **Android (APK)** + **PWA** (iPhone/escritorio); estanterías, lector EPUB/PDF con subrayados por colores, **diccionario integrado** (definición inline + palabras aprendidas) y **lectura a pantalla completa**, suscripciones Stripe, **verificación de email por código** (Resend), panel de **admin**, limpieza de cuentas sin verificar)*
 - **Idiomas UI:** ES (principal) / EN
 - **Logo:** llama dorada en círculo sobre negro — `public/logo.png` (512px, login/sidebar) + `public/favicon.png` (48px, pestaña). *(Rebrand 2026-06-10: antes "Códice")*
 - **Tipografías:** Inter + Fraunces (global), Plus Jakarta Sans + Spectral (Taller de Novela)
@@ -122,7 +122,7 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 
 ---
 
-## 5. Base de datos (14 tablas)
+## 5. Base de datos (18 tablas)
 
 | Tabla | Para qué |
 |---|---|
@@ -140,6 +140,10 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 | `mensajes` | (emisor_id, receptor_id, contenido, leido, **anuncio_id**) chat 1-a-1; `anuncio_id` enlaza la conversación a la oferta concreta |
 | `taller_novela` | (usuario_id PK, **data JSON**) un único documento por usuario para el Taller |
 | `suscripciones` | (usuario_id UNIQUE, stripe_customer_id, stripe_subscription_id, plan, status, current_period_end, cancel_at_period_end) — estado de la suscripción Stripe |
+| `subrayados` | (usuario_id, libro_id, cfi_range, texto, color, created_at) — subrayados del lector EPUB |
+| `estanterias` | (usuario_id, nombre UNIQUE, emoji) — estanterías para organizar libros |
+| `estanterias_libros` | tabla pivote estantería ↔ libro (FK CASCADE) |
+| `palabras_aprendidas` | (usuario_id, libro_id NULL, palabra, definicion, idioma, created_at) — diccionario: palabras guardadas. UNIQUE (usuario_id, palabra); FK libro `ON DELETE SET NULL` |
 
 ---
 
@@ -166,6 +170,9 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 | `/subscriptions` | POST /checkout `{interval: month\|year}`, POST /sync, POST /portal, GET /me → `{plan, plan_status, storage_used_bytes, subscription}`, **POST /webhook (body crudo)** | Stripe modelo **Free+Premium**: webhook/sync actualizan también `usuarios.plan` |
 | `/recommendations` | GET / | "Más libros de tus autores favoritos" (Open Library, descarta los que ya tienes) |
 | `/public/shelf/:username` | GET (**SIN auth**) | Estantería pública — solo si `public_shelf=1`; expone solo nombre/avatar/stats/libros (nunca email/teléfono) |
+| `/dictionary` | GET /define?word=&lang= , GET /saved , POST /saved , DELETE /saved/:id | Diccionario del lector: **español vía Wikcionario** (`es.wiktionary.org/w/api.php`, parser del extract), **inglés vía dictionaryapi.dev** (con fonética/sinónimos). CRUD de "palabras aprendidas" |
+| `/shelves` | GET/POST/PUT/DELETE + add/remove libro | Estanterías |
+| `/admin` | GET /stats , GET /users | Solo `is_admin`; métricas + lista de usuarios |
 | Estáticos | `/uploads/...` | servidos con `express.static` + CORP cross-origin |
 
 ---
@@ -246,6 +253,8 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 - ✅ **Logros/insignias** (Estadísticas): 10 badges calculados en vivo desde libros/perfil (sin BD)
 - ✅ **Estantería pública** (opt-in): toggle en Ajustes + ruta pública `/u/:username`; expone solo datos seguros
 - ✅ **Refactor**: los 3 autocompletados ahora envuelven un `<Typeahead>` genérico (sin duplicación)
+- ✅ **Diccionario integrado en el lector (2026-06-17)**: al seleccionar texto en el EPUB → botón "¿Qué significa?" en la barra de selección; la **definición se muestra inline en esa misma barra** (no modal), con tipo de palabra, fonética (inglés), 🔊 pronunciación (SpeechSynthesis) y "Guardar". Botón "Palabras (N)" en la cabecera con la lista de palabras guardadas (borrables). Backend `routes/dictionary.js`: español vía **Wikcionario** (el parser saca la definición de la línea que sigue a la cabecera numerada `1`/`1 Etiqueta`), inglés vía **dictionaryapi.dev**, fallback "Buscar en inglés →" cuando no hay resultado en español. Tabla `palabras_aprendidas`.
+- ✅ **Lectura a pantalla completa (2026-06-17)**: botón en la cabecera del lector (Fullscreen API sobre el contenedor del lector, así barra de selección/diccionario/subrayados siguen funcionando). Se oculta si el navegador no soporta fullscreen (iOS/Safari).
 
 ---
 
@@ -254,7 +263,7 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 ### 🎯 TAREAS PARA LA PRÓXIMA SESIÓN (pedidas por William el 2026-06-12)
 
 1. ✅ **Estanterías — HECHO (2026-06-13)**: tablas `estanterias` (usuario_id, nombre UNIQUE, emoji) + `estanterias_libros` (pivote, FK CASCADE). Ruta `server/routes/shelves.js` (GET/POST/PUT/DELETE + add/remove libro). El listado de libros trae `shelfIds`. UI en Mi Biblioteca: pestañas de filtro (Todas + cada estantería con contador), crear/renombrar/eliminar inline, y botón 📚 por libro que abre `ShelfPicker` (modal con checkboxes + crear al vuelo, 12 emojis). Funciones en LibraryContext: createShelf/renameShelf/deleteShelf/toggleBookInShelf. Verificado en local y prod. **SIN gate Premium aún** (el doc de estrategia las marca Premium — William decide; gatear = `requirePremium` en los endpoints de shelves + ocultar UI si plan!=premium).
-2. **📖 Diccionario integrado en el lector** — al seleccionar una palabra o frase en el EPUB, además de subrayar, opción "¿Qué significa?" con la definición. *Notas: encaja en la barra de selección existente del Reader (junto a los 5 colores). Fuente gratuita sin API key vía proxy del backend (patrón de Open Library): Wikcionario español (`es.wiktionary.org/w/api.php`) o `api.dictionaryapi.dev`. Mostrar definición en popover/panel; quizá guardar "palabras aprendidas".*
+2. ✅ **Diccionario integrado en el lector — HECHO (2026-06-17)**: ver checklist §10. Español vía Wikcionario, inglés vía dictionaryapi.dev, definición **inline** en la barra de selección, "Mis palabras" guardadas (tabla `palabras_aprendidas`). *(Nota: `dictionaryapi.dev` NO tiene español — devuelve 404 incluso para "libro"; por eso español va por Wikcionario.)* Además, **lectura a pantalla completa** (botón en la cabecera del lector, Fullscreen API).
 
 - ✅ ~~Notificaciones en navegador~~ · ✅ ~~Chat enlazado al anuncio~~ · ✅ ~~Suscripciones~~ *(hechos esta sesión)*
 - 🟡 **Stripe para prod**: webhook con la **Stripe CLI** (`stripe listen` → da `whsec_`) para renovaciones/cancelaciones automáticas. Hoy el alta funciona vía `/sync`; el Customer Portal ya está configurado (setup_stripe.js).
