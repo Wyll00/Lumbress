@@ -7,7 +7,7 @@
 ## 1. Identidad
 
 - **Nombre:** Lumbres — *"Lecturas Sociales"*
-- **Versión actual:** v0.11.0 *(sesión 2026-06-07: reto de lectura, recomendaciones, logros, estantería pública, refactor a `<Typeahead>`)*
+- **Versión actual:** v0.13.0 *(2026-06: **en producción** https://lumbress.com — app **Android (APK)** + **PWA** (iPhone/escritorio); estanterías, lector EPUB/PDF con subrayados por colores, suscripciones Stripe, **verificación de email por código** (Resend), panel de **admin**, limpieza de cuentas sin verificar)*
 - **Idiomas UI:** ES (principal) / EN
 - **Logo:** llama dorada en círculo sobre negro — `public/logo.png` (512px, login/sidebar) + `public/favicon.png` (48px, pestaña). *(Rebrand 2026-06-10: antes "Códice")*
 - **Tipografías:** Inter + Fraunces (global), Plus Jakarta Sans + Spectral (Taller de Novela)

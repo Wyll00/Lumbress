@@ -40,3 +40,6 @@ server/uploads/books/*
 
 # Assets fuente de la app (iconos/splash de @capacitor/assets)
 !assets/
+
+# Backups de .env (contienen secretos: NUNCA subir)
+*.env.bak
