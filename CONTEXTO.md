@@ -7,7 +7,7 @@
 ## 1. Identidad
 
 - **Nombre:** Lumbres — *"Lecturas Sociales"*
-- **Versión actual:** v0.14.0 *(2026-06: **en producción** https://lumbress.com — app **Android (APK)** + **PWA** (iPhone/escritorio); estanterías, lector EPUB/PDF con subrayados por colores, **diccionario integrado** (definición inline + palabras aprendidas) y **lectura a pantalla completa**, suscripciones Stripe, **verificación de email por código** (Resend), panel de **admin**, limpieza de cuentas sin verificar)*
+- **Versión actual:** v0.15.0 *(2026-06: **en producción** https://lumbress.com — app **Android (APK)** + **PWA** (iPhone/escritorio); estanterías, lector EPUB/PDF con subrayados por colores, **diccionario integrado** (definición inline + palabras aprendidas), **ajustes de lectura** (tamaño/interlineado/tipografía/tema, zoom PDF), **selección táctil en móvil** y **lectura a pantalla completa**, suscripciones Stripe, **verificación de email por código** (Resend), panel de **admin**, limpieza de cuentas sin verificar)*
 - **Idiomas UI:** ES (principal) / EN
 - **Logo:** llama dorada en círculo sobre negro — `public/logo.png` (512px, login/sidebar) + `public/favicon.png` (48px, pestaña). *(Rebrand 2026-06-10: antes "Códice")*
 - **Tipografías:** Inter + Fraunces (global), Plus Jakarta Sans + Spectral (Taller de Novela)
@@ -255,6 +255,8 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 - ✅ **Refactor**: los 3 autocompletados ahora envuelven un `<Typeahead>` genérico (sin duplicación)
 - ✅ **Diccionario integrado en el lector (2026-06-17)**: al seleccionar texto en el EPUB → botón "¿Qué significa?" en la barra de selección; la **definición se muestra inline en esa misma barra** (no modal), con tipo de palabra, fonética (inglés), 🔊 pronunciación (SpeechSynthesis) y "Guardar". Botón "Palabras (N)" en la cabecera con la lista de palabras guardadas (borrables). Backend `routes/dictionary.js`: español vía **Wikcionario** (el parser saca la definición de la línea que sigue a la cabecera numerada `1`/`1 Etiqueta`), inglés vía **dictionaryapi.dev**, fallback "Buscar en inglés →" cuando no hay resultado en español. Tabla `palabras_aprendidas`.
 - ✅ **Lectura a pantalla completa (2026-06-17)**: botón en la cabecera del lector (Fullscreen API sobre el contenedor del lector, así barra de selección/diccionario/subrayados siguen funcionando). Se oculta si el navegador no soporta fullscreen (iOS/Safari).
+- ✅ **Selección de texto en móvil/táctil (2026-06-18)**: epub.js solo dispara su evento `selected` en `mouseup`, así que en móvil no aparecía la barra de selección (ni diccionario ni subrayados). Añadido detector propio (`selectionchange` con rebote + `touchend`/`mouseup`) sobre el documento del EPUB vía `rendition.hooks.content` + `contents.cfiFromRange`.
+- ✅ **Ajustes de lectura (2026-06-18)**: panel "Aa" en la cabecera del lector — **tamaño de letra, interlineado, tipografía** (original/serif/sans) y **tema** (claro/sepia/oscuro) para EPUB (epub.js `themes.register/select/fontSize` + `readerStyles` de react-reader para el fondo del área); **zoom** para PDF. Persistido en `localStorage` (`lumbres-reader-settings`). Componentes `ReaderSettings.jsx` + `readerThemes.js`.
 
 ---
 

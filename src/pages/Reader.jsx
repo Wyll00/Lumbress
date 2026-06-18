@@ -1,11 +1,13 @@
 import { useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, Highlighter, Trash2, X, Pencil, Check, BookA, Search, Volume2, Loader2, Bookmark, BookmarkCheck, Maximize, Minimize } from 'lucide-react';
-import { ReactReader } from 'react-reader';
+import { ArrowLeft, ChevronLeft, ChevronRight, Highlighter, Trash2, X, Pencil, Check, BookA, Search, Volume2, Loader2, Bookmark, BookmarkCheck, Maximize, Minimize, ALargeSmall } from 'lucide-react';
+import { ReactReader, ReactReaderStyle } from 'react-reader';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { LibraryContext } from '../context/LibraryContext';
 import { AuthContext } from '../context/AuthContext';
 import { API_URL, withAuth, mediaUrl } from '../config';
+import ReaderSettings from '../components/ReaderSettings';
+import { THEMES } from '../components/readerThemes';
 
 // Worker de PDF.js servido por Vite desde node_modules
 pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
@@ -66,6 +68,15 @@ const Reader = () => {
     const containerRef = useRef(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const fsSupported = typeof document !== 'undefined' && (document.fullscreenEnabled || document.webkitFullscreenEnabled);
+
+    // Ajustes de lectura (tamaño de letra, interlineado, tipografía, tema; zoom para PDF)
+    const SETTINGS_KEY = 'lumbres-reader-settings';
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [readerSettings, setReaderSettings] = useState(() => {
+        const defaults = { fontSize: 100, lineHeight: 1.5, font: 'original', theme: 'claro', zoom: 100 };
+        try { return { ...defaults, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') }; }
+        catch { return defaults; }
+    });
 
     const fileUrl = book?.fileUrl ? mediaUrl(book.fileUrl) : null;
     const isPdf = book?.fileType === 'pdf';
@@ -293,6 +304,32 @@ const Reader = () => {
         };
     }, []);
 
+    // === Ajustes de lectura ===
+    // Persistir
+    useEffect(() => {
+        try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(readerSettings)); } catch { /* noop */ }
+    }, [readerSettings]);
+
+    // Aplicar al EPUB (tamaño, interlineado, tipografía y tema vía epub.js themes)
+    useEffect(() => {
+        if (!rendition || isPdf) return;
+        const { fontSize, lineHeight, font, theme } = readerSettings;
+        const p = THEMES[theme] || THEMES.claro;
+        const fam = font === 'sans' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+            : font === 'serif' ? 'Georgia, "Times New Roman", serif' : null;
+        const textRule = { color: `${p.fg} !important`, 'line-height': `${lineHeight} !important` };
+        if (fam) textRule['font-family'] = `${fam} !important`;
+        try {
+            rendition.themes.register('lumbres', {
+                'body': { background: `${p.bg} !important`, color: `${p.fg} !important` },
+                'p, div, span, li, a, blockquote, h1, h2, h3, h4, h5, h6, td, th, em, strong': textRule,
+                'a': { color: `${p.fg} !important` },
+            });
+            rendition.themes.select('lumbres');
+            rendition.themes.fontSize(`${fontSize}%`);
+        } catch { /* noop */ }
+    }, [rendition, readerSettings, isPdf]);
+
     const goPage = (delta) => {
         setPage((p) => {
             const next = Math.min(Math.max(1, p + delta), numPages || 1);
@@ -332,6 +369,15 @@ const Reader = () => {
         );
     }
 
+    // Fondo/color del área del lector EPUB según el tema elegido
+    const epubPalette = THEMES[readerSettings.theme] || THEMES.claro;
+    const epubReaderStyles = {
+        ...ReactReaderStyle,
+        readerArea: { ...ReactReaderStyle.readerArea, background: epubPalette.bg, transition: 'background 0.2s' },
+        arrow: { ...ReactReaderStyle.arrow, color: epubPalette.fg },
+        titleArea: { ...ReactReaderStyle.titleArea, color: epubPalette.fg },
+    };
+
     return (
         <div
             ref={containerRef}
@@ -355,6 +401,16 @@ const Reader = () => {
                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{book.author} · {book.fileType?.toUpperCase()}</p>
                 </div>
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    {/* Ajustes de lectura (tamaño de letra, tema…) */}
+                    <button
+                        className="btn-secondary"
+                        onClick={() => setSettingsOpen((o) => !o)}
+                        title="Ajustes de lectura (tamaño de letra, tema…)"
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', color: settingsOpen ? 'var(--accent-color)' : undefined }}
+                    >
+                        <ALargeSmall size={18} />
+                    </button>
+
                     {/* Pantalla completa */}
                     {fsSupported && (
                         <button
@@ -521,7 +577,7 @@ const Reader = () => {
                         >
                             <Page
                                 pageNumber={page}
-                                width={isMobile ? window.innerWidth - 32 : Math.min(880, window.innerWidth - 380)}
+                                width={Math.round((isMobile ? window.innerWidth - 32 : Math.min(880, window.innerWidth - 380)) * (readerSettings.zoom / 100))}
                                 renderTextLayer={false}
                                 renderAnnotationLayer={false}
                             />
@@ -537,6 +593,7 @@ const Reader = () => {
                             locationChanged={onEpubLocation}
                             getRendition={onRendition}
                             handleTextSelected={onTextSelected}
+                            readerStyles={epubReaderStyles}
                             epubOptions={{ allowScriptedContent: false }}
                         />
                     </div>
@@ -641,6 +698,16 @@ const Reader = () => {
                     </div>
                 )}
             </div>
+
+            {/* Panel de ajustes de lectura */}
+            {settingsOpen && (
+                <ReaderSettings
+                    settings={readerSettings}
+                    onChange={setReaderSettings}
+                    isPdf={isPdf}
+                    onClose={() => setSettingsOpen(false)}
+                />
+            )}
 
             {/* Modal: Mis palabras (diccionario) */}
             {wordsOpen && (
