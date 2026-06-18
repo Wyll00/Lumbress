@@ -111,6 +111,51 @@ const Reader = () => {
         });
     }, [rendition, highlights]);
 
+    // En móvil/táctil, epub.js NO dispara su evento 'selected' (se basa en mouseup).
+    // Detectamos la selección nosotros: selectionchange (con rebote) + touchend/mouseup
+    // sobre el documento interno del EPUB, y mostramos la barra de selección.
+    useEffect(() => {
+        if (!rendition) return;
+        const cleanups = [];
+
+        const showFromSelection = (contents) => {
+            try {
+                const sel = contents.window.getSelection();
+                if (!sel || sel.isCollapsed) return;
+                const text = sel.toString().trim();
+                if (!text) return;
+                const cfiRange = contents.cfiFromRange(sel.getRangeAt(0));
+                setPending({ cfiRange, text });
+                setDict(null);
+            } catch { /* selección no resoluble a CFI */ }
+        };
+
+        const attach = (contents) => {
+            if (!contents?.document) return;
+            const doc = contents.document;
+            let timer;
+            const debounced = () => { clearTimeout(timer); timer = setTimeout(() => showFromSelection(contents), 350); };
+            const immediate = () => showFromSelection(contents);
+            doc.addEventListener('selectionchange', debounced);
+            doc.addEventListener('touchend', immediate);
+            doc.addEventListener('mouseup', immediate);
+            cleanups.push(() => {
+                clearTimeout(timer);
+                doc.removeEventListener('selectionchange', debounced);
+                doc.removeEventListener('touchend', immediate);
+                doc.removeEventListener('mouseup', immediate);
+            });
+        };
+
+        try { (rendition.getContents() || []).forEach(attach); } catch { /* aún sin render */ }
+        try { rendition.hooks?.content?.register(attach); } catch { /* noop */ }
+
+        return () => {
+            cleanups.forEach((fn) => fn());
+            try { rendition.hooks?.content?.deregister(attach); } catch { /* noop */ }
+        };
+    }, [rendition]);
+
     const saveHighlight = async (color) => {
         if (!pending || saving) return;
         setSaving(true);
