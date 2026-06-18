@@ -1,6 +1,6 @@
 import { useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, Highlighter, Trash2, X, Pencil, Check, BookA, Search, Volume2, Loader2, Bookmark, BookmarkCheck, Maximize, Minimize, ALargeSmall } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Highlighter, Trash2, X, Pencil, Check, BookA, Maximize, Minimize, ALargeSmall } from 'lucide-react';
 import { ReactReader, ReactReaderStyle } from 'react-reader';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { LibraryContext } from '../context/LibraryContext';
@@ -8,6 +8,7 @@ import { AuthContext } from '../context/AuthContext';
 import { API_URL, withAuth, mediaUrl } from '../config';
 import ReaderSettings from '../components/ReaderSettings';
 import { THEMES } from '../components/readerThemes';
+import SelectionTools from '../components/SelectionTools';
 
 // Worker de PDF.js servido por Vite desde node_modules
 pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
@@ -454,115 +455,22 @@ const Reader = () => {
                 </div>
             </header>
 
-            {/* Barra de selección pendiente: aparece al seleccionar texto en el EPUB */}
+            {/* Herramientas de selección (diccionario + subrayado): barra arriba en escritorio, hoja inferior en móvil */}
             {pending && (
-                <div className="glass-panel" style={{
-                    padding: '10px 16px', marginBottom: 10,
-                    borderLeft: '4px solid var(--accent-color, #e0a93b)',
-                }}>
-                    {/* Fila de acciones */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                        <Highlighter size={18} style={{ color: 'var(--accent-color)', flexShrink: 0 }} />
-                        <span style={{ flex: 1, minWidth: 140, fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            «{pending.text.length > 90 ? pending.text.slice(0, 90) + '…' : pending.text}»
-                        </span>
-                        {/* Buscar el significado en el diccionario (se muestra aquí abajo) */}
-                        <button
-                            className="btn-secondary"
-                            onClick={() => lookupWord(pending.text)}
-                            title="Buscar el significado en el diccionario"
-                            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', flexShrink: 0, whiteSpace: 'nowrap', color: dict ? 'var(--accent-color)' : undefined }}
-                        >
-                            <Search size={15} /> ¿Qué significa?
-                        </button>
-                        {/* Elegir color = guardar con ese significado */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            {Object.entries(HL_COLORS).map(([key, c]) => (
-                                <button
-                                    key={key}
-                                    onClick={() => saveHighlight(key)}
-                                    disabled={saving}
-                                    title={labels[key]}
-                                    style={{
-                                        width: 26, height: 26, borderRadius: '50%', cursor: 'pointer',
-                                        background: c.hex, border: '2px solid rgba(255,255,255,0.25)',
-                                        opacity: saving ? 0.5 : 1, transition: 'transform 0.15s',
-                                        flexShrink: 0,
-                                    }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.2)'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-                                />
-                            ))}
-                        </div>
-                        <button className="btn-secondary" onClick={() => { setPending(null); setDict(null); }} style={{ padding: '7px 10px' }} title="Cancelar">
-                            <X size={15} />
-                        </button>
-                    </div>
-
-                    {/* Definición inline del diccionario */}
-                    {dict && (
-                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--card-border, rgba(255,255,255,0.1))', maxHeight: isMobile ? '38vh' : 220, overflowY: 'auto' }}>
-                            {dict.loading && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                                    <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Buscando definición…
-                                </div>
-                            )}
-
-                            {!dict.loading && dict.error && (
-                                <div>
-                                    <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{dict.error}</p>
-                                    <div style={{ display: 'flex', gap: 14, marginTop: 7, flexWrap: 'wrap' }}>
-                                        {dict.lang === 'es' && (
-                                            <button onClick={() => lookupWord(dict.word, 'en')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--accent-color)', fontSize: '0.82rem', fontWeight: 600 }}>
-                                                Buscar en inglés →
-                                            </button>
-                                        )}
-                                        {dict.word.trim().split(/\s+/).length > 1 && (
-                                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>💡 Prueba con una sola palabra.</span>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {!dict.loading && dict.data && (
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                        <BookA size={16} style={{ color: 'var(--accent-color)', flexShrink: 0 }} />
-                                        <strong style={{ color: 'var(--text)', fontSize: '1rem', textTransform: 'capitalize' }}>{dict.data.word}</strong>
-                                        {dict.data.phonetic && <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', fontStyle: 'italic' }}>{dict.data.phonetic}</span>}
-                                        <button onClick={() => speakWord(dict.data.word, dict.data.lang)} title="Escuchar pronunciación" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 2 }}>
-                                            <Volume2 size={16} />
-                                        </button>
-                                        <button
-                                            onClick={saveDictWord}
-                                            disabled={dict.saved}
-                                            title="Guardar en Mis palabras"
-                                            style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: dict.saved ? 'default' : 'pointer', color: dict.saved ? 'var(--accent-color)' : 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}
-                                        >
-                                            {dict.saved ? <><BookmarkCheck size={15} /> Guardada</> : <><Bookmark size={15} /> Guardar</>}
-                                        </button>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-                                        {dict.data.meanings.map((m, i) => (
-                                            <div key={i}>
-                                                {m.partOfSpeech && (
-                                                    <span style={{ display: 'inline-block', fontSize: '0.68rem', fontWeight: 700, color: 'var(--accent-color)', background: 'rgba(224,169,59,0.12)', borderRadius: 999, padding: '1px 9px', marginBottom: 5 }}>
-                                                        {m.partOfSpeech}
-                                                    </span>
-                                                )}
-                                                <ol style={{ margin: 0, paddingLeft: 18, color: 'var(--text)', display: 'flex', flexDirection: 'column', gap: 3 }}>
-                                                    {m.definitions.map((d, j) => (
-                                                        <li key={j} style={{ fontSize: '0.86rem', lineHeight: 1.45 }}>{d}</li>
-                                                    ))}
-                                                </ol>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+                <SelectionTools
+                    isMobile={isMobile}
+                    pending={pending}
+                    dict={dict}
+                    colors={HL_COLORS}
+                    labels={labels}
+                    saving={saving}
+                    onSaveHighlight={saveHighlight}
+                    onLookup={() => lookupWord(pending.text)}
+                    onLookupLang={(lang) => lookupWord(dict.word, lang)}
+                    onSpeak={speakWord}
+                    onSaveWord={saveDictWord}
+                    onClose={() => { setPending(null); setDict(null); }}
+                />
             )}
 
             <div className="glass-panel" style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden', borderRadius: 14 }}>
