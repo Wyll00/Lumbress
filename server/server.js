@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const pool = require('./db');
+const { logTraffic } = require('./middleware/traffic');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -59,6 +60,9 @@ app.post('/api/subscriptions/webhook', express.raw({ type: 'application/json' })
 app.use(express.json({ limit: '100mb' }));
 app.use(cookieParser());
 
+// Analítica de tráfico: registra cada petición a la API (país + IP) para el panel de admin
+app.use(logTraffic);
+
 // Request logging — disabled in production by default
 if (!isProduction) {
     app.use((req, res, next) => {
@@ -104,6 +108,7 @@ const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
 const shelvesRoutes = require('./routes/shelves');
 const dictionaryRoutes = require('./routes/dictionary');
+const trackRoutes = require('./routes/track');
 const { startNewsScheduler } = require('./services/newsFetcher');
 const { startCleanupScheduler } = require('./services/cleanup');
 
@@ -127,6 +132,7 @@ app.use('/api/public', apiLimiter, publicRoutes);
 app.use('/api/admin', apiLimiter, adminRoutes);
 app.use('/api/shelves', apiLimiter, shelvesRoutes);
 app.use('/api/dictionary', apiLimiter, dictionaryRoutes);
+app.use('/api/track', apiLimiter, trackRoutes);
 app.use('/api/subscriptions', apiLimiter, subscriptionsModule.router);
 
 // Arranca el scheduler de noticias (fetch inicial + cada 60 min)

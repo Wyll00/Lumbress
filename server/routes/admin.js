@@ -74,4 +74,55 @@ router.get('/users', async (req, res) => {
     }
 });
 
+// GET /api/admin/traffic — analítica de tráfico (peticiones, visitas, países, páginas)
+router.get('/traffic', async (req, res) => {
+    try {
+        const rows = async (sql) => (await pool.query(sql))[0];
+        const one = async (sql) => (await rows(sql))[0];
+
+        const [
+            reqHoy, req7, req30, reqTotal,
+            pvHoy, pv7, pvTotal,
+            uniq7, uniq30,
+        ] = await Promise.all([
+            one("SELECT COUNT(*) n FROM trafico WHERE tipo='request' AND created_at >= CURDATE()"),
+            one("SELECT COUNT(*) n FROM trafico WHERE tipo='request' AND created_at >= NOW() - INTERVAL 7 DAY"),
+            one("SELECT COUNT(*) n FROM trafico WHERE tipo='request' AND created_at >= NOW() - INTERVAL 30 DAY"),
+            one("SELECT COUNT(*) n FROM trafico WHERE tipo='request'"),
+            one("SELECT COUNT(*) n FROM trafico WHERE tipo='pageview' AND created_at >= CURDATE()"),
+            one("SELECT COUNT(*) n FROM trafico WHERE tipo='pageview' AND created_at >= NOW() - INTERVAL 7 DAY"),
+            one("SELECT COUNT(*) n FROM trafico WHERE tipo='pageview'"),
+            one("SELECT COUNT(DISTINCT ip) n FROM trafico WHERE ip IS NOT NULL AND created_at >= NOW() - INTERVAL 7 DAY"),
+            one("SELECT COUNT(DISTINCT ip) n FROM trafico WHERE ip IS NOT NULL AND created_at >= NOW() - INTERVAL 30 DAY"),
+        ]);
+
+        const porPais = await rows(`
+            SELECT COALESCE(pais, 'Desconocido') AS pais, pais_codigo AS codigo, COUNT(*) AS total
+            FROM trafico WHERE created_at >= NOW() - INTERVAL 30 DAY
+            GROUP BY pais, pais_codigo ORDER BY total DESC LIMIT 12`);
+        const topPaginas = await rows(`
+            SELECT ruta, COUNT(*) AS total
+            FROM trafico WHERE tipo='pageview' AND created_at >= NOW() - INTERVAL 30 DAY
+            GROUP BY ruta ORDER BY total DESC LIMIT 10`);
+        const porDia = await rows(`
+            SELECT DATE(created_at) AS dia,
+                   SUM(tipo='request') AS peticiones,
+                   SUM(tipo='pageview') AS visitas
+            FROM trafico WHERE created_at >= NOW() - INTERVAL 13 DAY
+            GROUP BY DATE(created_at) ORDER BY dia`);
+
+        res.json({
+            peticiones: { hoy: reqHoy.n, semana: req7.n, mes: req30.n, total: reqTotal.n },
+            visitas: { hoy: pvHoy.n, semana: pv7.n, total: pvTotal.n },
+            unicos: { semana: uniq7.n, mes: uniq30.n },
+            porPais: porPais.map((p) => ({ ...p, total: Number(p.total) })),
+            topPaginas: topPaginas.map((p) => ({ ...p, total: Number(p.total) })),
+            porDia: porDia.map((d) => ({ dia: d.dia, peticiones: Number(d.peticiones), visitas: Number(d.visitas) })),
+        });
+    } catch (err) {
+        console.error('[admin] traffic error:', err);
+        res.status(500).json({ message: 'Error obteniendo el tráfico' });
+    }
+});
+
 module.exports = router;

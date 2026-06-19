@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState, useCallback } from 'react';
-import { ShieldCheck, Users, BookOpen, FileText, MessagesSquare, Store, CreditCard, Highlighter, HardDrive, RefreshCw, BadgeCheck, MailWarning } from 'lucide-react';
+import { ShieldCheck, Users, BookOpen, FileText, MessagesSquare, Store, CreditCard, Highlighter, HardDrive, RefreshCw, BadgeCheck, MailWarning, Globe, Activity, Eye } from 'lucide-react';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { AuthContext } from '../context/AuthContext';
 import { API_URL, withAuth } from '../config';
 
@@ -10,6 +11,10 @@ const fmtBytes = (b) => {
     while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
     return `${n.toFixed(i ? 1 : 0)} ${u[i]}`;
 };
+
+// Código ISO de país → emoji de bandera (🇪🇸). Sin código → globo.
+const flag = (cc) => (cc ? String.fromCodePoint(...[...cc.toUpperCase()].map((c) => 0x1F1E6 + c.charCodeAt(0) - 65)) : '🌐');
+const fmtDia = (iso) => { try { return new Date(iso).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }); } catch { return iso; } };
 
 // eslint-disable-next-line no-unused-vars -- `Icon` se usa como componente en JSX (patrón icono-por-prop)
 const StatCard = ({ icon: Icon, label, value, hint }) => (
@@ -35,17 +40,20 @@ const Admin = () => {
     const { user } = useContext(AuthContext);
     const [stats, setStats] = useState(null);
     const [users, setUsers] = useState([]);
+    const [traffic, setTraffic] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const [s, u] = await Promise.all([
+            const [s, u, t] = await Promise.all([
                 fetch(`${API_URL}/api/admin/stats`, withAuth()),
                 fetch(`${API_URL}/api/admin/users`, withAuth()),
+                fetch(`${API_URL}/api/admin/traffic`, withAuth()),
             ]);
             if (s.ok) setStats(await s.json());
             if (u.ok) setUsers(await u.json());
+            if (t.ok) setTraffic(await t.json());
         } catch { /* noop */ }
         finally { setLoading(false); }
     }, []);
@@ -85,6 +93,67 @@ const Admin = () => {
                     <StatCard icon={Store} label="Anuncios marketplace" value={stats.anuncios} />
                     <StatCard icon={MessagesSquare} label="Mensajes de chat" value={stats.mensajes} />
                     <StatCard icon={HardDrive} label="Almacenamiento usado" value={fmtBytes(stats.almacenamientoBytes)} />
+                </div>
+            )}
+
+            {traffic && (
+                <div style={{ margin: '0 0 26px' }}>
+                    <h3 style={{ margin: '0 0 14px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Activity size={18} style={{ color: 'var(--accent-color)' }} /> Tráfico
+                    </h3>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 14 }}>
+                        <StatCard icon={Activity} label="Peticiones (hoy)" value={traffic.peticiones.hoy} hint={`${traffic.peticiones.total} en total`} />
+                        <StatCard icon={Eye} label="Páginas vistas (hoy)" value={traffic.visitas.hoy} hint={traffic.visitas.semana > 0 ? `${traffic.visitas.semana} esta semana` : null} />
+                        <StatCard icon={Users} label="Visitantes únicos (7d)" value={traffic.unicos.semana} hint={traffic.unicos.mes > 0 ? `${traffic.unicos.mes} en 30 días` : null} />
+                        <StatCard icon={Globe} label="Países (30d)" value={traffic.porPais.length} />
+                    </div>
+
+                    <div className="glass-panel" style={{ padding: '18px 20px', marginBottom: 14 }}>
+                        <p style={{ margin: '0 0 12px', fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Actividad (últimos 14 días)</p>
+                        <div style={{ width: '100%', height: 240 }}>
+                            <ResponsiveContainer>
+                                <LineChart data={traffic.porDia.map((d) => ({ ...d, dia: fmtDia(d.dia) }))} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                                    <XAxis dataKey="dia" tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} />
+                                    <YAxis tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} allowDecimals={false} width={36} />
+                                    <Tooltip contentStyle={{ background: '#1f1a14', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, fontSize: '0.8rem' }} />
+                                    <Line type="monotone" dataKey="peticiones" name="Peticiones" stroke="#e0a93b" strokeWidth={2} dot={false} />
+                                    <Line type="monotone" dataKey="visitas" name="Páginas vistas" stroke="#4aa3df" strokeWidth={2} dot={false} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
+                        <div className="glass-panel" style={{ padding: '18px 20px' }}>
+                            <p style={{ margin: '0 0 12px', fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Países (30 días)</p>
+                            {traffic.porPais.length === 0 ? (
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Sin datos todavía.</p>
+                            ) : traffic.porPais.map((p, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
+                                    <span style={{ fontSize: '1.1rem', width: 24, textAlign: 'center' }}>{flag(p.codigo)}</span>
+                                    <span style={{ flex: 1, minWidth: 0, color: 'var(--text)', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.pais}</span>
+                                    <div style={{ width: 80, height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden', flexShrink: 0 }}>
+                                        <div style={{ width: `${Math.round((p.total / (traffic.porPais[0]?.total || 1)) * 100)}%`, height: '100%', background: 'var(--accent-color)' }} />
+                                    </div>
+                                    <span style={{ width: 52, textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{p.total}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="glass-panel" style={{ padding: '18px 20px' }}>
+                            <p style={{ margin: '0 0 12px', fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Páginas más vistas (30 días)</p>
+                            {traffic.topPaginas.length === 0 ? (
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Aún no hay páginas vistas registradas.</p>
+                            ) : traffic.topPaginas.map((p, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '7px 0', borderBottom: '1px solid var(--card-border, rgba(255,255,255,0.06))' }}>
+                                    <span style={{ color: 'var(--text)', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.ruta}</span>
+                                    <span style={{ color: 'var(--accent-color)', fontWeight: 700, fontSize: '0.85rem', flexShrink: 0 }}>{p.total}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             )}
 

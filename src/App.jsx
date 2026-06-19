@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
 import MiniPlayer from './components/MiniPlayer';
+import RouteTracker from './components/RouteTracker';
 import './App.css';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -31,6 +32,7 @@ const PageLoader = () => (
 function App() {
   return (
     <Suspense fallback={<PageLoader />}>
+      <RouteTracker />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

@@ -23,10 +23,30 @@ async function purgeUnverified() {
     }
 }
 
+// Días que conservamos los registros de tráfico (analítica). Más antiguos se borran.
+const TRAFFIC_TTL_DAYS = Math.max(1, parseInt(process.env.TRAFFIC_TTL_DAYS, 10) || 90);
+
+// Borra registros de tráfico antiguos para que la tabla no crezca sin límite.
+async function purgeTraffic() {
+    try {
+        const [res] = await pool.query(
+            `DELETE FROM trafico WHERE created_at < (NOW() - INTERVAL ${TRAFFIC_TTL_DAYS} DAY)`
+        );
+        if (res.affectedRows > 0) {
+            console.log(`[cleanup] Tráfico antiguo purgado (filas afectadas: ${res.affectedRows})`);
+        }
+    } catch (err) {
+        // La tabla puede no existir aún en un entorno recién creado: no es crítico.
+        if (err.code !== 'ER_NO_SUCH_TABLE') console.error('[cleanup] Error purgando tráfico:', err.message);
+    }
+}
+
 // Ejecuta al arrancar (tras un pequeño retardo) y luego cada 6 horas.
 function startCleanupScheduler() {
     setTimeout(purgeUnverified, 30 * 1000);
+    setTimeout(purgeTraffic, 45 * 1000);
     setInterval(purgeUnverified, 6 * 60 * 60 * 1000);
+    setInterval(purgeTraffic, 12 * 60 * 60 * 1000);
 }
 
-module.exports = { startCleanupScheduler, purgeUnverified };
+module.exports = { startCleanupScheduler, purgeUnverified, purgeTraffic };

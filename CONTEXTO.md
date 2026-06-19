@@ -7,7 +7,7 @@
 ## 1. Identidad
 
 - **Nombre:** Lumbres — *"Lecturas Sociales"*
-- **Versión actual:** v0.15.1 *(2026-06: **en producción** https://lumbress.com — app **Android (APK)** + **PWA** (iPhone/escritorio); estanterías, lector EPUB/PDF con subrayados por colores, **diccionario integrado** (definición inline + palabras aprendidas), **ajustes de lectura** (tamaño/interlineado/tipografía/tema, zoom PDF), **selección táctil en móvil** y **lectura a pantalla completa**, suscripciones Stripe, **verificación de email por código** (Resend), panel de **admin**, limpieza de cuentas sin verificar)*
+- **Versión actual:** v0.16.0 *(2026-06: **en producción** https://lumbress.com — app **Android (APK)** + **PWA** (iPhone/escritorio); estanterías, lector EPUB/PDF con subrayados por colores, **diccionario integrado** (definición inline + palabras aprendidas), **ajustes de lectura** (tamaño/interlineado/tipografía/tema, zoom PDF), **selección táctil en móvil** y **lectura a pantalla completa**, suscripciones Stripe, **verificación de email por código** (Resend), panel de **admin**, limpieza de cuentas sin verificar)*
 - **Idiomas UI:** ES (principal) / EN
 - **Logo:** llama dorada en círculo sobre negro — `public/logo.png` (512px, login/sidebar) + `public/favicon.png` (48px, pestaña). *(Rebrand 2026-06-10: antes "Códice")*
 - **Tipografías:** Inter + Fraunces (global), Plus Jakarta Sans + Spectral (Taller de Novela)
@@ -122,7 +122,7 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 
 ---
 
-## 5. Base de datos (18 tablas)
+## 5. Base de datos (19 tablas)
 
 | Tabla | Para qué |
 |---|---|
@@ -144,6 +144,7 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 | `estanterias` | (usuario_id, nombre UNIQUE, emoji) — estanterías para organizar libros |
 | `estanterias_libros` | tabla pivote estantería ↔ libro (FK CASCADE) |
 | `palabras_aprendidas` | (usuario_id, libro_id NULL, palabra, definicion, idioma, created_at) — diccionario: palabras guardadas. UNIQUE (usuario_id, palabra); FK libro `ON DELETE SET NULL` |
+| `trafico` | (tipo `request`\|`pageview`, metodo, ruta, status, ip, pais, pais_codigo, usuario_id NULL, created_at) — analítica de tráfico para el panel admin. Índices created_at/tipo/pais. Retención 90 días (purga en cleanup) |
 
 ---
 
@@ -172,7 +173,8 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 | `/public/shelf/:username` | GET (**SIN auth**) | Estantería pública — solo si `public_shelf=1`; expone solo nombre/avatar/stats/libros (nunca email/teléfono) |
 | `/dictionary` | GET /define?word=&lang= , GET /saved , POST /saved , DELETE /saved/:id | Diccionario del lector: **español vía Wikcionario** (`es.wiktionary.org/w/api.php`, parser del extract), **inglés vía dictionaryapi.dev** (con fonética/sinónimos). CRUD de "palabras aprendidas" |
 | `/shelves` | GET/POST/PUT/DELETE + add/remove libro | Estanterías |
-| `/admin` | GET /stats , GET /users | Solo `is_admin`; métricas + lista de usuarios |
+| `/admin` | GET /stats , GET /users , GET /traffic | Solo `is_admin`; métricas + lista de usuarios + **analítica de tráfico** (peticiones/visitas/países/páginas) |
+| `/track` | POST `{ path }` | Registra una página vista del SPA (público; adjunta usuario si hay token). El país e IP los pone el servidor (geoip-lite) |
 | Estáticos | `/uploads/...` | servidos con `express.static` + CORP cross-origin |
 
 ---
@@ -257,6 +259,7 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 - ✅ **Lectura a pantalla completa (2026-06-17)**: botón en la cabecera del lector (Fullscreen API sobre el contenedor del lector, así barra de selección/diccionario/subrayados siguen funcionando). Se oculta si el navegador no soporta fullscreen (iOS/Safari).
 - ✅ **Selección de texto en móvil/táctil (2026-06-18)**: epub.js solo dispara su evento `selected` en `mouseup`, así que en móvil no aparecía la barra de selección (ni diccionario ni subrayados). Añadido detector propio (`selectionchange` con rebote + `touchend`/`mouseup`) sobre el documento del EPUB vía `rendition.hooks.content` + `contents.cfiFromRange`.
 - ✅ **Ajustes de lectura (2026-06-18)**: panel "Aa" en la cabecera del lector — **tamaño de letra, interlineado, tipografía** (original/serif/sans) y **tema** (claro/sepia/oscuro) para EPUB (epub.js `themes.register/select/fontSize` + `readerStyles` de react-reader para el fondo del área); **zoom** para PDF. Persistido en `localStorage` (`lumbres-reader-settings`). Componentes `ReaderSettings.jsx` + `readerThemes.js`.
+- ✅ **Analítica de tráfico en el panel admin (2026-06-19)**: sección "Tráfico" en `/admin` con tarjetas (peticiones hoy/total, páginas vistas, visitantes únicos, nº países), gráfica de 14 días (recharts: peticiones + páginas vistas) y listas de **países** (bandera por código ISO) y **páginas más vistas**. Backend: middleware `middleware/traffic.js` (registra cada petición a la API, fire-and-forget vía `res.on('finish')`), ruta `/api/track` (páginas vistas del SPA, llamada desde `RouteTracker.jsx` en cada cambio de ruta), país por **geoip-lite** (offline, sin claves; nombre en español vía `Intl.DisplayNames`), endpoint `GET /api/admin/traffic`. Tabla `trafico` (guarda **país + IP** — decisión del dueño; RGPD: requiere aviso de privacidad). Retención 90 días (`purgeTraffic` en cleanup). **El deploy necesita `--deps`** (dependencia nueva geoip-lite) y crear la tabla en prod (`node scripts/create_trafico.js`).
 - ✅ **Herramientas de selección adaptadas a móvil (2026-06-18)**: extraídas a `SelectionTools.jsx`. En **escritorio** = barra superior (como antes); en **móvil** = **hoja deslizante desde abajo** (backdrop + sheet) con "¿Qué significa?" + definición + colores de subrayado, para no saturar la parte de arriba en pantallas pequeñas. *(Diagnóstico verificado en navegador real con la cuenta demo `freetester`/`pruebas1234` + libro EPUB id 15: la detección de selección de epub.js — `selectionchange` → evento `selected` → `handleTextSelected` — funciona en escritorio Y móvil. Si en un dispositivo no aparece, sospechar **caché del service worker** sirviendo un bundle viejo: cerrar del todo y reabrir.)*
 
 ---
