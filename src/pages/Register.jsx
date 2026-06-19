@@ -137,6 +137,12 @@ const Register = () => {
                     <button type="submit" className="primary-btn auth-submit" disabled={isLoading}>
                         {isLoading ? t('authRegistering') : t('authRegisterBtn')}
                     </button>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', textAlign: 'center', margin: '12px 0 0', lineHeight: 1.5 }}>
+                        Al registrarte aceptas los{' '}
+                        <Link to="/terminos" style={{ color: 'var(--accent-color)' }}>Términos y Condiciones</Link>{' '}
+                        y la{' '}
+                        <Link to="/privacidad" style={{ color: 'var(--accent-color)' }}>Política de Privacidad</Link>.
+                    </p>
                 </form>
 
                 <div className="auth-footer">

@@ -1,8 +1,9 @@
 import { useContext, useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
 import { API_URL, withAuth, isNative } from '../config';
-import { Camera, User, Mail, Phone, Lock, Eye, EyeOff, Save, CheckCircle, XCircle, Clock, Bell, Share2, Copy, BadgeCheck, Smartphone, Download } from 'lucide-react';
+import { Camera, User, Mail, Phone, Lock, Eye, EyeOff, Save, CheckCircle, XCircle, Clock, Bell, Share2, Copy, BadgeCheck, Smartphone, Download, Shield, FileText, ChevronRight } from 'lucide-react';
 import './Settings.css';
 
 const API = `${API_URL}/api/users`;
@@ -497,6 +498,31 @@ const Settings = () => {
                             </a>
                         </section>
                     )}
+
+                    <section className="settings-card glass-panel">
+                        <h2><Shield size={18} /> Legal</h2>
+                        <p style={{ color: 'var(--text-secondary)', margin: '0 0 16px', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                            Cómo tratamos tus datos y las condiciones de uso de Lumbres.
+                        </p>
+                        {[
+                            { to: '/privacidad', Icon: Shield, label: 'Política de Privacidad' },
+                            { to: '/terminos', Icon: FileText, label: 'Términos y Condiciones' },
+                        ].map((item) => (
+                            <Link
+                                key={item.to}
+                                to={item.to}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px',
+                                    borderRadius: 10, textDecoration: 'none', color: 'var(--text)',
+                                    border: '1px solid var(--card-border, rgba(255,255,255,0.1))', marginBottom: 8,
+                                }}
+                            >
+                                <item.Icon size={17} style={{ color: 'var(--accent-color)', flexShrink: 0 }} />
+                                <span style={{ flex: 1, fontSize: '0.9rem' }}>{item.label}</span>
+                                <ChevronRight size={16} style={{ color: 'var(--text-secondary)' }} />
+                            </Link>
+                        ))}
+                    </section>
             </div>
         </div>
     );

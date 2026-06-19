@@ -22,6 +22,8 @@ const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const PublicShelf = lazy(() => import('./pages/PublicShelf'));
 const Reader = lazy(() => import('./pages/Reader'));
 const Admin = lazy(() => import('./pages/Admin'));
+const Privacidad = lazy(() => import('./pages/Privacidad'));
+const Terminos = lazy(() => import('./pages/Terminos'));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
@@ -38,6 +40,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/verify" element={<VerifyEmail />} />
         <Route path="/u/:username" element={<PublicShelf />} />
+        <Route path="/privacidad" element={<Privacidad />} />
+        <Route path="/terminos" element={<Terminos />} />
 
         <Route path="/*" element={
           <ProtectedRoute>
