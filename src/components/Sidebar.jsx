@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { BookOpen, LayoutDashboard, BarChart3, Library, Globe, LogOut, Settings, Users, Clock, CreditCard, Headphones, MessagesSquare, Feather, ShieldCheck, MoreHorizontal } from 'lucide-react';
+import { BookOpen, LayoutDashboard, BarChart3, Library, Globe, LogOut, Settings, Users, Clock, CreditCard, Headphones, MessagesSquare, Feather, ShieldCheck, MoreHorizontal, Compass } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
@@ -43,6 +43,12 @@ const Sidebar = () => {
                     <NavLink to="/library" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         <Library size={20} />
                         <span>{t('myLibrary')}</span>
+                    </NavLink>
+                </li>
+                <li className="nav-extra">
+                    <NavLink to="/catalogo" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                        <Compass size={20} />
+                        <span>{language === 'es' ? 'Explorar' : 'Explore'}</span>
                     </NavLink>
                 </li>
                 <li className="nav-extra">
@@ -110,6 +116,9 @@ const Sidebar = () => {
                 <>
                     <div className="mobile-more-backdrop" onClick={closeMore} />
                     <div className="mobile-more glass-panel">
+                        <NavLink to="/catalogo" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                            <Compass size={19} /><span>{language === 'es' ? 'Explorar' : 'Explore'}</span>
+                        </NavLink>
                         <NavLink to="/statistics" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                             <BarChart3 size={19} /><span>{t('statistics')}</span>
                         </NavLink>

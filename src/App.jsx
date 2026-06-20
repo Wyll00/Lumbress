@@ -22,6 +22,7 @@ const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const PublicShelf = lazy(() => import('./pages/PublicShelf'));
 const Reader = lazy(() => import('./pages/Reader'));
 const Admin = lazy(() => import('./pages/Admin'));
+const Catalogo = lazy(() => import('./pages/Catalogo'));
 const Privacidad = lazy(() => import('./pages/Privacidad'));
 const Terminos = lazy(() => import('./pages/Terminos'));
 
@@ -52,6 +53,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/library" element={<MyLibrary />} />
+                    <Route path="/catalogo" element={<Catalogo />} />
                     <Route path="/reader/:bookId" element={<Reader />} />
                     <Route path="/statistics" element={<Statistics />} />
                     <Route path="/settings" element={<Settings />} />

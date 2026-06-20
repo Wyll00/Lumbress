@@ -1,4 +1,5 @@
 import { useState, useContext, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { LibraryContext } from '../context/LibraryContext';
 import { LanguageContext } from '../context/LanguageContext';
 import BookCard from '../components/BookCard';
@@ -6,7 +7,7 @@ import BookModal from '../components/BookModal';
 import NotesPanel from '../components/NotesPanel';
 import ImportBooksModal from '../components/ImportBooksModal';
 import ShelfPicker from '../components/ShelfPicker';
-import { Plus, Search, Filter, Upload, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Plus, Search, Filter, Upload, Pencil, Trash2, Check, X, Compass } from 'lucide-react';
 import './MyLibrary.css';
 
 const MyLibrary = () => {
@@ -267,9 +268,14 @@ const MyLibrary = () => {
                         <div className="empty-message glass-panel">
                             <h2>{t('noBooksFound')}</h2>
                             <p>{t('tryAdjusting')}</p>
-                            <button className="btn-primary" onClick={() => handleOpenModal()}>
-                                {t('addABook')}
-                            </button>
+                            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+                                <Link to="/catalogo" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+                                    <Compass size={16} /> Explorar catálogo gratis
+                                </Link>
+                                <button className="btn-secondary" onClick={() => handleOpenModal()}>
+                                    {t('addABook')}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ) : (

@@ -52,7 +52,8 @@ router.get('/', async (req, res) => {
             fileType: b.archivo_tipo,
             notes: b.notas ? (typeof b.notas === 'string' ? JSON.parse(b.notas) : b.notas) : [],
             categories: b.categorias ? b.categorias.split('||') : [],
-            shelfIds: b.estanteria_ids ? b.estanteria_ids.split(',').map(Number) : []
+            shelfIds: b.estanteria_ids ? b.estanteria_ids.split(',').map(Number) : [],
+            origen: b.origen || 'usuario'
         }));
         res.json(mappedBooks);
     } catch (err) {
@@ -66,7 +67,7 @@ router.post('/', async (req, res) => {
         // Plan gratis: biblioteca limitada (palanca de conversión). Premium: sin límite.
         const { plan, limits } = await getPlan(req.user.id);
         if (plan !== 'premium') {
-            const [[{ total }]] = await pool.query('SELECT COUNT(*) AS total FROM libros WHERE usuario_id = ?', [req.user.id]);
+            const [[{ total }]] = await pool.query("SELECT COUNT(*) AS total FROM libros WHERE usuario_id = ? AND origen <> 'catalogo'", [req.user.id]);
             if (total >= limits.maxBooks) {
                 return res.status(402).json({
                     code: 'LIMIT_REACHED',
