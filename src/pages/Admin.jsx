@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState, useCallback } from 'react';
-import { ShieldCheck, Users, BookOpen, FileText, MessagesSquare, Store, CreditCard, Highlighter, HardDrive, RefreshCw, BadgeCheck, MailWarning, Globe, Activity, Eye } from 'lucide-react';
+import { ShieldCheck, Users, BookOpen, FileText, MessagesSquare, Store, CreditCard, Highlighter, HardDrive, RefreshCw, BadgeCheck, MailWarning, Globe, Activity, Eye, Bug, AlertTriangle, Check } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { AuthContext } from '../context/AuthContext';
 import { API_URL, withAuth } from '../config';
@@ -41,22 +41,36 @@ const Admin = () => {
     const [stats, setStats] = useState(null);
     const [users, setUsers] = useState([]);
     const [traffic, setTraffic] = useState(null);
+    const [errors, setErrors] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const [s, u, t] = await Promise.all([
+            const [s, u, t, e] = await Promise.all([
                 fetch(`${API_URL}/api/admin/stats`, withAuth()),
                 fetch(`${API_URL}/api/admin/users`, withAuth()),
                 fetch(`${API_URL}/api/admin/traffic`, withAuth()),
+                fetch(`${API_URL}/api/admin/errors`, withAuth()),
             ]);
             if (s.ok) setStats(await s.json());
             if (u.ok) setUsers(await u.json());
             if (t.ok) setTraffic(await t.json());
+            if (e.ok) setErrors(await e.json());
         } catch { /* noop */ }
         finally { setLoading(false); }
     }, []);
+
+    const resolveError = async (id) => {
+        try {
+            const res = await fetch(`${API_URL}/api/admin/errors/${id}/resolve`, withAuth({ method: 'POST' }));
+            if (res.ok) setErrors((prev) => prev && {
+                ...prev,
+                sinResolver: Math.max(0, prev.sinResolver - 1),
+                errores: prev.errores.map((er) => (er.id === id ? { ...er, resuelto: 1 } : er)),
+            });
+        } catch { /* noop */ }
+    };
 
     useEffect(() => { load(); }, [load]);
 
@@ -93,6 +107,50 @@ const Admin = () => {
                     <StatCard icon={Store} label="Anuncios marketplace" value={stats.anuncios} />
                     <StatCard icon={MessagesSquare} label="Mensajes de chat" value={stats.mensajes} />
                     <StatCard icon={HardDrive} label="Almacenamiento usado" value={fmtBytes(stats.almacenamientoBytes)} />
+                </div>
+            )}
+
+            {errors && (
+                <div style={{ margin: '0 0 26px' }}>
+                    <h3 style={{ margin: '0 0 14px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <Bug size={18} style={{ color: 'var(--accent-color)' }} /> Errores
+                        {errors.sinResolver > 0 && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.72rem', fontWeight: 700, color: '#e0a93b', background: 'rgba(224,169,59,0.12)', border: '1px solid rgba(224,169,59,0.3)', borderRadius: 999, padding: '2px 10px' }}>
+                                <AlertTriangle size={13} /> {errors.sinResolver} sin resolver
+                            </span>
+                        )}
+                    </h3>
+                    <div className="glass-panel" style={{ padding: '18px 20px' }}>
+                        {errors.errores.length === 0 ? (
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>Sin errores registrados. 🎉</p>
+                        ) : errors.errores.map((er) => (
+                            <div key={er.id} style={{ padding: '12px 0', borderBottom: '1px solid var(--card-border, rgba(255,255,255,0.06))', opacity: er.resuelto ? 0.5 : 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                                    <div style={{ minWidth: 0, flex: 1 }}>
+                                        <p style={{ margin: 0, color: 'var(--text)', fontSize: '0.88rem', fontWeight: 600, wordBreak: 'break-word' }}>{er.mensaje}</p>
+                                        <p style={{ margin: '3px 0 0', color: 'var(--text-secondary)', fontSize: '0.76rem' }}>
+                                            {er.metodo} {er.ruta} · estado {er.status} · {er.veces}× · última: {new Date(er.ultima_vez).toLocaleString('es-ES')}
+                                        </p>
+                                        {er.stack && (
+                                            <details style={{ marginTop: 6 }}>
+                                                <summary style={{ cursor: 'pointer', color: 'var(--accent-color)', fontSize: '0.76rem' }}>Ver detalle técnico</summary>
+                                                <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '6px 0 0', maxHeight: 180, overflow: 'auto' }}>{er.stack}</pre>
+                                            </details>
+                                        )}
+                                    </div>
+                                    {er.resuelto ? (
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--success-color, #4E6147)', fontSize: '0.78rem', flexShrink: 0 }}>
+                                            <Check size={14} /> Resuelto
+                                        </span>
+                                    ) : (
+                                        <button className="btn-secondary" onClick={() => resolveError(er.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', flexShrink: 0, fontSize: '0.8rem' }}>
+                                            <Check size={14} /> Resolver
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 

@@ -7,7 +7,7 @@
 ## 1. Identidad
 
 - **Nombre:** Lumbres — *"Lecturas Sociales"*
-- **Versión actual:** v0.16.1 *(2026-06: **en producción** https://lumbress.com — app **Android (APK)** + **PWA** (iPhone/escritorio); estanterías, lector EPUB/PDF con subrayados por colores, **diccionario integrado** (definición inline + palabras aprendidas), **ajustes de lectura** (tamaño/interlineado/tipografía/tema, zoom PDF), **selección táctil en móvil** y **lectura a pantalla completa**, suscripciones Stripe, **verificación de email por código** (Resend), panel de **admin**, limpieza de cuentas sin verificar)*
+- **Versión actual:** v0.17.0 *(2026-06: **en producción** https://lumbress.com — app **Android (APK)** + **PWA** (iPhone/escritorio); estanterías, lector EPUB/PDF con subrayados por colores, **diccionario integrado** (definición inline + palabras aprendidas), **ajustes de lectura** (tamaño/interlineado/tipografía/tema, zoom PDF), **selección táctil en móvil** y **lectura a pantalla completa**, suscripciones Stripe, **verificación de email por código** (Resend), panel de **admin**, limpieza de cuentas sin verificar)*
 - **Idiomas UI:** ES (principal) / EN
 - **Logo:** llama dorada en círculo sobre negro — `public/logo.png` (512px, login/sidebar) + `public/favicon.png` (48px, pestaña). *(Rebrand 2026-06-10: antes "Códice")*
 - **Tipografías:** Inter + Fraunces (global), Plus Jakarta Sans + Spectral (Taller de Novela)
@@ -122,7 +122,7 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 
 ---
 
-## 5. Base de datos (19 tablas)
+## 5. Base de datos (20 tablas)
 
 | Tabla | Para qué |
 |---|---|
@@ -145,6 +145,7 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 | `estanterias_libros` | tabla pivote estantería ↔ libro (FK CASCADE) |
 | `palabras_aprendidas` | (usuario_id, libro_id NULL, palabra, definicion, idioma, created_at) — diccionario: palabras guardadas. UNIQUE (usuario_id, palabra); FK libro `ON DELETE SET NULL` |
 | `trafico` | (tipo `request`\|`pageview`, metodo, ruta, status, ip, pais, pais_codigo, usuario_id NULL, created_at) — analítica de tráfico para el panel admin. Índices created_at/tipo/pais. Retención 90 días (purga en cleanup) |
+| `errores` | (huella UNIQUE, mensaje, stack, ruta, metodo, status, usuario_id, veces, primera_vez, ultima_vez, resuelto) — registro de errores tipo Sentry, agrupados por huella (hash mensaje+ruta) |
 
 ---
 
@@ -173,7 +174,7 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 | `/public/shelf/:username` | GET (**SIN auth**) | Estantería pública — solo si `public_shelf=1`; expone solo nombre/avatar/stats/libros (nunca email/teléfono) |
 | `/dictionary` | GET /define?word=&lang= , GET /saved , POST /saved , DELETE /saved/:id | Diccionario del lector: **español vía Wikcionario** (`es.wiktionary.org/w/api.php`, parser del extract), **inglés vía dictionaryapi.dev** (con fonética/sinónimos). CRUD de "palabras aprendidas" |
 | `/shelves` | GET/POST/PUT/DELETE + add/remove libro | Estanterías |
-| `/admin` | GET /stats , GET /users , GET /traffic | Solo `is_admin`; métricas + lista de usuarios + **analítica de tráfico** (peticiones/visitas/países/páginas) |
+| `/admin` | GET /stats , GET /users , GET /traffic , GET /errors , POST /errors/:id/resolve | Solo `is_admin`; métricas + usuarios + **analítica de tráfico** + **registro de errores** |
 | `/track` | POST `{ path }` | Registra una página vista del SPA (público; adjunta usuario si hay token). El país e IP los pone el servidor (geoip-lite) |
 | Estáticos | `/uploads/...` | servidos con `express.static` + CORP cross-origin |
 
@@ -259,6 +260,7 @@ npm run dev                     # :5173 (o 5174 si 5173 ocupado)
 - ✅ **Lectura a pantalla completa (2026-06-17)**: botón en la cabecera del lector (Fullscreen API sobre el contenedor del lector, así barra de selección/diccionario/subrayados siguen funcionando). Se oculta si el navegador no soporta fullscreen (iOS/Safari).
 - ✅ **Selección de texto en móvil/táctil (2026-06-18)**: epub.js solo dispara su evento `selected` en `mouseup`, así que en móvil no aparecía la barra de selección (ni diccionario ni subrayados). Añadido detector propio (`selectionchange` con rebote + `touchend`/`mouseup`) sobre el documento del EPUB vía `rendition.hooks.content` + `contents.cfiFromRange`.
 - ✅ **Ajustes de lectura (2026-06-18)**: panel "Aa" en la cabecera del lector — **tamaño de letra, interlineado, tipografía** (original/serif/sans) y **tema** (claro/sepia/oscuro) para EPUB (epub.js `themes.register/select/fontSize` + `readerStyles` de react-reader para el fondo del área); **zoom** para PDF. Persistido en `localStorage` (`lumbres-reader-settings`). Componentes `ReaderSettings.jsx` + `readerThemes.js`.
+- ✅ **Registro de errores + aviso de caídas (2026-06-19)**: error-tracking propio tipo Sentry — `services/errorLog.js` registra en la tabla `errores` (agrupados por huella) los errores del handler global de Express + `unhandledRejection`/`uncaughtException`; sección **"Errores"** en `/admin` (lista, detalle técnico, marcar resuelto). **Email al admin** (Resend, vía `mailer.sendAlert`) la primera vez que aparece una huella nueva (tope 6/h). Aviso de caídas: `scripts/healthcheck.js` chequea `https://lumbress.com/api/health` y envía email al admin al caer/recuperarse (solo en cambios de estado, vía cron en el VPS cada 5 min: `*/5 * * * * cd /var/www/lumbres/server && node scripts/healthcheck.js`). *Limitación: el cron vive en el VPS, así que no detecta una caída total del propio VPS — para eso conviene un monitor externo (UptimeRobot/healthchecks.io, requiere alta del usuario).*
 - ✅ **Páginas legales (2026-06-19)**: Política de Privacidad (`/privacidad`) y Términos y Condiciones (`/terminos`) — borradores a medida (RGPD/LOPDGDD/LSSI; **no es asesoría legal**), persona física, contacto `privacidad@lumbress.com`. Términos incluye **derechos de autor + retirada de contenido (notice-and-takedown)** y mercadillo. Componentes `pages/Privacidad.jsx`, `pages/Terminos.jsx`, `components/LegalLayout.jsx`. Rutas públicas en App.jsx; enlazadas desde Registro (aviso de consentimiento) y Ajustes (tarjeta "Legal"). **PENDIENTE de William:** rellenar `[TU NOMBRE COMPLETO]` en ambas páginas; idealmente revisión de un profesional; crear el buzón `privacidad@lumbress.com`.
 - ✅ **Analítica de tráfico en el panel admin (2026-06-19)**: sección "Tráfico" en `/admin` con tarjetas (peticiones hoy/total, páginas vistas, visitantes únicos, nº países), gráfica de 14 días (recharts: peticiones + páginas vistas) y listas de **países** (bandera por código ISO) y **páginas más vistas**. Backend: middleware `middleware/traffic.js` (registra cada petición a la API, fire-and-forget vía `res.on('finish')`), ruta `/api/track` (páginas vistas del SPA, llamada desde `RouteTracker.jsx` en cada cambio de ruta), país por **geoip-lite** (offline, sin claves; nombre en español vía `Intl.DisplayNames`), endpoint `GET /api/admin/traffic`. Tabla `trafico` (guarda **país + IP** — decisión del dueño; RGPD: requiere aviso de privacidad). Retención 90 días (`purgeTraffic` en cleanup). **El deploy necesita `--deps`** (dependencia nueva geoip-lite) y crear la tabla en prod (`node scripts/create_trafico.js`).
 - ✅ **Herramientas de selección adaptadas a móvil (2026-06-18)**: extraídas a `SelectionTools.jsx`. En **escritorio** = barra superior (como antes); en **móvil** = **hoja deslizante desde abajo** (backdrop + sheet) con "¿Qué significa?" + definición + colores de subrayado, para no saturar la parte de arriba en pantallas pequeñas. *(Diagnóstico verificado en navegador real con la cuenta demo `freetester`/`pruebas1234` + libro EPUB id 15: la detección de selección de epub.js — `selectionchange` → evento `selected` → `handleTextSelected` — funciona en escritorio Y móvil. Si en un dispositivo no aparece, sospechar **caché del service worker** sirviendo un bundle viejo: cerrar del todo y reabrir.)*

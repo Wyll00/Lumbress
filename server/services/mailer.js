@@ -129,4 +129,35 @@ async function sendVerificationCode({ toEmail, toName, code } = {}) {
     }
 }
 
-module.exports = { sendNewMessageEmail, sendVerificationCode, isConfigured };
+/**
+ * Aviso genérico para el administrador (errores, caídas, etc.).
+ * Fire-and-forget: registra errores pero nunca lanza.
+ */
+async function sendAlert({ toEmail, subject, text } = {}) {
+    if (!isConfigured() || !toEmail) {
+        if (!isConfigured()) console.warn('[mail] SMTP sin configurar; se omite el aviso al admin.');
+        return false;
+    }
+    const from = process.env.MAIL_FROM || 'Lumbres <no-reply@lumbres.app>';
+    const html = `
+    <div style="font-family:Inter,Arial,sans-serif;background:#1a1410;padding:24px;color:#f5efe6">
+      <div style="max-width:560px;margin:0 auto;background:#241b14;border:1px solid #e0a93b33;border-radius:16px;overflow:hidden">
+        <div style="background:#e0a93b;color:#1a1410;padding:14px 20px;font-weight:800;font-size:14px;letter-spacing:.5px">
+          🔔 LUMBRES · Aviso de administración
+        </div>
+        <div style="padding:24px">
+          <pre style="margin:0;white-space:pre-wrap;font-family:inherit;font-size:14px;color:#f5efe6">${escapeHtml(text || '')}</pre>
+        </div>
+      </div>
+    </div>`;
+    try {
+        const info = await getTransporter().sendMail({ from, to: toEmail, subject, text, html, priority: 'high' });
+        console.log(`[mail] Aviso al admin enviado a ${toEmail} (messageId: ${info.messageId})`);
+        return true;
+    } catch (err) {
+        console.error('[mail] Error enviando el aviso al admin:', err.message);
+        return false;
+    }
+}
+
+module.exports = { sendNewMessageEmail, sendVerificationCode, sendAlert, isConfigured };

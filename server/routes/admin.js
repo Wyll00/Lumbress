@@ -125,4 +125,34 @@ router.get('/traffic', async (req, res) => {
     }
 });
 
+// GET /api/admin/errors — errores registrados (agrupados por huella)
+router.get('/errors', async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT id, mensaje, stack, ruta, metodo, status, veces, primera_vez, ultima_vez, resuelto
+            FROM errores
+            ORDER BY resuelto ASC, ultima_vez DESC
+            LIMIT 60`);
+        const [[{ sinResolver }]] = await pool.query('SELECT COUNT(*) sinResolver FROM errores WHERE resuelto = 0');
+        res.json({ errores: rows, sinResolver });
+    } catch (err) {
+        // Si la tabla aún no existe, devolvemos vacío en lugar de romper el panel.
+        if (err.code === 'ER_NO_SUCH_TABLE') return res.json({ errores: [], sinResolver: 0 });
+        console.error('[admin] errors list error:', err);
+        res.status(500).json({ message: 'Error obteniendo los errores' });
+    }
+});
+
+// POST /api/admin/errors/:id/resolve — marcar un error como resuelto (o reabrir)
+router.post('/errors/:id/resolve', async (req, res) => {
+    try {
+        const resuelto = req.body.resuelto === false ? 0 : 1;
+        await pool.query('UPDATE errores SET resuelto = ? WHERE id = ?', [resuelto, req.params.id]);
+        res.json({ ok: true, id: Number(req.params.id), resuelto });
+    } catch (err) {
+        console.error('[admin] resolve error:', err);
+        res.status(500).json({ message: 'Error actualizando el error' });
+    }
+});
+
 module.exports = router;

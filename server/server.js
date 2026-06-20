@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const pool = require('./db');
 const { logTraffic } = require('./middleware/traffic');
+const { logError } = require('./services/errorLog');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -148,6 +149,8 @@ app.get('/api/health', (req, res) => {
 // Generic error handler — never leak stack traces to the client
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
+    // Registramos el error para el panel de admin (fire-and-forget)
+    logError(err, { ruta: (req.originalUrl || req.url || '').split('?')[0], metodo: req.method, status: 500, usuarioId: req.user?.id });
     if (res.headersSent) return next(err);
     res.status(500).json({ message: 'Error interno del servidor' });
 });
@@ -165,4 +168,16 @@ pool.getConnection()
 
 app.listen(PORT, () => {
     console.log(`Servidor ejecutándose en puerto ${PORT}`);
+});
+
+// Errores no capturados: los registramos para el panel antes de que pm2 reinicie.
+process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled Rejection:', reason);
+    logError(reason instanceof Error ? reason : new Error(String(reason)), { ruta: 'unhandledRejection', metodo: '-', status: 0 });
+});
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    logError(err, { ruta: 'uncaughtException', metodo: '-', status: 0 });
+    // Dar un margen para registrar y salir; pm2 reinicia el proceso.
+    setTimeout(() => process.exit(1), 1500);
 });
