@@ -23,9 +23,11 @@ server/.env.local
 server/uploads/audio/*
 server/uploads/covers/*
 server/uploads/books/*
+server/uploads/catalogo/*
 !server/uploads/audio/.gitkeep
 !server/uploads/covers/.gitkeep
 !server/uploads/books/.gitkeep
+!server/uploads/catalogo/.gitkeep
 
 # Editor directories and files
 .vscode/*
