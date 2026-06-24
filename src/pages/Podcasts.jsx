@@ -322,7 +322,7 @@ const Podcasts = () => {
         <div className="podcasts-page" ref={rootRef}>
             <header className="page-header">
                 <div className="podcasts-title">
-                    <Headphones size={32} />
+                    <Headphones size={32} color="#7fa06f" />
                     <div>
                         <h1>Podcasts y Audiolibros</h1>
                         <p>Gestiona tus podcasts favoritos y descubre nuevos episodios</p>

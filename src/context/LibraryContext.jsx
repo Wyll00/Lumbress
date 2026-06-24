@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { sileo } from 'sileo';
 import { AuthContext } from './AuthContext';
 import { API_URL as BASE_URL, withAuth } from '../config';
 
@@ -77,7 +78,8 @@ export const LibraryProvider = ({ children }) => {
       } else {
         // P. ej. límite del plan gratis (402): avisar al usuario en vez de fallar en silencio
         const data = await res.json().catch(() => ({}));
-        if (data.message) alert(data.message);
+        if (res.status === 402) sileo.warning({ title: 'Has alcanzado el límite del plan gratis', description: data.message || 'Pásate a Premium para biblioteca ilimitada.' });
+        else if (data.message) sileo.error({ title: 'No se pudo añadir el libro', description: data.message });
       }
     } catch (err) {
       console.error("Error adding book:", err);
@@ -214,7 +216,7 @@ export const LibraryProvider = ({ children }) => {
       }));
       const data = await res.json();
       if (res.ok) { setShelves(prev => [...prev, data].sort((a, b) => a.nombre.localeCompare(b.nombre))); return data; }
-      alert(data.message || 'No se pudo crear la estantería.');
+      sileo.error({ title: 'No se pudo crear la estantería', description: data.message || 'Inténtalo de nuevo.' });
     } catch (err) { console.error('Error creando estantería:', err); }
     return null;
   };
@@ -263,14 +265,19 @@ export const LibraryProvider = ({ children }) => {
     let newStatus = bookToUpdate.status;
     let newPages = pagesRead;
 
-    if (pagesRead >= bookToUpdate.totalPages) {
+    if (bookToUpdate.totalPages > 0 && pagesRead >= bookToUpdate.totalPages) {
       newStatus = 'Read';
       newPages = bookToUpdate.totalPages;
-    } else if (pagesRead > 0 && bookToUpdate.status === 'To Read') {
+    } else if (pagesRead > 0 && (bookToUpdate.status === 'To Read' || bookToUpdate.status === 'Pendiente')) {
       newStatus = 'Reading';
     }
 
-    updateBook(id, { pagesRead: newPages, status: newStatus });
+    const updates = { pagesRead: newPages, status: newStatus };
+    // Al pasar a "leído" sin fecha de fin, la ponemos hoy (así cuenta en el reto del año)
+    if (newStatus === 'Read' && !bookToUpdate.fecha_fin) {
+      updates.fecha_fin = new Date().toISOString().slice(0, 10);
+    }
+    updateBook(id, updates);
   };
 
   return (

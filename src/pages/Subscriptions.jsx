@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Check, X, Star, BookOpen, Feather } from 'lucide-react';
+import { sileo } from 'sileo';
 import { API_URL, withAuth } from '../config';
 import './Subscriptions.css';
 
@@ -41,8 +42,8 @@ const Subscriptions = () => {
             }));
             const data = await res.json();
             if (res.ok && data.url) { window.location.href = data.url; return; }
-            alert(data.message || 'No se pudo iniciar el pago.');
-        } catch { alert('Error de conexión.'); }
+            sileo.error({ title: 'No se pudo iniciar el pago', description: data.message || 'Inténtalo de nuevo.' });
+        } catch { sileo.error({ title: 'Error de conexión' }); }
         finally { setBusy(null); }
     };
 
@@ -52,8 +53,8 @@ const Subscriptions = () => {
             const res = await fetch(`${API_URL}/api/subscriptions/portal`, withAuth({ method: 'POST' }));
             const data = await res.json();
             if (res.ok && data.url) { window.location.href = data.url; return; }
-            alert(data.message || 'No se pudo abrir el portal.');
-        } catch { alert('Error de conexión.'); }
+            sileo.error({ title: 'No se pudo abrir el portal', description: data.message || 'Inténtalo de nuevo.' });
+        } catch { sileo.error({ title: 'Error de conexión' }); }
         finally { setBusy(null); }
     };
 

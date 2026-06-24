@@ -6,9 +6,14 @@ import { LanguageProvider } from './context/LanguageContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { PlayerProvider } from './context/PlayerContext.jsx'
 import { NotificationProvider } from './context/NotificationContext.jsx'
+import { Toaster, sileo } from 'sileo'
+import 'sileo/styles.css'
 import { isNative } from './config'
 import './index.css'
 import App from './App.jsx'
+
+// Depuración en dev: poder lanzar toasts desde la consola (window.__sileo.success(...))
+if (import.meta.env.DEV && typeof window !== 'undefined') window.__sileo = sileo;
 
 // PWA: registrar el service worker SOLO en la web (en la app nativa Capacitor no hace falta
 // y podría servir contenido cacheado tras una actualización).
@@ -25,6 +30,7 @@ createRoot(document.getElementById('root')).render(
             <LibraryProvider>
               <PlayerProvider>
                 <App />
+                <Toaster position="top-center" theme="dark" />
               </PlayerProvider>
             </LibraryProvider>
           </NotificationProvider>

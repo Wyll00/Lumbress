@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { BookOpen, LayoutDashboard, BarChart3, Library, Globe, LogOut, Settings, Users, Clock, CreditCard, Headphones, MessagesSquare, Feather, ShieldCheck, MoreHorizontal, Compass } from 'lucide-react';
+import { BookOpen, LayoutDashboard, BarChart3, Library, Globe, LogOut, Settings, Users, Clock, CreditCard, Headphones, MessagesSquare, Feather, ShieldCheck, MoreHorizontal, Compass, Sparkles } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
@@ -35,69 +35,83 @@ const Sidebar = () => {
             <ul className="nav-links">
                 <li>
                     <NavLink to="/" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <LayoutDashboard size={20} />
+                        <LayoutDashboard size={20} color="#e0a93b" />
                         <span>{t('dashboard')}</span>
                     </NavLink>
                 </li>
+
+                <li className="nav-section"><span>{language === 'es' ? 'Tu lectura' : 'Reading'}</span></li>
                 <li>
                     <NavLink to="/library" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Library size={20} />
+                        <Library size={20} color="#C18A2F" />
                         <span>{t('myLibrary')}</span>
                     </NavLink>
                 </li>
                 <li className="nav-extra">
                     <NavLink to="/catalogo" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Compass size={20} />
+                        <Compass size={20} color="#C18A2F" />
                         <span>{language === 'es' ? 'Explorar' : 'Explore'}</span>
                     </NavLink>
                 </li>
                 <li className="nav-extra">
                     <NavLink to="/statistics" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <BarChart3 size={20} />
+                        <BarChart3 size={20} color="#C18A2F" />
                         <span>{t('statistics')}</span>
                     </NavLink>
                 </li>
-                <li className="nav-extra">
-                    <NavLink to="/podcasts" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Headphones size={20} />
-                        <span>Podcasts</span>
-                    </NavLink>
-                </li>
+
+                <li className="nav-section"><span>{language === 'es' ? 'Comunidad' : 'Community'}</span></li>
                 <li>
                     <NavLink to="/community" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Users size={20} />
+                        <Users size={20} color="#b08a98" />
                         <span>{t('community')}</span>
                     </NavLink>
                 </li>
                 <li>
                     <NavLink to="/mensajes" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <MessagesSquare size={20} />
+                        <MessagesSquare size={20} color="#b08a98" />
                         <span>{t('messages')}</span>
                         {unreadTotal > 0 && <span className="nav-badge">{unreadTotal > 9 ? '9+' : unreadTotal}</span>}
                     </NavLink>
                 </li>
-                <li className="nav-extra">
-                    <NavLink to="/taller" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Feather size={20} />
-                        <span>{t('workshop')}</span>
+
+                <li className="nav-section"><span>{language === 'es' ? 'Descubrir' : 'Discover'}</span></li>
+                <li>
+                    <NavLink to="/novedades" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                        <Sparkles size={20} color="#e0a93b" />
+                        <span>{language === 'es' ? 'Novedades' : "What's new"}</span>
                     </NavLink>
                 </li>
                 <li className="nav-extra">
+                    <NavLink to="/podcasts" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                        <Headphones size={20} color="#7fa06f" />
+                        <span>Podcasts</span>
+                    </NavLink>
+                </li>
+                <li className="nav-extra">
+                    <NavLink to="/taller" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                        <Feather size={20} color="#7fa06f" />
+                        <span>{t('workshop')}</span>
+                    </NavLink>
+                </li>
+
+                <li className="nav-section"><span>{language === 'es' ? 'Cuenta' : 'Account'}</span></li>
+                <li className="nav-extra">
                     <NavLink to="/subscriptions" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <CreditCard size={20} />
+                        <CreditCard size={20} color="#e0a93b" />
                         <span>{t('subscriptionsNav')}</span>
                     </NavLink>
                 </li>
                 <li className="nav-extra">
                     <NavLink to="/settings" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Settings size={20} />
+                        <Settings size={20} color="#e0a93b" />
                         <span>{t('settingsNav')}</span>
                     </NavLink>
                 </li>
                 {!!user?.is_admin && (
                     <li className="nav-extra">
                         <NavLink to="/admin" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                            <ShieldCheck size={20} />
+                            <ShieldCheck size={20} color="#b08a98" />
                             <span>Admin</span>
                         </NavLink>
                     </li>
@@ -121,6 +135,9 @@ const Sidebar = () => {
                         </NavLink>
                         <NavLink to="/statistics" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                             <BarChart3 size={19} /><span>{t('statistics')}</span>
+                        </NavLink>
+                        <NavLink to="/novedades" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                            <Sparkles size={19} /><span>{language === 'es' ? 'Novedades' : "What's new"}</span>
                         </NavLink>
                         <NavLink to="/podcasts" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                             <Headphones size={19} /><span>Podcasts</span>

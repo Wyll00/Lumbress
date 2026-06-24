@@ -174,12 +174,17 @@ const BookModal = ({ isOpen, onClose, onSave, editingBook }) => {
             }];
         }
 
+        // Al marcar como leído sin fecha de fin, ponemos la de hoy (así cuenta en el reto del año)
+        const finalFechaFin = (finalStatus === 'Read' && !formData.fecha_fin)
+            ? new Date().toISOString().slice(0, 10)
+            : (formData.fecha_fin || null);
+
         onSave({
             ...formData,
             status: finalStatus,
             pagesRead: finalPagesRead,
             fecha_inicio: formData.fecha_inicio || null,
-            fecha_fin: formData.fecha_fin || null,
+            fecha_fin: finalFechaFin,
             notes: currentNotes
         });
         setNewNote('');

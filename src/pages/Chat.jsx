@@ -147,7 +147,7 @@ const Chat = () => {
     return (
         <div className="chat-page">
             <header className="page-header">
-                <h1><MessagesSquare size={28} style={{ verticalAlign: 'middle', marginRight: 8 }} />Mensajes</h1>
+                <h1><MessagesSquare size={28} color="#b08a98" style={{ verticalAlign: 'middle', marginRight: 8 }} />Mensajes</h1>
                 <p>Habla con otros lectores y coordina tus compras</p>
             </header>
 

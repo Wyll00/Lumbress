@@ -7,7 +7,7 @@ import BookModal from '../components/BookModal';
 import NotesPanel from '../components/NotesPanel';
 import ImportBooksModal from '../components/ImportBooksModal';
 import ShelfPicker from '../components/ShelfPicker';
-import { Plus, Search, Filter, Upload, Pencil, Trash2, Check, X, Compass } from 'lucide-react';
+import { Plus, Search, Filter, Upload, Pencil, Trash2, Check, X, Compass, Library } from 'lucide-react';
 import './MyLibrary.css';
 
 const MyLibrary = () => {
@@ -147,7 +147,7 @@ const MyLibrary = () => {
             <div className={`mylibrary-main animate-fade-in ${selectedBookForNotes ? 'with-notes-panel' : ''}`}>
                 <header className="library-header">
                     <div className="title-section">
-                        <h1>{t('myLibrary')}</h1>
+                        <h1><Library size={26} color="#C18A2F" style={{ verticalAlign: 'middle', marginRight: 8 }} />{t('myLibrary')}</h1>
                         <p>{books.length === 1 ? t('bookTotal', { count: books.length }) : t('booksTotal', { count: books.length })}</p>
                     </div>
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>

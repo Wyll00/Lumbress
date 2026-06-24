@@ -1,0 +1,241 @@
+/* Carrusel de Novedades: cards grandes que pasan solas cada 3s */
+.nov-carousel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 18px;
+}
+
+.nov-track {
+    display: flex;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+}
+
+.nov-slide {
+    min-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Card grande (estilo "pricing-card" de Suscripciones) — el contenido llena toda la card */
+.nov-card {
+    display: flex;
+    gap: 32px;
+    align-items: stretch;
+    padding: 30px 36px;
+    min-height: 340px;
+}
+
+.nov-cover {
+    width: 220px;
+    flex-shrink: 0;
+    align-self: center;
+    aspect-ratio: 2 / 3;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nov-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* La columna de info ocupa todo el alto: datos arriba, acciones abajo */
+.nov-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.nov-info-top {
+    display: flex;
+    flex-direction: column;
+}
+
+.nov-chip {
+    align-self: flex-start;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #e0a93b;
+    background: rgba(224, 169, 59, 0.12);
+    border: 1px solid rgba(224, 169, 59, 0.3);
+    border-radius: 20px;
+    padding: 3px 12px;
+    margin-bottom: 14px;
+}
+
+.nov-title {
+    margin: 0;
+    font-size: 1.9rem;
+    line-height: 1.12;
+    color: var(--text);
+}
+
+.nov-author {
+    margin: 8px 0 0;
+    color: var(--accent-color, #e0a93b);
+    font-weight: 600;
+    font-size: 1.02rem;
+}
+
+.nov-synopsis {
+    margin: 16px 0 0;
+    color: var(--text-secondary);
+    font-size: 0.96rem;
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Fila de acciones: ocupa todo el ancho (botón a la izquierda, datos a la derecha) */
+.nov-actions {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.nov-actions-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.nov-by {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    opacity: 0.75;
+}
+
+/* Flechas */
+.nov-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--card-border, rgba(255, 255, 255, 0.15));
+    background: rgba(20, 16, 12, 0.55);
+    backdrop-filter: blur(6px);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.25s, background 0.2s;
+    z-index: 2;
+}
+
+.nov-carousel:hover .nov-arrow {
+    opacity: 0.9;
+}
+
+.nov-arrow:hover {
+    background: rgba(224, 169, 59, 0.85);
+    color: #1a1410;
+}
+
+.nov-arrow.left {
+    left: 14px;
+}
+
+.nov-arrow.right {
+    right: 14px;
+}
+
+/* Puntos */
+.nov-dots {
+    display: flex;
+    justify-content: center;
+    gap: 9px;
+    margin-top: 16px;
+}
+
+.nov-dots button {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    background: var(--card-border, rgba(255, 255, 255, 0.25));
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.nov-dots button.active {
+    background: #e0a93b;
+    width: 26px;
+    border-radius: 5px;
+}
+
+.nov-del {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #e07b6a;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 680px) {
+    .nov-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 24px 20px;
+        gap: 18px;
+        min-height: 0;
+    }
+
+    .nov-cover {
+        width: 160px;
+    }
+
+    .nov-info {
+        align-items: center;
+    }
+
+    .nov-info-top {
+        align-items: center;
+    }
+
+    .nov-chip,
+    .nov-synopsis {
+        align-self: center;
+    }
+
+    .nov-title {
+        font-size: 1.5rem;
+    }
+
+    .nov-actions {
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .nov-actions-meta {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .nov-arrow {
+        opacity: 0.9;
+    }
+}

@@ -1,4 +1,5 @@
 import { createContext, useState, useRef, useEffect, useCallback } from 'react';
+import { sileo } from 'sileo';
 import { API_URL, withAuth } from '../config';
 
 export const PlayerContext = createContext(null);
@@ -109,6 +110,7 @@ export const PlayerProvider = ({ children }) => {
         const onError = () => {
             console.error('Audio error', audio.error);
             setPlaying(false);
+            sileo.error({ title: 'No se pudo reproducir', description: 'Revisa el audio o tu conexión.' });
         };
 
         audio.addEventListener('timeupdate', onTime);
@@ -140,6 +142,7 @@ export const PlayerProvider = ({ children }) => {
             setTrack(newTrack);
             setCurrentTime(0);
             setDuration(0);
+            sileo.info({ title: 'Reproduciendo', description: newTrack.title });
         }
         audio.playbackRate = rate;
         audio.volume = volume;

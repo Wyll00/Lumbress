@@ -202,20 +202,22 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 16px;
-    padding-top: 16px;
+    flex-wrap: wrap;
+    row-gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
     border-top: 1px solid var(--card-border);
 }
 
 .book-card-actions-inline {
     display: flex;
-    gap: 8px;
+    gap: 5px;
 }
 
 .action-btn-inline {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
     background: transparent;
     display: flex;
     align-items: center;
@@ -247,14 +249,14 @@
 
 .book-card-rating {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     align-items: center;
 }
 
 .inline-star-btn {
     background: transparent;
     border: none;
-    padding: 2px;
+    padding: 1px;
     cursor: pointer;
     display: flex;
     align-items: center;

@@ -168,7 +168,7 @@ const VenderLibro = () => {
             </button>
 
             <header className="vender-header">
-                <BookPlus size={34} />
+                <BookPlus size={34} color="#b08a98" />
                 <div>
                     <h1>Vende tu libro con nosotros</h1>
                     <p>Publica tu libro y llega a otros lectores de la comunidad.</p>

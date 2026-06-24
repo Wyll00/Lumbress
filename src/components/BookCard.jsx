@@ -123,22 +123,22 @@ const BookCard = ({ book, onEdit, onDelete, onUpdateProgress, onOpenNotes, onOpe
                                 title={`Leer ${book.fileType?.toUpperCase() || ''}`}
                                 style={{ color: 'var(--accent-color, #e0a93b)' }}
                             >
-                                <BookOpen size={16} />
+                                <BookOpen size={14} />
                             </button>
                         )}
                         <button onClick={() => onOpenNotes(book)} className="action-btn-inline notes-btn" title={t('notesLabel') || "Notes"}>
-                            <Quote size={16} />
+                            <Quote size={14} />
                         </button>
                         {onOpenShelves && (
                             <button onClick={() => onOpenShelves(book)} className="action-btn-inline notes-btn" title="Añadir a estantería">
-                                <Library size={16} />
+                                <Library size={14} />
                             </button>
                         )}
                         <button onClick={() => onEdit(book)} className="action-btn-inline edit-btn" title={t('editBook') || "Edit"}>
-                            <Edit2 size={16} />
+                            <Edit2 size={14} />
                         </button>
                         <button onClick={() => onDelete(book.id)} className="action-btn-inline delete-btn" title={t('deleteBook') || "Delete"}>
-                            <Trash2 size={16} />
+                            <Trash2 size={14} />
                         </button>
                     </div>
 
@@ -152,7 +152,7 @@ const BookCard = ({ book, onEdit, onDelete, onUpdateProgress, onOpenNotes, onOpe
                                     title={`${star} ${t('stars') || 'Stars'}`}
                                 >
                                     <Star
-                                        size={16}
+                                        size={14}
                                         fill={book.rating >= star ? 'var(--warning-color)' : 'none'}
                                         color={book.rating >= star ? 'var(--warning-color)' : 'var(--text-secondary)'}
                                         style={{ opacity: book.rating >= star ? 1 : 0.4 }}

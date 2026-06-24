@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
 import { API_URL, withAuth, isNative } from '../config';
-import { Camera, User, Mail, Phone, Lock, Eye, EyeOff, Save, CheckCircle, XCircle, Clock, Bell, Share2, Copy, BadgeCheck, Smartphone, Download, Shield, FileText, ChevronRight } from 'lucide-react';
+import { Camera, User, Mail, Phone, Lock, Eye, EyeOff, Save, CheckCircle, XCircle, Clock, Bell, Share2, Copy, BadgeCheck, Smartphone, Download, Shield, FileText, ChevronRight, Settings2 } from 'lucide-react';
 import './Settings.css';
 
 const API = `${API_URL}/api/users`;
@@ -194,7 +194,7 @@ const Settings = () => {
     return (
         <div className="settings-page animate-fade-in">
             <header className="page-header">
-                <h1>⚙️ Ajustes de Cuenta</h1>
+                <h1><Settings2 size={26} color="#e0a93b" style={{ verticalAlign: 'middle', marginRight: 8 }} />Ajustes de Cuenta</h1>
                 <p>Gestiona tu información personal y seguridad</p>
             </header>
 

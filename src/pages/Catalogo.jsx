@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Plus, Check, BookOpen, Loader2, Download, Compass } from 'lucide-react';
+import { sileo } from 'sileo';
 import { API_URL, withAuth, mediaUrl } from '../config';
 import { LibraryContext } from '../context/LibraryContext';
 
@@ -65,30 +66,43 @@ const Catalogo = () => {
 
     const add = async (gid) => {
         setAddingId(gid);
-        try {
+        const titulo = results.find((r) => r.id === gid)?.title || 'El libro';
+        // Tarea: descargar el EPUB y refrescar la biblioteca (lanza si falla; devuelve el libro)
+        const task = (async () => {
             const res = await fetch(`${API_URL}/api/catalog/add`, withAuth({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ gutenbergId: gid }),
             }));
-            if (res.ok) {
-                await refetchBooks();
-            } else {
+            if (!res.ok) {
                 const j = await res.json().catch(() => ({}));
-                alert(j.message || 'No se pudo añadir el libro.');
+                throw new Error(j.message || 'No se pudo añadir el libro.');
             }
-        } catch {
-            alert('Error de conexión.');
-        } finally {
-            setAddingId(null);
-        }
+            const book = await res.json();
+            await refetchBooks();
+            return book;
+        })();
+        // Toast con estados: descargando → añadido / error. Los libros del catálogo (EPUB de
+        // dominio público) no traen nº de páginas: avisamos para que el usuario las ajuste.
+        sileo.promise(task, {
+            loading: { title: 'Añadiendo…', description: titulo },
+            success: (book) => (book && Number(book.totalPages) > 0
+                ? { title: 'Añadido a tu biblioteca', description: titulo }
+                : {
+                    title: 'Añadido a tu biblioteca',
+                    description: `«${titulo}» no trae nº de páginas. Edítalo en tu biblioteca para seguir tu progreso.`,
+                    duration: 7000,
+                }),
+            error: (e) => ({ title: 'No se pudo añadir', description: (e && e.message) || 'Inténtalo de nuevo.' }),
+        });
+        try { await task; } catch { /* el toast ya informa */ } finally { setAddingId(null); }
     };
 
     return (
         <div className="catalogo-page animate-fade-in" style={{ maxWidth: 1100, margin: '0 auto' }}>
             <header className="page-header" style={{ marginBottom: 18 }}>
                 <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Compass size={26} style={{ color: 'var(--accent-color)' }} /> Explorar catálogo
+                    <Compass size={26} style={{ color: '#C18A2F' }} /> Explorar catálogo
                 </h1>
                 <p>Miles de libros gratis y legales (dominio público) listos para leer. Añádelos a tu biblioteca con un toque.</p>
             </header>

@@ -77,9 +77,22 @@
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 5px;
     padding: 0 16px;
     flex: 1;
+}
+
+/* Etiqueta de sección (agrupa los ítems del menú en escritorio) */
+.nav-section {
+    padding: 14px 20px 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--sidebar-muted);
+    opacity: 0.55;
+    pointer-events: none;
+    user-select: none;
 }
 
 .nav-item {
@@ -217,6 +230,11 @@
 
     /* Los ítems secundarios salen de la barra (viven en el panel "Más") */
     .nav-links .nav-extra {
+        display: none;
+    }
+
+    /* Las etiquetas de sección son solo de escritorio */
+    .nav-section {
         display: none;
     }
 

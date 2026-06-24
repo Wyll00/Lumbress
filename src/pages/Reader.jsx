@@ -6,6 +6,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import { LibraryContext } from '../context/LibraryContext';
 import { AuthContext } from '../context/AuthContext';
 import { API_URL, withAuth, mediaUrl } from '../config';
+import { sileo } from 'sileo';
 import ReaderSettings from '../components/ReaderSettings';
 import { THEMES } from '../components/readerThemes';
 import SelectionTools from '../components/SelectionTools';
@@ -30,7 +31,7 @@ const styleFor = (color) => ({ fill: hexFor(color), 'fill-opacity': '0.32', 'mix
 const Reader = () => {
     const { bookId } = useParams();
     const navigate = useNavigate();
-    const { books } = useContext(LibraryContext);
+    const { books, updateBook } = useContext(LibraryContext);
     const { user, refreshUser } = useContext(AuthContext);
     const book = books.find((b) => String(b.id) === String(bookId));
     const posKey = `lumbres-reader-pos-${bookId}`;
@@ -98,6 +99,22 @@ const Reader = () => {
         setRendition(r);
         if (import.meta.env.DEV) window.__lumbresRendition = r; // depuración en dev
     }, []);
+
+    // Al abrir el libro por primera vez en el lector, marcamos la fecha de inicio
+    // (y lo pasamos a "Leyendo" si aún no se había empezado). Solo si no tenía
+    // fecha y no estaba ya leído; el ref evita que se dispare dos veces.
+    const startMarkedRef = useRef(false);
+    useEffect(() => {
+        if (!book || !fileUrl || startMarkedRef.current) return;
+        if (book.fecha_inicio || book.status === 'Read') return;
+        startMarkedRef.current = true;
+        const updates = { fecha_inicio: new Date().toISOString().slice(0, 10) };
+        if (!book.status || book.status === 'To Read' || book.status === 'Pendiente') {
+            updates.status = 'Reading';
+        }
+        updateBook(book.id, updates);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [bookId, !!book, fileUrl]);
 
     // Cargar subrayados guardados
     useEffect(() => {
@@ -183,9 +200,9 @@ const Reader = () => {
                 setPending(null);
             } else {
                 const data = await res.json().catch(() => ({}));
-                alert(data.message || 'No se pudo guardar el subrayado.');
+                sileo.error({ title: 'No se pudo subrayar', description: data.message || 'Inténtalo de nuevo.' });
             }
-        } catch { alert('Error de conexión.'); }
+        } catch { sileo.error({ title: 'Error de conexión' }); }
         finally { setSaving(false); }
     };
 
@@ -199,9 +216,9 @@ const Reader = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ labels: editLabels }),
             }));
-            if (res.ok) { await refreshUser(); setEditLabels(null); }
-            else alert('No se pudieron guardar las etiquetas.');
-        } catch { alert('Error de conexión.'); }
+            if (res.ok) { await refreshUser(); setEditLabels(null); sileo.success({ title: 'Significados guardados' }); }
+            else sileo.error({ title: 'No se pudieron guardar las etiquetas' });
+        } catch { sileo.error({ title: 'Error de conexión' }); }
         finally { setSavingLabels(false); }
     };
 
@@ -267,9 +284,9 @@ const Reader = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ word: dict.data.word, definition, lang: dict.data.lang, bookId }),
             }));
-            if (res.ok) { onWordSaved(await res.json()); setDict((d) => ({ ...d, saved: true })); }
-            else { const j = await res.json().catch(() => ({})); alert(j.message || 'No se pudo guardar la palabra.'); }
-        } catch { alert('Error de conexión.'); }
+            if (res.ok) { onWordSaved(await res.json()); setDict((d) => ({ ...d, saved: true })); sileo.success({ title: 'Palabra guardada', description: dict.data.word }); }
+            else { const j = await res.json().catch(() => ({})); sileo.error({ title: 'No se pudo guardar', description: j.message || 'Inténtalo de nuevo.' }); }
+        } catch { sileo.error({ title: 'Error de conexión' }); }
     };
 
     // Al guardar (desde aquí) la metemos al principio de la lista (sin duplicar)

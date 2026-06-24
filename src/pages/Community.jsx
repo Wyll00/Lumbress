@@ -258,7 +258,7 @@ const Community = () => {
       />
       <header className="page-header community-header">
         <div>
-          <h1><Users size={28} style={{ verticalAlign: 'middle', marginRight: 8 }} />Comunidad</h1>
+          <h1><Users size={28} color="#b08a98" style={{ verticalAlign: 'middle', marginRight: 8 }} />Comunidad</h1>
           <p>Comparte reseñas, recomendaciones y reflexiones con otros lectores</p>
         </div>
         <button className="sell-book-btn" onClick={() => navigate('/vender')}>

@@ -111,6 +111,7 @@ const shelvesRoutes = require('./routes/shelves');
 const dictionaryRoutes = require('./routes/dictionary');
 const catalogRoutes = require('./routes/catalog');
 const trackRoutes = require('./routes/track');
+const novedadesRoutes = require('./routes/novedades');
 const { startNewsScheduler } = require('./services/newsFetcher');
 const { startCleanupScheduler } = require('./services/cleanup');
 
@@ -136,6 +137,7 @@ app.use('/api/shelves', apiLimiter, shelvesRoutes);
 app.use('/api/dictionary', apiLimiter, dictionaryRoutes);
 app.use('/api/catalog', apiLimiter, catalogRoutes);
 app.use('/api/track', apiLimiter, trackRoutes);
+app.use('/api/novedades', apiLimiter, novedadesRoutes);
 app.use('/api/subscriptions', apiLimiter, subscriptionsModule.router);
 
 // Arranca el scheduler de noticias (fetch inicial + cada 60 min)

@@ -87,7 +87,7 @@ const Admin = () => {
             <header className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
                 <div>
                     <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <ShieldCheck size={26} style={{ color: 'var(--accent-color)' }} /> Administración
+                        <ShieldCheck size={26} style={{ color: '#b08a98' }} /> Administración
                     </h1>
                     <p>El pulso de Lumbres: usuarios, contenido y suscripciones.</p>
                 </div>

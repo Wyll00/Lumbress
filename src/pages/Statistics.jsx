@@ -7,7 +7,7 @@ import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line
 } from 'recharts';
-import { BookOpen, Layers, Target, Library, Star } from 'lucide-react';
+import { BookOpen, Layers, Target, Library, Star, BarChart3 } from 'lucide-react';
 import Calendar from '../components/Calendar';
 import ReadBooksModal from '../components/ReadBooksModal';
 import Achievements from '../components/Achievements';
@@ -180,7 +180,7 @@ const Statistics = () => {
         return (
             <div className="statistics animate-fade-in">
                 <header className="page-header">
-                    <h1>{t('readingStats')}</h1>
+                    <h1><BarChart3 size={26} color="#C18A2F" style={{ verticalAlign: 'middle', marginRight: 8 }} />{t('readingStats')}</h1>
                     <p>{t('analyzeHabits')}</p>
                 </header>
                 <PremiumGate
@@ -195,7 +195,7 @@ const Statistics = () => {
         return (
             <div className="statistics animate-fade-in">
                 <header className="page-header">
-                    <h1>{t('readingStats')}</h1>
+                    <h1><BarChart3 size={26} color="#C18A2F" style={{ verticalAlign: 'middle', marginRight: 8 }} />{t('readingStats')}</h1>
                 </header>
                 <div className="empty-stats glass-panel">
                     <p>{t('addBooksForStats')}</p>
@@ -211,7 +211,7 @@ const Statistics = () => {
     return (
         <div className="statistics animate-fade-in">
             <header className="page-header">
-                <h1>{t('readingStats')}</h1>
+                <h1><BarChart3 size={26} color="#C18A2F" style={{ verticalAlign: 'middle', marginRight: 8 }} />{t('readingStats')}</h1>
                 <p>{t('analyzeHabits')}</p>
             </header>
 

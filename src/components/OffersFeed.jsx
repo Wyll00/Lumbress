@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, MapPin, Tag, User, Phone, Eye, Home, MessageSquare, Trash2, CheckCircle, BadgeCheck } from 'lucide-react';
+import { sileo } from 'sileo';
 import { AuthContext } from '../context/AuthContext';
 import { API_URL, withAuth, mediaUrl } from '../config';
 import './OffersFeed.css';
@@ -81,8 +82,9 @@ const OffersFeed = () => {
             const res = await fetch(`${API_URL}/api/anuncios/${id}`, withAuth({ method: 'DELETE' }));
             if (res.ok) {
                 setOffers(prev => prev.filter(o => o.id !== id));
+                sileo.success({ title: 'Anuncio eliminado' });
             } else {
-                alert("Error eliminando el anuncio");
+                sileo.error({ title: 'Error eliminando el anuncio' });
             }
         } catch (err) {
             console.error('Error eliminando anuncio', err);
@@ -99,8 +101,9 @@ const OffersFeed = () => {
             }));
             if (res.ok) {
                 setOffers(prev => prev.map(o => o.id === id ? { ...o, vendido: newStatus ? 1 : 0 } : o));
+                sileo.success({ title: newStatus ? 'Marcado como vendido' : 'Marcado como disponible' });
             } else {
-                alert("Error actualizando el anuncio");
+                sileo.error({ title: 'Error actualizando el anuncio' });
             }
         } catch (err) {
             console.error('Error actualizando anuncio', err);
