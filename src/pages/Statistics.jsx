@@ -2,7 +2,7 @@ import { useContext, useMemo, useState, useEffect } from 'react';
 import { LibraryContext } from '../context/LibraryContext';
 import { LanguageContext } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
-import { API_URL, withAuth } from '../config';
+import { API_URL, withAuth, SUBSCRIPTIONS_ENABLED } from '../config';
 import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line
@@ -175,8 +175,8 @@ const Statistics = () => {
         return { total, totalPages, completedPages, genreData, statusData, averageRating, ratingsData, authorData, uniqueGenresCount, weeklyRankingData, weeklyHoursText };
     }, [books, t, weeklyData]);
 
-    // Estadísticas: función Premium (el plan gratis ve el aviso con CTA de upgrade)
-    if (user && user.plan !== 'premium') {
+    // Estadísticas: función Premium (abierta a todos en la fase gratis)
+    if (SUBSCRIPTIONS_ENABLED && user && user.plan !== 'premium') {
         return (
             <div className="statistics animate-fade-in">
                 <header className="page-header">

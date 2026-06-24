@@ -4,6 +4,7 @@ import { BookOpen, LayoutDashboard, BarChart3, Library, Globe, LogOut, Settings,
 import { LanguageContext } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
+import { SUBSCRIPTIONS_ENABLED } from '../config';
 import './Sidebar.css';
 
 const Sidebar = () => {
@@ -96,12 +97,14 @@ const Sidebar = () => {
                 </li>
 
                 <li className="nav-section"><span>{language === 'es' ? 'Cuenta' : 'Account'}</span></li>
-                <li className="nav-extra">
-                    <NavLink to="/subscriptions" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <CreditCard size={20} color="#e0a93b" />
-                        <span>{t('subscriptionsNav')}</span>
-                    </NavLink>
-                </li>
+                {SUBSCRIPTIONS_ENABLED && (
+                    <li className="nav-extra">
+                        <NavLink to="/subscriptions" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                            <CreditCard size={20} color="#e0a93b" />
+                            <span>{t('subscriptionsNav')}</span>
+                        </NavLink>
+                    </li>
+                )}
                 <li className="nav-extra">
                     <NavLink to="/settings" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         <Settings size={20} color="#e0a93b" />
@@ -145,9 +148,11 @@ const Sidebar = () => {
                         <NavLink to="/taller" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                             <Feather size={19} /><span>{t('workshop')}</span>
                         </NavLink>
-                        <NavLink to="/subscriptions" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                            <CreditCard size={19} /><span>{t('subscriptionsNav')}</span>
-                        </NavLink>
+                        {SUBSCRIPTIONS_ENABLED && (
+                            <NavLink to="/subscriptions" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                                <CreditCard size={19} /><span>{t('subscriptionsNav')}</span>
+                            </NavLink>
+                        )}
                         <NavLink to="/settings" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                             <Settings size={19} /><span>{t('settingsNav')}</span>
                         </NavLink>

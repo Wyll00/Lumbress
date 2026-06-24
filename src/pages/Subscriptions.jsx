@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Check, X, Star, BookOpen, Feather } from 'lucide-react';
 import { sileo } from 'sileo';
-import { API_URL, withAuth } from '../config';
+import { API_URL, withAuth, SUBSCRIPTIONS_ENABLED } from '../config';
 import './Subscriptions.css';
 
 // Modelo de lanzamiento: Gratis + Premium (doc "Estrategia de suscripción").
@@ -92,6 +92,18 @@ const Subscriptions = () => {
         ['Taller de Novela', '1 proyecto', '1 proyecto'],
         ['Insignia de perfil', false, true],
     ];
+
+    // Cobro desactivado (fase gratis): no mostramos planes ni checkout.
+    if (!SUBSCRIPTIONS_ENABLED) {
+        return (
+            <div className="subscriptions-page animate-fade-in">
+                <header className="subscriptions-header">
+                    <h1 className="gradient-text">Todo gratis por ahora</h1>
+                    <p>Mientras Lumbres crece, todas las funciones están disponibles para todos, sin coste. ¡Disfrútalas!</p>
+                </header>
+            </div>
+        );
+    }
 
     return (
         <div className="subscriptions-page animate-fade-in">

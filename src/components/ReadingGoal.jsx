@@ -2,7 +2,7 @@ import { useContext, useState } from 'react';
 import { Target, Pencil, Check } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
-import { API_URL, withAuth } from '../config';
+import { API_URL, withAuth, SUBSCRIPTIONS_ENABLED } from '../config';
 import PremiumGate from './PremiumGate';
 import './ReadingGoal.css';
 
@@ -32,8 +32,8 @@ const ReadingGoal = ({ books = [] }) => {
 
     const openEdit = () => { setInput(goal ? String(goal) : ''); setEditing(true); };
 
-    // Objetivos de lectura: función Premium
-    if (user && user.plan !== 'premium') {
+    // Objetivos de lectura: función Premium (abierta a todos en la fase gratis)
+    if (SUBSCRIPTIONS_ENABLED && user && user.plan !== 'premium') {
         return (
             <PremiumGate
                 compact

@@ -7,6 +7,7 @@ import AnimatedNumber from '../components/AnimatedNumber';
 import ReadBooksModal from '../components/ReadBooksModal';
 import ReadingGoal from '../components/ReadingGoal';
 import Recommendations from '../components/Recommendations';
+import NovedadesHome from '../components/NovedadesHome';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -114,6 +115,8 @@ const Dashboard = () => {
                     </div>
                 </div>
             </div>
+
+            <NovedadesHome />
 
             <ReadingGoal books={books} />
 

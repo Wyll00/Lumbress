@@ -7,6 +7,12 @@ export const API_URL = isNative
     ? 'https://lumbress.com'
     : (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
+// ===== INTERRUPTOR DE SUSCRIPCIONES (cobro) =====
+// false = fase gratis: se ocultan los planes/botones de pago y TODAS las
+// funciones premium quedan abiertas para todos. Pon true (aquí Y en
+// SUBSCRIPTIONS_ENABLED de server/middleware/plan.js) para reactivar el cobro.
+export const SUBSCRIPTIONS_ENABLED = false;
+
 // Sesión: en web va por cookie httpOnly (más segura). En la app nativa, por token
 // en cabecera (las cookies de terceros no son fiables dentro del WebView).
 const TOKEN_KEY = 'lumbres_token';

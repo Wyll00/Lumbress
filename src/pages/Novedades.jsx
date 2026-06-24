@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Sparkles, Plus, Trash2, ExternalLink, BookOpen, Loader2, X, ImagePlus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, Plus, Loader2, X, ImagePlus } from 'lucide-react';
 import { sileo } from 'sileo';
 import { API_URL, withAuth, mediaUrl, uploadFile } from '../config';
+import NovedadesCarousel from '../components/NovedadesCarousel';
 import './Novedades.css';
 
 const EMPTY = { titulo: '', autor: '', genero: '', enlace: '', sinopsis: '', portada_url: '' };
@@ -14,9 +15,6 @@ const Novedades = () => {
     const [submitting, setSubmitting] = useState(false);
     const [uploading, setUploading] = useState(false);
     const fileRef = useRef(null);
-    // Carrusel: índice activo + pausa al pasar el ratón
-    const [index, setIndex] = useState(0);
-    const [paused, setPaused] = useState(false);
 
     useEffect(() => {
         (async () => {
@@ -28,20 +26,6 @@ const Novedades = () => {
             finally { setLoading(false); }
         })();
     }, []);
-
-    // Auto-avance cada 3s (se pausa al pasar el ratón); no rota si hay 0/1 libro
-    useEffect(() => {
-        if (items.length < 2 || paused) return undefined;
-        const t = setInterval(() => setIndex((i) => (i + 1) % items.length), 3000);
-        return () => clearInterval(t);
-    }, [items.length, paused]);
-
-    // Si se borra el último, no dejar el índice fuera de rango
-    useEffect(() => {
-        if (index >= items.length && items.length > 0) setIndex(0);
-    }, [items.length, index]);
-
-    const go = (n) => setIndex((i) => (i + n + items.length) % items.length);
 
     const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -168,59 +152,7 @@ const Novedades = () => {
                     <p style={{ margin: '6px 0 0' }}>¿Eres escritor/a? Sé el primero en promocionar tu libro aquí.</p>
                 </div>
             ) : (
-                <>
-                    <div className="nov-carousel" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-                        <div className="nov-track" style={{ transform: `translateX(-${index * 100}%)` }}>
-                            {items.map((it) => (
-                                <div className="nov-slide" key={it.id}>
-                                    <div className="nov-card glass-panel">
-                                        <div className="nov-cover">
-                                            {it.portada_url ? (
-                                                <img src={mediaUrl(it.portada_url)} alt={it.titulo} loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                                            ) : (
-                                                <BookOpen size={48} style={{ color: 'var(--text-secondary)' }} />
-                                            )}
-                                        </div>
-                                        <div className="nov-info">
-                                            <div className="nov-info-top">
-                                                {it.genero && <span className="nov-chip">{it.genero}</span>}
-                                                <h2 className="nov-title">{it.titulo}</h2>
-                                                <p className="nov-author">{it.autor}</p>
-                                                {it.sinopsis && <p className="nov-synopsis">{it.sinopsis}</p>}
-                                            </div>
-                                            <div className="nov-actions">
-                                                <a href={it.enlace} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '12px 24px', textDecoration: 'none' }}>
-                                                    Conseguir <ExternalLink size={15} />
-                                                </a>
-                                                <div className="nov-actions-meta">
-                                                    {it.publicado_por && <span className="nov-by">Promocionado por @{it.publicado_por}</span>}
-                                                    {it.isOwner && (
-                                                        <button className="nov-del" onClick={() => remove(it.id)} title="Quitar promoción">
-                                                            <Trash2 size={14} /> Quitar
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        {items.length > 1 && (
-                            <>
-                                <button className="nov-arrow left" onClick={() => go(-1)} aria-label="Anterior"><ChevronLeft size={20} /></button>
-                                <button className="nov-arrow right" onClick={() => go(1)} aria-label="Siguiente"><ChevronRight size={20} /></button>
-                            </>
-                        )}
-                    </div>
-                    {items.length > 1 && (
-                        <div className="nov-dots">
-                            {items.map((_, i) => (
-                                <button key={i} className={i === index ? 'active' : ''} onClick={() => setIndex(i)} aria-label={`Ir al libro ${i + 1}`} />
-                            ))}
-                        </div>
-                    )}
-                </>
+                <NovedadesCarousel items={items} manageable onRemove={remove} />
             )}
         </div>
     );

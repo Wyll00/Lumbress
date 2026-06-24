@@ -5,7 +5,7 @@ import { ReactReader, ReactReaderStyle } from 'react-reader';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { LibraryContext } from '../context/LibraryContext';
 import { AuthContext } from '../context/AuthContext';
-import { API_URL, withAuth, mediaUrl } from '../config';
+import { API_URL, withAuth, mediaUrl, isNative } from '../config';
 import { sileo } from 'sileo';
 import ReaderSettings from '../components/ReaderSettings';
 import { THEMES } from '../components/readerThemes';
@@ -83,17 +83,22 @@ const Reader = () => {
     const fileUrl = book?.fileUrl ? mediaUrl(book.fileUrl) : null;
     const isPdf = book?.fileType === 'pdf';
     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    // Diccionario y subrayado solo en escritorio web o en la app de Android: en el
+    // navegador del móvil la selección de texto es poco fiable. La lectura, los
+    // ajustes y la pantalla completa siguen disponibles en todas partes.
+    const selectionFeatures = isNative || !isMobile;
 
     const onEpubLocation = useCallback((loc) => {
         setLocation(loc);
         localStorage.setItem(posKey, loc);
     }, [posKey]);
 
-    // Al seleccionar texto en el EPUB, ofrecer subrayar
+    // Al seleccionar texto en el EPUB, ofrecer subrayar (no en móvil-web)
     const onTextSelected = useCallback((cfiRange, contents) => {
+        if (!selectionFeatures) return;
         const text = contents.window.getSelection()?.toString().trim();
         if (text) { setPending({ cfiRange, text }); setDict(null); }
-    }, []);
+    }, [selectionFeatures]);
 
     const onRendition = useCallback((r) => {
         setRendition(r);
@@ -144,7 +149,7 @@ const Reader = () => {
     // Detectamos la selección nosotros: selectionchange (con rebote) + touchend/mouseup
     // sobre el documento interno del EPUB, y mostramos la barra de selección.
     useEffect(() => {
-        if (!rendition) return;
+        if (!rendition || !selectionFeatures) return undefined;
         const cleanups = [];
 
         const showFromSelection = (contents) => {
@@ -183,7 +188,7 @@ const Reader = () => {
             cleanups.forEach((fn) => fn());
             try { rendition.hooks?.content?.deregister(attach); } catch { /* noop */ }
         };
-    }, [rendition]);
+    }, [rendition, selectionFeatures]);
 
     const saveHighlight = async (color) => {
         if (!pending || saving) return;
@@ -441,17 +446,19 @@ const Reader = () => {
                         </button>
                     )}
 
-                    {/* Mis palabras (diccionario) — disponible en EPUB y PDF */}
-                    <button
-                        className="btn-secondary"
-                        onClick={() => setWordsOpen(true)}
-                        title="Tus palabras guardadas del diccionario"
-                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', color: wordsOpen ? 'var(--accent-color)' : undefined }}
-                    >
-                        <BookA size={16} /> {isMobile ? `(${savedWords.length})` : `Palabras (${savedWords.length})`}
-                    </button>
+                    {/* Mis palabras (diccionario) — solo escritorio web o app */}
+                    {selectionFeatures && (
+                        <button
+                            className="btn-secondary"
+                            onClick={() => setWordsOpen(true)}
+                            title="Tus palabras guardadas del diccionario"
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', color: wordsOpen ? 'var(--accent-color)' : undefined }}
+                        >
+                            <BookA size={16} /> {isMobile ? `(${savedWords.length})` : `Palabras (${savedWords.length})`}
+                        </button>
+                    )}
 
-                    {!isPdf && (
+                    {selectionFeatures && !isPdf && (
                         <button
                             className="btn-secondary"
                             onClick={() => setPanelOpen((o) => !o)}
@@ -472,8 +479,14 @@ const Reader = () => {
                 </div>
             </header>
 
+            {!selectionFeatures && (
+                <p style={{ margin: '0 0 8px', fontSize: '0.72rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                    💡 Para subrayar y usar el diccionario, abre el libro en la app de Android o en el ordenador.
+                </p>
+            )}
+
             {/* Herramientas de selección (diccionario + subrayado): barra arriba en escritorio, hoja inferior en móvil */}
-            {pending && (
+            {pending && selectionFeatures && (
                 <SelectionTools
                     isMobile={isMobile}
                     pending={pending}
