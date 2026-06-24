@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const auth = require('../middleware/auth');
+const { safeHttpUrl, safeMediaUrl } = require('../utils/url');
 
 router.use(auth);
 
@@ -10,29 +11,6 @@ const MAX_POR_USUARIO = 10; // tope de promociones activas por usuario (anti-spa
 async function esAdmin(userId) {
     const [r] = await pool.query('SELECT is_admin FROM usuarios WHERE id = ?', [userId]);
     return !!r[0]?.is_admin;
-}
-
-// Normaliza un enlace de "conseguir el libro": solo http/https; añade https:// si falta.
-function enlaceSeguro(raw) {
-    const s = String(raw || '').trim();
-    if (!s) return null;
-    const conProto = /^https?:\/\//i.test(s) ? s : `https://${s}`;
-    try {
-        const u = new URL(conProto);
-        if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
-        return conProto.slice(0, 500);
-    } catch { return null; }
-}
-
-// Portada: o una ruta /uploads/... (subida a nuestro backend) o una URL http(s).
-function portadaSegura(raw) {
-    const s = String(raw || '').trim();
-    if (!s) return null;
-    if (s.startsWith('/uploads/')) return s.slice(0, 500);
-    if (/^https?:\/\//i.test(s)) {
-        try { new URL(s); return s.slice(0, 500); } catch { return null; }
-    }
-    return null;
 }
 
 // GET /api/novedades — escaparate público (aprobadas), de la más reciente a la más antigua
@@ -62,8 +40,8 @@ router.post('/', async (req, res) => {
         const autor = String(req.body.autor || '').trim().slice(0, 160);
         const sinopsis = String(req.body.sinopsis || '').trim().slice(0, 2000);
         const genero = String(req.body.genero || '').trim().slice(0, 80) || null;
-        const enlace = enlaceSeguro(req.body.enlace);
-        const portada_url = portadaSegura(req.body.portada_url);
+        const enlace = safeHttpUrl(req.body.enlace);
+        const portada_url = safeMediaUrl(req.body.portada_url);
 
         if (!titulo) return res.status(400).json({ message: 'El título es obligatorio.' });
         if (!autor) return res.status(400).json({ message: 'El nombre del autor es obligatorio.' });

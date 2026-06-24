@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const auth = require('../middleware/auth');
+const { safeHttpUrl } = require('../utils/url');
 
 router.use(auth);
 
@@ -11,7 +12,7 @@ const sanitize = (body) => ({
     nombre: typeof body.nombre === 'string' ? body.nombre.trim() : '',
     autor: typeof body.autor === 'string' ? body.autor.trim() : null,
     descripcion: typeof body.descripcion === 'string' ? body.descripcion : null,
-    url_fuente: typeof body.url_fuente === 'string' ? body.url_fuente.trim() : null,
+    url_fuente: safeHttpUrl(body.url_fuente), // solo http/https (se muestra como enlace)
     audio_url: typeof body.audio_url === 'string' ? body.audio_url.trim() : null,
     portada_url: typeof body.portada_url === 'string' ? body.portada_url : null,
     categoria: typeof body.categoria === 'string' ? body.categoria.trim() : null,
