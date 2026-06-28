@@ -348,6 +348,7 @@ function Select({ value, onChange, options }) {
 }
 
 function Dashboard({ data, persist, go }) {
+  const isMobile = useIsMobile();
   const totalWords = data.chapters.reduce((a, c) => a + wordCount(c.content), 0);
   const pct = data.meta.target ? Math.min(100, Math.round((totalWords / data.meta.target) * 100)) : 0;
   const setMeta = (patch) => persist({ ...data, meta: { ...data.meta, ...patch } });
@@ -362,12 +363,12 @@ function Dashboard({ data, persist, go }) {
   return (
     <div>
       <Header title="Resumen de la novela" subtitle="Vista general de tu proyecto y progreso de escritura." />
-      <div style={{ padding: "26px 34px" }}>
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 24, marginBottom: 24 }}>
+      <div style={{ padding: isMobile ? "18px 16px" : "26px 34px" }}>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: isMobile ? 16 : 24, marginBottom: 24 }}>
           <Field label="Título de la obra">
             <TextInput value={data.meta.title} onChange={(e) => setMeta({ title: e.target.value })} />
           </Field>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
             <Field label="Género">
               <TextInput value={data.meta.genre} placeholder="Fantasía, romance…"
                 onChange={(e) => setMeta({ genre: e.target.value })} />
@@ -393,12 +394,12 @@ function Dashboard({ data, persist, go }) {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: isMobile ? 12 : 16 }}>
           {stats.map((s) => (
             <button key={s.label} onClick={() => go(s.sec)}
-              style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14,
-                padding: "20px 18px", cursor: "pointer", textAlign: "left", fontFamily: FONT,
-                display: "flex", flexDirection: "column", gap: 12 }}>
+              style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, minWidth: 0,
+                padding: isMobile ? "15px 14px" : "20px 18px", cursor: "pointer", textAlign: "left", fontFamily: FONT,
+                display: "flex", flexDirection: "column", gap: isMobile ? 8 : 12 }}>
               <s.icon size={22} color={C.amber} strokeWidth={2} />
               <div>
                 <div style={{ fontSize: 28, fontWeight: 800, color: C.text, lineHeight: 1 }}>{s.value}</div>
