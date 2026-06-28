@@ -103,6 +103,30 @@
     padding: 32px;
     max-width: 1200px;
     margin: 0 auto;
+    overflow-x: hidden; /* evita el scroll/recorte horizontal en móvil */
+}
+
+/* Que nada del formulario/feed se salga del ancho de la pantalla */
+.community-page *,
+.community-page *::before,
+.community-page *::after {
+    box-sizing: border-box;
+}
+
+.community-layout {
+    min-width: 0;
+}
+
+/* Los hijos del grid (formulario y feed) deben poder encoger al ancho disponible */
+.community-layout > * {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.composer-field input,
+.composer-field textarea {
+    width: 100%;
+    max-width: 100%;
 }
 
 /* ── Layout ─────────────────────────── */
