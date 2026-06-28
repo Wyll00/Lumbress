@@ -150,6 +150,18 @@ export default function TallerNovela() {
       border: `1px solid ${C.border}` }}>
       <FontInjector />
 
+      {/* En móvil: cabecera con título (como el resto de páginas) sobre las pestañas */}
+      {isMobile && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "14px 16px", background: C.panel, borderBottom: `1px solid ${C.borderSoft}`, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9, fontFamily: FONT,
+            fontSize: 17, fontWeight: 700, color: C.text }}>
+            <Feather size={18} color={C.amber} /> Taller de novela
+          </div>
+          <SaveBadge state={saveState} />
+        </div>
+      )}
+
       {/* Navegación interna del módulo (en móvil: pestañas horizontales con scroll) */}
       <nav style={isMobile
         ? { width: "100%", background: C.panel, borderBottom: `1px solid ${C.borderSoft}`,
