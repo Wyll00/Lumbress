@@ -259,4 +259,10 @@
     .filters-box {
         flex-direction: column;
     }
+
+    /* En móvil, 2 libros por fila para aprovechar la pantalla */
+    .books-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
 }

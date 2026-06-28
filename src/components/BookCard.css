@@ -271,3 +271,62 @@
 .inline-star-btn:active {
     transform: scale(0.9);
 }
+
+/* ── Móvil: 2 tarjetas por fila, todo compacto y sin desbordes ── */
+@media (max-width: 768px) {
+    .book-card-header {
+        height: 132px;
+    }
+
+    .book-card-content {
+        padding: 12px;
+    }
+
+    .book-meta {
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 8px;
+        font-size: 0.72rem;
+    }
+
+    .book-title {
+        font-size: 1rem;
+    }
+
+    .book-author {
+        font-size: 0.82rem;
+    }
+
+    .book-tags-container {
+        margin-bottom: 12px;
+    }
+
+    .progress-pie-chart {
+        width: 50px;
+        height: 50px;
+    }
+
+    .progress-pie-inner {
+        width: 40px;
+        height: 40px;
+    }
+
+    .progress-section {
+        gap: 8px;
+    }
+
+    .book-card-footer {
+        margin-top: 10px;
+        padding-top: 10px;
+    }
+
+    .book-card-actions-inline {
+        gap: 3px;
+    }
+
+    .action-btn-inline {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+    }
+}
