@@ -618,11 +618,69 @@
         grid-template-columns: 1fr;
     }
 
+    /* En móvil el feed va primero; el formulario "Nueva publicación" debajo */
+    .posts-feed {
+        order: 1;
+    }
+
     .composer-panel {
         position: static;
+        order: 2;
     }
 
     .community-page {
         padding: 20px 16px;
+    }
+}
+
+@media (max-width: 600px) {
+    .community-page {
+        padding: 16px 12px;
+    }
+
+    /* Cabecera: título y botón apilados, botón a todo el ancho */
+    .community-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .community-header h1 {
+        font-size: 1.4rem;
+    }
+
+    .community-header h1 svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .community-header p {
+        font-size: 0.85rem;
+    }
+
+    .sell-book-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Tarjetas más compactas en pantallas pequeñas */
+    .post-card {
+        padding: 16px;
+    }
+
+    .post-title {
+        font-size: 1rem;
+    }
+
+    .post-content {
+        font-size: 0.9rem;
+    }
+
+    .composer-panel {
+        padding: 16px;
+    }
+
+    .post-image {
+        max-height: 280px;
     }
 }

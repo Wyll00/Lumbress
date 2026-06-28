@@ -268,14 +268,25 @@
 }
 
 @media (max-width: 768px) {
-    .calendar-cell {
-        min-height: 60px;
-        padding: 8px;
-    }
-    .calendar-day-number {
-        font-size: 1rem;
-    }
-    .calendar-day-name {
-        font-size: 0.65rem;
-    }
+    .calendar-container { padding: 14px; }
+    .calendar-header { flex-wrap: wrap; gap: 10px; margin-bottom: 14px; padding-bottom: 12px; }
+    .calendar-header h2 { font-size: 1.15rem; }
+    .calendar-add-btn { font-size: 0.75rem; padding: 7px 12px; }
+    .calendar-grid { gap: 4px; }
+    .calendar-dow { font-size: 0.62rem; padding: 4px 0; margin-bottom: 2px; }
+
+    .calendar-cell { min-height: 54px; padding: 4px; border-radius: 8px; }
+    /* El nombre del día ya está en la cabecera de la columna: en móvil sobra
+       dentro de cada celda y dejaba el número sin sitio. */
+    .calendar-day-name { display: none; }
+    .calendar-day-header { justify-content: center; }
+    .calendar-day-number { font-size: 0.9rem; width: 24px; height: 24px; }
+
+    /* Eventos compactos para que quepan en celdas estrechas */
+    .calendar-events-list { margin-bottom: 2px; gap: 2px; }
+    .calendar-event-time { display: none; }
+    .calendar-event-title { font-size: 0.6rem; }
+    .calendar-event-delete { opacity: 1; } /* sin hover en táctil */
+    /* La celda de hoy ya se distingue por el borde y el fondo de color */
+    .calendar-today-badge { display: none; }
 }
