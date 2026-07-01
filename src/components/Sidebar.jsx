@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { BookOpen, LayoutDashboard, BarChart3, Library, Globe, LogOut, Settings, Users, Clock, CreditCard, Headphones, MessagesSquare, Feather, ShieldCheck, MoreHorizontal, Compass, Sparkles } from 'lucide-react';
+import { BookOpen, LayoutDashboard, BarChart3, Library, Globe, LogOut, Settings, Users, Clock, CreditCard, Headphones, MessagesSquare, Feather, ShieldCheck, MoreHorizontal, Compass, Sparkles, Newspaper } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
@@ -84,6 +84,12 @@ const Sidebar = () => {
                     </NavLink>
                 </li>
                 <li className="nav-extra">
+                    <NavLink to="/blog" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                        <Newspaper size={20} color="#7fa06f" />
+                        <span>Blog</span>
+                    </NavLink>
+                </li>
+                <li className="nav-extra">
                     <NavLink to="/podcasts" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         <Headphones size={20} color="#7fa06f" />
                         <span>Podcasts</span>
@@ -141,6 +147,9 @@ const Sidebar = () => {
                         </NavLink>
                         <NavLink to="/novedades" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                             <Sparkles size={19} /><span>{language === 'es' ? 'Novedades' : "What's new"}</span>
+                        </NavLink>
+                        <NavLink to="/blog" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                            <Newspaper size={19} /><span>Blog</span>
                         </NavLink>
                         <NavLink to="/podcasts" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                             <Headphones size={19} /><span>Podcasts</span>

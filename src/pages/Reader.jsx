@@ -407,7 +407,7 @@ const Reader = () => {
             className="reader-page animate-fade-in"
             style={{
                 display: 'flex', flexDirection: 'column',
-                height: isFullscreen ? '100vh' : (isMobile ? 'calc(100dvh - 130px)' : 'calc(100vh - 48px)'),
+                height: isFullscreen ? '100vh' : (isMobile ? 'calc(100dvh - 130px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' : 'calc(100vh - 48px)'),
                 ...(isFullscreen ? { background: 'var(--bg, #161410)', padding: isMobile ? 12 : 20, boxSizing: 'border-box' } : {}),
             }}
         >

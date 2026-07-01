@@ -112,8 +112,10 @@ const dictionaryRoutes = require('./routes/dictionary');
 const catalogRoutes = require('./routes/catalog');
 const trackRoutes = require('./routes/track');
 const novedadesRoutes = require('./routes/novedades');
+const blogRoutes = require('./routes/blog');
 const { startNewsScheduler } = require('./services/newsFetcher');
 const { startCleanupScheduler } = require('./services/cleanup');
+const { startBlogScheduler } = require('./services/blogWriter');
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/books', apiLimiter, booksRoutes);
@@ -138,6 +140,7 @@ app.use('/api/dictionary', apiLimiter, dictionaryRoutes);
 app.use('/api/catalog', apiLimiter, catalogRoutes);
 app.use('/api/track', apiLimiter, trackRoutes);
 app.use('/api/novedades', apiLimiter, novedadesRoutes);
+app.use('/api/blog', apiLimiter, blogRoutes);
 app.use('/api/subscriptions', apiLimiter, subscriptionsModule.router);
 
 // Arranca el scheduler de noticias (fetch inicial + cada 60 min)
@@ -145,6 +148,9 @@ startNewsScheduler();
 
 // Limpieza periódica de cuentas sin verificar (registros abandonados/falsos)
 startCleanupScheduler();
+
+// Generación automática de borradores del blog (2 veces/semana, si está activada)
+startBlogScheduler();
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });

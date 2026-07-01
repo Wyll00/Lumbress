@@ -21,6 +21,10 @@
     margin-bottom: 88px;
     /* Space for mobile bottom nav (64px + 12px + margen) */
     padding: 14px;
+    /* iPhone (PWA a pantalla completa): no meter el contenido bajo la hora/isla ni el borde inferior */
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+    padding-left: calc(14px + env(safe-area-inset-left, 0px));
+    padding-right: calc(14px + env(safe-area-inset-right, 0px));
   }
 
   /* Títulos de página más contenidos en pantallas pequeñas */
