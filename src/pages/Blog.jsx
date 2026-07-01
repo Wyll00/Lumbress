@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Newspaper, Plus, Pencil, Trash2, X, Loader2, ImagePlus, Sparkles } from 'lucide-react';
+import { Newspaper, Plus, Pencil, Trash2, X, Loader2, ImagePlus } from 'lucide-react';
 import { sileo } from 'sileo';
 import { API_URL, withAuth, mediaUrl, uploadFile } from '../config';
 import { AuthContext } from '../context/AuthContext';
@@ -21,7 +21,6 @@ const Blog = () => {
     const [editingId, setEditingId] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [uploading, setUploading] = useState(false);
-    const [generating, setGenerating] = useState(false);
     const fileRef = useRef(null);
 
     const load = useCallback(async () => {
@@ -115,21 +114,6 @@ const Blog = () => {
         }
     };
 
-    const generateAI = async () => {
-        setGenerating(true);
-        try {
-            const res = await fetch(`${API_URL}/api/blog/generate`, withAuth({ method: 'POST' }));
-            const j = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(j.message || 'No se pudo generar.');
-            sileo.success({ title: 'Borrador generado con IA', description: j.titulo ? `«${j.titulo}» — revísalo y publícalo.` : 'Revísalo y publícalo cuando quieras.', duration: 6000 });
-            load();
-        } catch (err) {
-            sileo.error({ title: 'No se pudo generar', description: err.message || 'Inténtalo de nuevo.', duration: 7000 });
-        } finally {
-            setGenerating(false);
-        }
-    };
-
     const fmtDate = (d) => new Date(d).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
 
     return (
@@ -142,14 +126,9 @@ const Blog = () => {
                     <p>Artículos, listas y consejos de lectura del equipo de Lumbres.</p>
                 </div>
                 {isAdmin && !editorOpen && (
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        <button className="btn-secondary" onClick={generateAI} disabled={generating} title="Genera un borrador con IA en tu estilo" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '11px 16px', whiteSpace: 'nowrap' }}>
-                            {generating ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Generando…</> : <><Sparkles size={16} /> Generar con IA</>}
-                        </button>
-                        <button className="btn-primary" onClick={openNew} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '11px 18px', whiteSpace: 'nowrap' }}>
-                            <Plus size={16} /> Nuevo artículo
-                        </button>
-                    </div>
+                    <button className="btn-primary" onClick={openNew} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '11px 18px', whiteSpace: 'nowrap' }}>
+                        <Plus size={16} /> Nuevo artículo
+                    </button>
                 )}
             </header>
 

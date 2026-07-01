@@ -3,7 +3,6 @@ const router = express.Router();
 const pool = require('../db');
 const auth = require('../middleware/auth');
 const { safeMediaUrl } = require('../utils/url');
-const { generateDraft } = require('../services/blogWriter');
 
 router.use(auth);
 
@@ -63,18 +62,6 @@ router.get('/:id', async (req, res) => {
     } catch (err) {
         console.error('Error obteniendo artículo:', err);
         res.status(500).json({ message: 'Error obteniendo el artículo' });
-    }
-});
-
-// POST /api/blog/generate — generar un borrador con IA (solo admin)
-router.post('/generate', async (req, res) => {
-    try {
-        if (!(await esAdmin(req.user.id))) return res.status(403).json({ message: 'Solo administración.' });
-        const draft = await generateDraft();
-        res.status(201).json(draft);
-    } catch (err) {
-        console.error('Error generando con IA:', err.message);
-        res.status(500).json({ message: err.message || 'No se pudo generar el artículo.' });
     }
 });
 

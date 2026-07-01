@@ -115,7 +115,6 @@ const novedadesRoutes = require('./routes/novedades');
 const blogRoutes = require('./routes/blog');
 const { startNewsScheduler } = require('./services/newsFetcher');
 const { startCleanupScheduler } = require('./services/cleanup');
-const { startBlogScheduler } = require('./services/blogWriter');
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/books', apiLimiter, booksRoutes);
@@ -148,9 +147,6 @@ startNewsScheduler();
 
 // Limpieza periódica de cuentas sin verificar (registros abandonados/falsos)
 startCleanupScheduler();
-
-// Generación automática de borradores del blog (2 veces/semana, si está activada)
-startBlogScheduler();
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
