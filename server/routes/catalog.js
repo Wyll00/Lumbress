@@ -14,6 +14,30 @@ const UA = 'Lumbres/1.0 (lectura social; https://lumbress.com)';
 
 const epubOf = (b) => b.formats?.['application/epub+zip'] || b.formats?.['application/epub+zip; charset=utf-8'] || null;
 
+// FILTRO LEGAL — dominio público en ESPAÑA, no en EE. UU.
+// Project Gutenberg aplica la ley estadounidense (publicado antes de 1929), pero en España
+// una obra solo entra en dominio público 80 años después de la muerte del autor (disposición
+// transitoria 4.ª del TRLPI para autores fallecidos antes del 7-12-1987, que son todos los
+// que entran ahora; la regla general UE es 70). El plazo cuenta desde el 1 de enero siguiente
+// al fallecimiento. Se exige lo mismo a los TRADUCTORES: la traducción tiene derechos propios.
+// Si no hay datos de fallecimiento, la obra se excluye (no verificable = fuera).
+const PD_YEARS = 80;
+const pdCutoffYear = () => new Date().getFullYear() - PD_YEARS - 1; // en 2026: fallecidos en 1945 o antes
+
+const personIsPD = (p, cutoff) =>
+    (Number.isInteger(p.death_year) && p.death_year <= cutoff)
+    // Sin año de muerte pero nacido hace 180+ años (aunque viviera 100, murió hace 80+):
+    // cubre autores antiguos (Homero, anónimos clásicos con fecha) con ficha incompleta.
+    || (p.death_year == null && Number.isInteger(p.birth_year) && p.birth_year <= cutoff - 100);
+
+function isPublicDomainSpain(b) {
+    if (b.copyright === true) return false; // con derechos incluso en EE. UU.
+    const cutoff = pdCutoffYear();
+    const people = [...(b.authors || []), ...(b.translators || [])];
+    if (people.length === 0) return false;
+    return people.every((p) => personIsPD(p, cutoff));
+}
+
 function mapBook(b) {
     return {
         id: b.id,
@@ -47,7 +71,7 @@ router.get('/search', async (req, res) => {
             count: data.count || 0,
             hasNext: !!data.next,
             page,
-            results: (data.results || []).map(mapBook).filter((b) => b.hasEpub),
+            results: (data.results || []).filter(isPublicDomainSpain).map(mapBook).filter((b) => b.hasEpub),
         });
     } catch (err) {
         if (err.name === 'AbortError') return res.status(504).json({ message: 'El catálogo tardó demasiado. Inténtalo de nuevo.' });
@@ -71,6 +95,11 @@ router.post('/add', async (req, res) => {
         const gr = await fetch(`https://gutendex.com/books/${gid}/`, { headers: { 'User-Agent': UA } });
         if (!gr.ok) return res.status(404).json({ message: 'No se encontró el libro en el catálogo.' });
         const b = await gr.json();
+        // Mismo filtro legal que en /search: aunque alguien llame a la API directamente con un
+        // id, no se puede añadir una obra que no esté en dominio público en España.
+        if (!isPublicDomainSpain(b)) {
+            return res.status(403).json({ message: 'Ese libro aún no está en dominio público en España, así que no podemos ofrecerlo.' });
+        }
         const epubUrl = epubOf(b);
         if (!epubUrl) return res.status(400).json({ message: 'Ese libro no tiene versión EPUB.' });
         const cover = b.formats?.['image/jpeg'] || '';

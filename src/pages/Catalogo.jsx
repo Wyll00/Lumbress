@@ -104,7 +104,10 @@ const Catalogo = () => {
                 <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <Compass size={26} style={{ color: '#C18A2F' }} /> Explorar catálogo
                 </h1>
-                <p>Miles de libros gratis y legales (dominio público) listos para leer. Añádelos a tu biblioteca con un toque.</p>
+                <p>
+                    Libros gratis y legales listos para leer: solo mostramos obras en <strong>dominio público en España</strong> (autor
+                    y traductor fallecidos hace más de 80 años). Añádelos a tu biblioteca con un toque.
+                </p>
             </header>
 
             {/* Buscador */}
@@ -142,7 +145,7 @@ const Catalogo = () => {
                 </div>
             ) : (
                 <>
-                    {count > 0 && <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0 0 12px' }}>{count.toLocaleString('es-ES')} libros encontrados</p>}
+                    {count > 0 && <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0 0 12px' }}>{count.toLocaleString('es-ES')} resultados en el catálogo · mostramos solo los que están en dominio público en España</p>}
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16 }}>
                         {results.map((b) => {

@@ -176,7 +176,7 @@ max_allowed_packet=256M   # antes 1M, no aguantaba imágenes
 | `/shelves` | GET/POST/PUT/DELETE + add/remove libro | Estanterías |
 | `/admin` | GET /stats , GET /users , GET /traffic , GET /errors , POST /errors/:id/resolve | Solo `is_admin`; métricas + usuarios + **analítica de tráfico** + **registro de errores** |
 | `/track` | POST `{ path }` | Registra una página vista del SPA (público; adjunta usuario si hay token). El país e IP los pone el servidor (geoip-lite) |
-| `/catalog` | GET /search?q=&lang=&page= , POST /add `{ gutenbergId }` | Catálogo de libros gratis (dominio público) vía **Gutendex/Project Gutenberg**. `add` descarga el EPUB a `/uploads/catalogo/pg-{id}.epub` (compartido, dedup) y crea un `libros` con `origen='catalogo'` (no cuenta cuota ni límite de plan) |
+| `/catalog` | GET /search?q=&lang=&page= , POST /add `{ gutenbergId }` | Catálogo de libros gratis (dominio público) vía **Gutendex/Project Gutenberg**. **Filtro legal PD-España**: solo obras cuyo autor **y traductor** llevan 80+ años fallecidos (regla transitoria TRLPI; sin datos = excluido); se aplica en `search` y se re-verifica en `add` (403 si no pasa). `add` descarga el EPUB a `/uploads/catalogo/pg-{id}.epub` (compartido, dedup) y crea un `libros` con `origen='catalogo'` (no cuenta cuota ni límite de plan) |
 | Estáticos | `/uploads/...` | servidos con `express.static` + CORP cross-origin |
 
 ---
