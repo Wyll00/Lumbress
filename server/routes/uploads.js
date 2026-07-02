@@ -27,13 +27,31 @@ const ALLOWED = {
 const BOOK_EXTS = ['.epub', '.pdf'];
 const KINDS = ['audio', 'covers', 'books'];
 
+// SEGURIDAD: la extensión del fichero la decide el SERVIDOR a partir del tipo real
+// permitido, NUNCA el nombre que envía el cliente. Así un usuario no puede subir un
+// ".html"/".svg" (disfrazado de imagen) que luego se sirva como HTML y ejecute código (XSS).
+const MIME_EXT = {
+    'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif',
+    'audio/mpeg': '.mp3', 'audio/mp4': '.m4a', 'audio/x-m4a': '.m4a', 'audio/ogg': '.ogg',
+    'audio/wav': '.wav', 'audio/webm': '.weba', 'audio/aac': '.aac',
+};
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const kind = KINDS.includes(req.params.kind) ? req.params.kind : 'covers';
         cb(null, path.join(UPLOADS_DIR, kind));
     },
     filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname).toLowerCase().slice(0, 10);
+        const kind = KINDS.includes(req.params.kind) ? req.params.kind : 'covers';
+        let ext;
+        if (kind === 'books') {
+            // fileFilter ya validó que es .epub/.pdf por extensión
+            ext = path.extname(file.originalname).toLowerCase();
+            if (!BOOK_EXTS.includes(ext)) ext = '.epub';
+        } else {
+            // covers/audio: la extensión sale del tipo real (validado en fileFilter), no del nombre
+            ext = MIME_EXT[file.mimetype] || '.bin';
+        }
         const unique = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`;
         cb(null, unique);
     },
