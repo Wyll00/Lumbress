@@ -4,7 +4,7 @@ import LegalLayout, { Section, Text, List } from '../components/LegalLayout';
 // Política de Privacidad de Lumbres. Borrador a tu medida (no es asesoría legal).
 // Rellena los datos entre corchetes [ ] antes de publicarla en serio.
 const Privacidad = () => (
-    <LegalLayout title="Política de Privacidad" updated="19 de junio de 2026">
+    <LegalLayout title="Política de Privacidad" updated="2 de julio de 2026">
         <Text>
             En Lumbres nos tomamos en serio tu privacidad. Esta política explica qué datos personales
             recogemos, con qué finalidad, en qué nos basamos para tratarlos y qué derechos tienes.
@@ -12,7 +12,7 @@ const Privacidad = () => (
 
         <Section>1. Responsable del tratamiento</Section>
         <Text>
-            Responsable: <strong>[TU NOMBRE COMPLETO]</strong> (persona física), Tenerife, España.<br />
+            Responsable: <strong>William Lázaro Luis González</strong> (persona física), Tenerife, España.<br />
             Sitio web: https://lumbress.com<br />
             Contacto en materia de privacidad: <strong>privacidad@lumbress.com</strong>
         </Text>

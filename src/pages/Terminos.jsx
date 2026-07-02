@@ -4,7 +4,7 @@ import LegalLayout, { Section, Text, List } from '../components/LegalLayout';
 // Términos y Condiciones de Lumbres. Borrador a tu medida (no es asesoría legal).
 // Rellena los datos entre corchetes [ ] antes de publicarlos en serio.
 const Terminos = () => (
-    <LegalLayout title="Términos y Condiciones" updated="19 de junio de 2026">
+    <LegalLayout title="Términos y Condiciones" updated="2 de julio de 2026">
         <Text>
             Estos términos regulan el uso de Lumbres. Al registrarte o usar la plataforma aceptas estas
             condiciones. Si no estás de acuerdo, por favor no utilices el servicio.
@@ -12,7 +12,7 @@ const Terminos = () => (
 
         <Section>1. Quiénes somos</Section>
         <Text>
-            Lumbres es un servicio gestionado por <strong>[TU NOMBRE COMPLETO]</strong> (persona física),
+            Lumbres es un servicio gestionado por <strong>William Lázaro Luis González</strong> (persona física),
             Tenerife, España. Contacto: <strong>privacidad@lumbress.com</strong>.
         </Text>
 
