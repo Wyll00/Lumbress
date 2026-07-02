@@ -5,7 +5,7 @@ import { ReactReader, ReactReaderStyle } from 'react-reader';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { LibraryContext } from '../context/LibraryContext';
 import { AuthContext } from '../context/AuthContext';
-import { API_URL, withAuth, mediaUrl, isNative } from '../config';
+import { API_URL, withAuth, isNative } from '../config';
 import { sileo } from 'sileo';
 import ReaderSettings from '../components/ReaderSettings';
 import { THEMES } from '../components/readerThemes';
@@ -80,13 +80,36 @@ const Reader = () => {
         catch { return defaults; }
     });
 
-    const fileUrl = book?.fileUrl ? mediaUrl(book.fileUrl) : null;
+    // El archivo del libro es PRIVADO y no compartible: pedimos al backend un enlace firmado
+    // temporal (solo lo obtiene el dueño con sesión) y el lector descarga el archivo desde ahí.
+    const [fileUrl, setFileUrl] = useState(null);
+    const [fileError, setFileError] = useState('');
     const isPdf = book?.fileType === 'pdf';
     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
     // Diccionario y subrayado solo en escritorio web o en la app de Android: en el
     // navegador del móvil la selección de texto es poco fiable. La lectura, los
     // ajustes y la pantalla completa siguen disponibles en todas partes.
     const selectionFeatures = isNative || !isMobile;
+
+    // Pide el enlace firmado del archivo cuando cambia el libro. Si el libro no tiene
+    // archivo (fileUrl vacío) no pedimos nada. El token caduca en 2h (se renueva al reabrir).
+    useEffect(() => {
+        if (!book?.id || !book?.fileUrl) { setFileUrl(null); return; }
+        let cancelled = false;
+        setFileUrl(null);
+        setFileError('');
+        (async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/books/${book.id}/file-url`, withAuth());
+                if (!res.ok) throw new Error('no-url');
+                const data = await res.json();
+                if (!cancelled) setFileUrl(`${API_URL}${data.url}`);
+            } catch {
+                if (!cancelled) setFileError('No se pudo cargar el archivo de este libro.');
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [book?.id, book?.fileUrl]);
 
     const onEpubLocation = useCallback((loc) => {
         setLocation(loc);
@@ -383,11 +406,28 @@ const Reader = () => {
     }
     if (!book) return null; // biblioteca aún cargando
 
-    if (!fileUrl) {
+    if (!book.fileUrl) {
         return (
             <div className="glass-panel" style={{ padding: 40, textAlign: 'center' }}>
                 <p>Este libro no tiene archivo EPUB/PDF. Súbelo desde "Editar libro".</p>
                 <button className="btn-secondary" onClick={() => navigate('/library')}>Volver a Mi Biblioteca</button>
+            </div>
+        );
+    }
+
+    if (fileError) {
+        return (
+            <div className="glass-panel" style={{ padding: 40, textAlign: 'center' }}>
+                <p>{fileError}</p>
+                <button className="btn-secondary" onClick={() => navigate('/library')}>Volver a Mi Biblioteca</button>
+            </div>
+        );
+    }
+
+    if (!fileUrl) {
+        return (
+            <div className="glass-panel" style={{ padding: 40, textAlign: 'center' }}>
+                <p>Abriendo tu libro…</p>
             </div>
         );
     }

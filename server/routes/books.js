@@ -2,11 +2,67 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
+const jwt = require('jsonwebtoken');
 const pool = require('../db');
 const auth = require('../middleware/auth');
 const { getPlan } = require('../middleware/plan');
 
+// GET /api/books/file/:token — sirve el archivo (EPUB/PDF) de un libro SOLO con un token
+// temporal firmado (emitido en /:id/file-url tras comprobar sesión y propiedad). Va ANTES
+// del auth global: el token ES la autorización, así que el lector puede pedirlo directamente
+// (funciona en web con cookie y en la app con Bearer, sin exponer la sesión).
+router.get('/file/:token', async (req, res) => {
+    try {
+        let payload;
+        try {
+            payload = jwt.verify(req.params.token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+        } catch {
+            return res.status(401).json({ message: 'Enlace caducado o no válido.' });
+        }
+        if (payload.purpose !== 'bookfile' || !payload.bid || !payload.uid) {
+            return res.status(403).json({ message: 'Acceso no permitido.' });
+        }
+        const [rows] = await pool.query(
+            'SELECT archivo_url, archivo_tipo FROM libros WHERE id = ? AND usuario_id = ?',
+            [payload.bid, payload.uid]
+        );
+        const book = rows[0];
+        if (!book || !book.archivo_url || !/^\/uploads\/books\/[\w.-]+$/.test(book.archivo_url)) {
+            return res.status(404).json({ message: 'Archivo no encontrado.' });
+        }
+        const filePath = path.join(__dirname, '..', book.archivo_url);
+        if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'Archivo no encontrado.' });
+        res.setHeader('Content-Type', book.archivo_tipo === 'pdf' ? 'application/pdf' : 'application/epub+zip');
+        res.setHeader('Cache-Control', 'private, no-store');
+        res.setHeader('Access-Control-Allow-Origin', '*'); // el lector lo descarga con fetch
+        res.sendFile(filePath);
+    } catch (err) {
+        console.error('Error sirviendo libro:', err.message);
+        res.status(500).json({ message: 'Error interno.' });
+    }
+});
+
 router.use(auth);
+
+// GET /api/books/:id/file-url — enlace temporal firmado para abrir el libro (solo el dueño)
+router.get('/:id/file-url', async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            'SELECT id, archivo_url FROM libros WHERE id = ? AND usuario_id = ?',
+            [req.params.id, req.user.id]
+        );
+        if (!rows[0] || !rows[0].archivo_url) return res.status(404).json({ message: 'Este libro no tiene archivo.' });
+        const token = jwt.sign(
+            { bid: Number(rows[0].id), uid: req.user.id, purpose: 'bookfile' },
+            process.env.JWT_SECRET,
+            { expiresIn: '2h', algorithm: 'HS256' }
+        );
+        res.json({ url: `/api/books/file/${token}` });
+    } catch (err) {
+        console.error('Error generando enlace de libro:', err.message);
+        res.status(500).json({ message: 'Error interno.' });
+    }
+});
 
 // Borra el archivo físico (EPUB/PDF) de un libro y descuenta su tamaño del almacenamiento del usuario.
 async function removeBookFile(relUrl, userId) {
