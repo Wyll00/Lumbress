@@ -78,7 +78,20 @@ const Privacidad = () => (
             y se procesa en nuestro servidor.
         </Text>
 
-        <Section>10. Cambios en esta política</Section>
+        <Section>10. Contenido y archivos que subes (tu responsabilidad)</Section>
+        <Text>
+            <strong>Tú eres el único responsable</strong> de los documentos y archivos que subes a Lumbres
+            (libros EPUB/PDF, imágenes, textos, reseñas y anuncios). Al subirlos <strong>declaras que tienes
+            derecho a hacerlo</strong>: que son de tu propiedad, de dominio público, con una licencia que lo
+            permita o con la autorización del titular. Te comprometes a <strong>no subir ni distribuir obras
+            protegidas por derechos de autor sin permiso</strong>. Lumbres actúa únicamente como soporte
+            técnico para almacenar y mostrarte tu contenido y <strong>no se hace responsable de las
+            infracciones de derechos de autor cometidas por los usuarios</strong>; si un titular de derechos
+            nos avisa, retiraremos el contenido infractor. Tienes el detalle en nuestros{' '}
+            <Link to="/terminos" style={{ color: 'var(--accent-color)' }}>Términos y Condiciones</Link> (apartados 5 y 6).
+        </Text>
+
+        <Section>11. Cambios en esta política</Section>
         <Text>
             Podemos actualizar esta política para reflejar cambios en el servicio o en la normativa.
             Publicaremos siempre la versión vigente en esta página con su fecha de actualización.
