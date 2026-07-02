@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
 import { API_URL, withAuth, isNative } from '../config';
-import { Camera, User, Mail, Phone, Lock, Eye, EyeOff, Save, CheckCircle, XCircle, Clock, Bell, Share2, Copy, BadgeCheck, Smartphone, Download, Shield, FileText, ChevronRight, Settings2 } from 'lucide-react';
+import { Camera, User, Mail, Phone, Lock, Eye, EyeOff, Save, CheckCircle, XCircle, Clock, Bell, Share2, Copy, BadgeCheck, Smartphone, Download, Shield, FileText, ChevronRight, Settings2, Scale } from 'lucide-react';
 import './Settings.css';
 
 const API = `${API_URL}/api/users`;
@@ -507,6 +507,7 @@ const Settings = () => {
                         {[
                             { to: '/privacidad', Icon: Shield, label: 'Política de Privacidad' },
                             { to: '/terminos', Icon: FileText, label: 'Términos y Condiciones' },
+                            { to: '/aviso-legal', Icon: Scale, label: 'Aviso Legal' },
                         ].map((item) => (
                             <Link
                                 key={item.to}

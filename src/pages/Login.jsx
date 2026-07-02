@@ -159,6 +159,13 @@ const Login = () => {
 
                 <div className="auth-footer">
                     <p>{t('authNoAccount')} <Link to="/register">{t('authRegisterLink')}</Link></p>
+                    <p style={{ fontSize: '0.75rem', marginTop: 10 }}>
+                        <Link to="/aviso-legal" style={{ color: 'var(--text-secondary)' }}>Aviso Legal</Link>
+                        {' · '}
+                        <Link to="/privacidad" style={{ color: 'var(--text-secondary)' }}>Privacidad</Link>
+                        {' · '}
+                        <Link to="/terminos" style={{ color: 'var(--text-secondary)' }}>Términos</Link>
+                    </p>
                 </div>
             </div>
         </div>

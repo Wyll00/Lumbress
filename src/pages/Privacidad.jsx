@@ -98,7 +98,8 @@ const Privacidad = () => (
         </Text>
 
         <Text style={{ marginTop: 18 }}>
-            Consulta también nuestros <Link to="/terminos" style={{ color: 'var(--accent-color)' }}>Términos y Condiciones</Link>.
+            Consulta también nuestros <Link to="/terminos" style={{ color: 'var(--accent-color)' }}>Términos y Condiciones</Link>{' '}
+            y el <Link to="/aviso-legal" style={{ color: 'var(--accent-color)' }}>Aviso Legal</Link>.
         </Text>
     </LegalLayout>
 );

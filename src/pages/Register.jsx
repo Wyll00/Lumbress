@@ -142,6 +142,7 @@ const Register = () => {
                         <Link to="/terminos" style={{ color: 'var(--accent-color)' }}>Términos y Condiciones</Link>{' '}
                         y la{' '}
                         <Link to="/privacidad" style={{ color: 'var(--accent-color)' }}>Política de Privacidad</Link>.
+                        {' '}Consulta también el <Link to="/aviso-legal" style={{ color: 'var(--accent-color)' }}>Aviso Legal</Link>.
                     </p>
                 </form>
 

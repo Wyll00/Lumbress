@@ -105,7 +105,8 @@ const Terminos = () => (
         </Text>
 
         <Text style={{ marginTop: 18 }}>
-            Consulta también nuestra <Link to="/privacidad" style={{ color: 'var(--accent-color)' }}>Política de Privacidad</Link>.
+            Consulta también nuestra <Link to="/privacidad" style={{ color: 'var(--accent-color)' }}>Política de Privacidad</Link>{' '}
+            y el <Link to="/aviso-legal" style={{ color: 'var(--accent-color)' }}>Aviso Legal</Link>.
         </Text>
     </LegalLayout>
 );

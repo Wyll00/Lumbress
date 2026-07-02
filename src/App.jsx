@@ -28,6 +28,7 @@ const Blog = lazy(() => import('./pages/Blog'));
 const BlogPost = lazy(() => import('./pages/BlogPost'));
 const Privacidad = lazy(() => import('./pages/Privacidad'));
 const Terminos = lazy(() => import('./pages/Terminos'));
+const AvisoLegal = lazy(() => import('./pages/AvisoLegal'));
 
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
@@ -46,6 +47,7 @@ function App() {
         <Route path="/u/:username" element={<PublicShelf />} />
         <Route path="/privacidad" element={<Privacidad />} />
         <Route path="/terminos" element={<Terminos />} />
+        <Route path="/aviso-legal" element={<AvisoLegal />} />
 
         <Route path="/*" element={
           <ProtectedRoute>
