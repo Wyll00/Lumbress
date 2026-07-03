@@ -14,7 +14,7 @@ const AvisoLegal = () => (
         <Section>1. Datos del titular</Section>
         <List>
             <li>Titular: <strong>William Lázaro Luis González</strong> (persona física).</li>
-            <li>NIF: <strong>[NIF]</strong></li>
+            <li>NIF: <strong>55439933C</strong></li>
             <li>Domicilio a efectos de contacto: Tenerife, España.</li>
             <li>Correo electrónico: <strong>privacidad@lumbress.com</strong></li>
             <li>Sitio web: <strong>https://lumbress.com</strong></li>

@@ -9,6 +9,14 @@
   overflow-y: auto;
   margin-left: 260px;
   /* Space for fixed sidebar */
+  transition: margin-left 0.25s ease;
+}
+
+/* Menú plegado a solo-iconos (botón en la cabecera del sidebar) */
+@media (min-width: 769px) {
+  body.sidebar-collapsed .main-content {
+    margin-left: 92px;
+  }
 }
 
 @media (max-width: 768px) {

@@ -395,16 +395,15 @@ function Dashboard({ data, persist, go }) {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: isMobile ? 12 : 16 }}>
+          {/* Sin etiqueta de texto: en tarjetas estrechas se recortaba fatal. El nombre queda
+              como tooltip (title) y el icono + número van centrados. */}
           {stats.map((s) => (
-            <button key={s.label} onClick={() => go(s.sec)}
+            <button key={s.label} onClick={() => go(s.sec)} title={s.label} aria-label={s.label}
               style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, minWidth: 0,
-                padding: isMobile ? "15px 14px" : "20px 18px", cursor: "pointer", textAlign: "left", fontFamily: FONT,
-                display: "flex", flexDirection: "column", gap: isMobile ? 8 : 12 }}>
+                padding: isMobile ? "15px 10px" : "20px 14px", cursor: "pointer", fontFamily: FONT,
+                display: "flex", flexDirection: "column", alignItems: "center", gap: isMobile ? 8 : 10 }}>
               <s.icon size={22} color={C.amber} strokeWidth={2} />
-              <div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: C.text, lineHeight: 1 }}>{s.value}</div>
-                <div style={{ fontSize: 12.5, color: C.textDim, marginTop: 5 }}>{s.label}</div>
-              </div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: C.text, lineHeight: 1 }}>{s.value}</div>
             </button>
           ))}
         </div>

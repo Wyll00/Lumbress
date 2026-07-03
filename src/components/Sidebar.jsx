@@ -1,25 +1,38 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { BookOpen, LayoutDashboard, BarChart3, Library, Globe, LogOut, Settings, Users, Clock, CreditCard, Headphones, MessagesSquare, Feather, ShieldCheck, MoreHorizontal, Compass, Sparkles, Newspaper } from 'lucide-react';
+import { BookOpen, Home, Compass, Users, MessageSquare, Sparkles, Newspaper, Headphones, Feather, BarChart3, SlidersHorizontal, Shield, Globe, LogOut, CreditCard, MoreHorizontal, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
 import { SUBSCRIPTIONS_ENABLED } from '../config';
 import './Sidebar.css';
 
+// Menú lateral (diseño "Menú Lumbres" de Claude Design): cabecera con marca + botón de
+// plegar, navegación principal, sección Descubrir, bloque de cuenta y tarjeta de usuario.
 const Sidebar = () => {
     const { t, language, toggleLanguage } = useContext(LanguageContext);
     const { logout, user } = useContext(AuthContext);
     const { unreadTotal } = useContext(NotificationContext);
     const initials = user?.username ? user.username.substring(0, 2).toUpperCase() : '?';
-    // Móvil: la barra inferior muestra 4 ítems esenciales + "Más" (el resto en un panel)
+    // Móvil: la barra inferior muestra los ítems esenciales + "Más" (el resto en un panel)
     const [moreOpen, setMoreOpen] = useState(false);
     const closeMore = () => setMoreOpen(false);
 
+    // Escritorio: menú plegable a solo-iconos (persistido). El margen del contenido lo
+    // ajusta App.css a través de la clase en <body>.
+    const [collapsed, setCollapsed] = useState(() => localStorage.getItem('lumbres-sidebar-collapsed') === '1');
+    useEffect(() => {
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        localStorage.setItem('lumbres-sidebar-collapsed', collapsed ? '1' : '0');
+        return () => document.body.classList.remove('sidebar-collapsed');
+    }, [collapsed]);
+
+    const hours = Number(user?.reading_hours || 0).toLocaleString(language === 'es' ? 'es-ES' : 'en-US');
+
     return (
-        <nav className="sidebar glass-panel">
+        <nav className={`sidebar glass-panel${collapsed ? ' collapsed' : ''}`}>
             <div className="sidebar-header">
-                <div className="logo-container">
+                <div className="sidebar-brand">
                     <img
                         src="/logo.png"
                         alt="Lumbres"
@@ -27,50 +40,47 @@ const Sidebar = () => {
                         onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }}
                     />
                     <div className="logo-fallback" style={{ display: 'none' }}>
-                        <BookOpen size={28} />
-                        <h1>Lumbres</h1>
+                        <BookOpen size={22} />
                     </div>
+                    <span className="brand-name">Lumbres</span>
                 </div>
+                <button
+                    className="sidebar-collapse-btn"
+                    onClick={() => setCollapsed((c) => !c)}
+                    title={collapsed ? (language === 'es' ? 'Desplegar menú' : 'Expand menu') : (language === 'es' ? 'Plegar menú' : 'Collapse menu')}
+                >
+                    {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+                </button>
             </div>
 
             <ul className="nav-links">
                 <li>
-                    <NavLink to="/" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <LayoutDashboard size={20} color="#e0a93b" />
+                    <NavLink to="/" className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
+                        <Home size={20} />
                         <span>{t('dashboard')}</span>
                     </NavLink>
                 </li>
-
-                <li className="nav-section"><span>{language === 'es' ? 'Tu lectura' : 'Reading'}</span></li>
                 <li>
-                    <NavLink to="/library" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Library size={20} color="#C18A2F" />
-                        <span>{t('myLibrary')}</span>
+                    <NavLink to="/library" className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
+                        <BookOpen size={20} />
+                        <span>{language === 'es' ? 'Biblioteca' : 'Library'}</span>
                     </NavLink>
                 </li>
                 <li className="nav-extra">
-                    <NavLink to="/catalogo" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Compass size={20} color="#C18A2F" />
+                    <NavLink to="/catalogo" className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
+                        <Compass size={20} />
                         <span>{language === 'es' ? 'Explorar' : 'Explore'}</span>
                     </NavLink>
                 </li>
-                <li className="nav-extra">
-                    <NavLink to="/statistics" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <BarChart3 size={20} color="#C18A2F" />
-                        <span>{t('statistics')}</span>
-                    </NavLink>
-                </li>
-
-                <li className="nav-section"><span>{language === 'es' ? 'Comunidad' : 'Community'}</span></li>
                 <li>
-                    <NavLink to="/community" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Users size={20} color="#b08a98" />
+                    <NavLink to="/community" className={({ isActive }) => `nav-item nav-pink${isActive ? ' active' : ''}`}>
+                        <Users size={20} />
                         <span>{t('community')}</span>
                     </NavLink>
                 </li>
                 <li>
-                    <NavLink to="/mensajes" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <MessagesSquare size={20} color="#b08a98" />
+                    <NavLink to="/mensajes" className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
+                        <MessageSquare size={20} />
                         <span>{t('messages')}</span>
                         {unreadTotal > 0 && <span className="nav-badge">{unreadTotal > 9 ? '9+' : unreadTotal}</span>}
                     </NavLink>
@@ -78,53 +88,30 @@ const Sidebar = () => {
 
                 <li className="nav-section"><span>{language === 'es' ? 'Descubrir' : 'Discover'}</span></li>
                 <li>
-                    <NavLink to="/novedades" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Sparkles size={20} color="#e0a93b" />
+                    <NavLink to="/novedades" className={({ isActive }) => `nav-item nav-green${isActive ? ' active' : ''}`}>
+                        <Sparkles size={20} />
                         <span>{language === 'es' ? 'Novedades' : "What's new"}</span>
                     </NavLink>
                 </li>
                 <li className="nav-extra">
-                    <NavLink to="/blog" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Newspaper size={20} color="#7fa06f" />
+                    <NavLink to="/blog" className={({ isActive }) => `nav-item nav-green${isActive ? ' active' : ''}`}>
+                        <Newspaper size={20} />
                         <span>Blog</span>
                     </NavLink>
                 </li>
                 <li className="nav-extra">
-                    <NavLink to="/podcasts" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Headphones size={20} color="#7fa06f" />
+                    <NavLink to="/podcasts" className={({ isActive }) => `nav-item nav-green${isActive ? ' active' : ''}`}>
+                        <Headphones size={20} />
                         <span>Podcasts</span>
                     </NavLink>
                 </li>
                 <li className="nav-extra">
-                    <NavLink to="/taller" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Feather size={20} color="#7fa06f" />
+                    <NavLink to="/taller" className={({ isActive }) => `nav-item nav-green${isActive ? ' active' : ''}`}>
+                        <Feather size={20} />
                         <span>{t('workshop')}</span>
                     </NavLink>
                 </li>
 
-                <li className="nav-section"><span>{language === 'es' ? 'Cuenta' : 'Account'}</span></li>
-                {SUBSCRIPTIONS_ENABLED && (
-                    <li className="nav-extra">
-                        <NavLink to="/subscriptions" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                            <CreditCard size={20} color="#e0a93b" />
-                            <span>{t('subscriptionsNav')}</span>
-                        </NavLink>
-                    </li>
-                )}
-                <li className="nav-extra">
-                    <NavLink to="/settings" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <Settings size={20} color="#e0a93b" />
-                        <span>{t('settingsNav')}</span>
-                    </NavLink>
-                </li>
-                {!!user?.is_admin && (
-                    <li className="nav-extra">
-                        <NavLink to="/admin" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                            <ShieldCheck size={20} color="#b08a98" />
-                            <span>Admin</span>
-                        </NavLink>
-                    </li>
-                )}
                 {/* Solo móvil: abre el panel con el resto del menú */}
                 <li className="nav-more-li">
                     <button className={`nav-item nav-more-btn ${moreOpen ? 'active' : ''}`} onClick={() => setMoreOpen((o) => !o)}>
@@ -163,18 +150,18 @@ const Sidebar = () => {
                             </NavLink>
                         )}
                         <NavLink to="/settings" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                            <Settings size={19} /><span>{t('settingsNav')}</span>
+                            <SlidersHorizontal size={19} /><span>{t('settingsNav')}</span>
                         </NavLink>
                         {!!user?.is_admin && (
                             <NavLink to="/admin" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                                <ShieldCheck size={19} /><span>Admin</span>
+                                <Shield size={19} /><span>Admin</span>
                             </NavLink>
                         )}
                         <div className="mobile-more-footer">
                             <NavLink to="/settings" onClick={closeMore} className="sidebar-user-avatar" title={`@${user?.username || ''}`}>
                                 {user?.profile_image
                                     ? <img src={user.profile_image} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-                                    : <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--accent-color)' }}>{initials}</span>}
+                                    : <span style={{ fontSize: '0.85rem', fontWeight: 800 }}>{initials}</span>}
                             </NavLink>
                             <button className="btn-secondary" onClick={() => { toggleLanguage(); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px' }}>
                                 <Globe size={15} /> {language === 'es' ? 'EN' : 'ES'}
@@ -187,40 +174,55 @@ const Sidebar = () => {
                 </>
             )}
 
-            <div className="sidebar-footer">
-                {/* User mini-avatar */}
-                <NavLink to="/settings" style={{ textDecoration: 'none' }}>
-                    <div className="sidebar-user-avatar" title={`@${user?.username || ''}`}>
+            {/* Bloque inferior (solo escritorio): cuenta + tarjeta de usuario */}
+            <div className="sidebar-bottom">
+                <div className="sidebar-bottom-group">
+                    <NavLink to="/statistics" className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
+                        <BarChart3 size={19} />
+                        <span>{t('statistics')}</span>
+                    </NavLink>
+                    {SUBSCRIPTIONS_ENABLED && (
+                        <NavLink to="/subscriptions" className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
+                            <CreditCard size={19} />
+                            <span>{t('subscriptionsNav')}</span>
+                        </NavLink>
+                    )}
+                    <NavLink to="/settings" className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
+                        <SlidersHorizontal size={19} />
+                        <span>{t('settingsNav')}</span>
+                    </NavLink>
+                    {!!user?.is_admin && (
+                        <NavLink to="/admin" className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
+                            <Shield size={19} />
+                            <span>Admin</span>
+                        </NavLink>
+                    )}
+                    <button
+                        className="nav-item nav-warm nav-btn"
+                        onClick={toggleLanguage}
+                        title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+                    >
+                        <Globe size={19} />
+                        <span>{language === 'es' ? 'Idioma · EN' : 'Language · ES'}</span>
+                    </button>
+                    <button className="nav-item nav-warm nav-btn" onClick={logout}>
+                        <LogOut size={19} />
+                        <span>{language === 'es' ? 'Salir' : 'Logout'}</span>
+                    </button>
+                </div>
+
+                <NavLink to="/settings" className="sidebar-user-card" title={`@${user?.username || ''}`}>
+                    <div className="sidebar-user-avatar">
                         {user?.profile_image
                             ? <img src={user.profile_image} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-                            : <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--accent-color)' }}>{initials}</span>
+                            : <span>{initials}</span>
                         }
                     </div>
+                    <div className="sidebar-user-meta">
+                        <strong>{user?.username || ''}</strong>
+                        <span>{hours} hrs</span>
+                    </div>
                 </NavLink>
-                {/* Reading Hours Counter */}
-                <div className="sidebar-reading-hours" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }} title="Horas leídas en total">
-                    <Clock size={14} style={{ color: 'var(--accent-color)' }} />
-                    <span>{user?.reading_hours || 0} hrs</span>
-                </div>
-                <button
-                    onClick={toggleLanguage}
-                    className="btn-secondary"
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', fontSize: '0.8rem' }}
-                    title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
-                >
-                    <Globe size={16} />
-                    {language === 'es' ? 'EN' : 'ES'}
-                </button>
-                <button
-                    onClick={logout}
-                    className="action-btn-inline delete-btn"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '6px 12px', fontSize: '0.8rem', width: 'auto', height: 'auto' }}
-                    title={language === 'es' ? 'Cerrar Sesión' : 'Logout'}
-                >
-                    <LogOut size={16} />
-                    {language === 'es' ? 'Salir' : 'Logout'}
-                </button>
-                <p>{t('appVersion')}</p>
             </div>
         </nav>
     );
