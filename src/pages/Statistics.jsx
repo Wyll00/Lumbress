@@ -137,7 +137,7 @@ const Statistics = () => {
         const authorData = Object.keys(authorCount)
             .map(name => ({ name, count: authorCount[name] }))
             .sort((a, b) => b.count - a.count)
-            .slice(0, 5); // top 5 authors
+            .slice(0, 3); // solo los 3 autores más leídos (la gráfica no se sobrecarga)
 
         const uniqueGenresCount = Object.keys(genreMap).length;
 
