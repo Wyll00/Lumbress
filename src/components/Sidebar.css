@@ -215,14 +215,8 @@
 }
 
 /* Menú de cuenta desplegable: solo aparece al tocar la tarjeta de usuario.
-   position:fixed para que no lo recorte el overflow del sidebar (también plegado). */
-.user-menu-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 125;
-    background: transparent;
-}
-
+   position:fixed para que no lo recorte el overflow del sidebar (también plegado).
+   El cierre al pulsar fuera lo gestiona un listener global (sin capa que robe clics). */
 .sidebar-bottom-group {
     position: fixed;
     left: 24px;
@@ -403,8 +397,7 @@
     }
 
     /* El menú de cuenta (portal) es solo de escritorio; en móvil vive en el panel "Más" */
-    .sidebar-bottom-group,
-    .user-menu-backdrop {
+    .sidebar-bottom-group {
         display: none;
     }
 

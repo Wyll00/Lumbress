@@ -24,6 +24,19 @@ const Sidebar = () => {
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const closeUserMenu = () => setUserMenuOpen(false);
 
+    // Cierre del menú de cuenta: cualquier pulsación fuera del menú lo cierra, SIN robar el
+    // clic (el elemento pulsado responde normal). La tarjeta de usuario queda excluida aquí
+    // porque su propio onClick hace el toggle abrir/cerrar.
+    useEffect(() => {
+        if (!userMenuOpen) return;
+        const onDocPointerDown = (e) => {
+            if (e.target.closest?.('.sidebar-bottom-group') || e.target.closest?.('.sidebar-user-card')) return;
+            setUserMenuOpen(false);
+        };
+        document.addEventListener('pointerdown', onDocPointerDown);
+        return () => document.removeEventListener('pointerdown', onDocPointerDown);
+    }, [userMenuOpen]);
+
     // Escritorio: menú plegable a solo-iconos (persistido). El margen del contenido lo
     // ajusta App.css a través de la clase en <body>.
     const [collapsed, setCollapsed] = useState(() => localStorage.getItem('lumbres-sidebar-collapsed') === '1');
@@ -186,7 +199,6 @@ const Sidebar = () => {
                     efecto glass lo recortarían (sobre todo con la barra plegada). */}
                 {userMenuOpen && createPortal(
                     <>
-                        <div className="user-menu-backdrop" onClick={closeUserMenu} />
                         <div className={`sidebar-bottom-group${collapsed ? ' from-collapsed' : ''}`}>
                             <NavLink to="/statistics" onClick={closeUserMenu} className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
                                 <BarChart3 size={19} />
