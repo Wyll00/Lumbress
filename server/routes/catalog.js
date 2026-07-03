@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
+const AdmZip = require('adm-zip');
 const pool = require('../db');
 const auth = require('../middleware/auth');
 
@@ -13,6 +14,28 @@ const SUPPORTED_LANGS = ['es', 'en', 'fr', 'it', 'de', 'pt'];
 const UA = 'Lumbres/1.0 (lectura social; https://lumbress.com)';
 
 const epubOf = (b) => b.formats?.['application/epub+zip'] || b.formats?.['application/epub+zip; charset=utf-8'] || null;
+
+// Los EPUB no traen numero de páginas: lo estimamos como un libro impreso (~275
+// palabras por página) contando las palabras del texto real del archivo. Si algo
+// falla (EPUB raro, zip corrupto), devolvemos 0 y el usuario puede ponerlo a mano.
+const WORDS_PER_PAGE = 275;
+function estimatePagesFromEpub(buffer) {
+    try {
+        const zip = new AdmZip(buffer);
+        let words = 0;
+        for (const entry of zip.getEntries()) {
+            if (entry.isDirectory || !/\.(x?html?|htm)$/i.test(entry.entryName)) continue;
+            const text = entry.getData().toString('utf8')
+                .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/&[a-z#0-9]+;/gi, ' ');
+            words += text.split(/\s+/).filter(Boolean).length;
+        }
+        return words > 0 ? Math.max(1, Math.round(words / WORDS_PER_PAGE)) : 0;
+    } catch {
+        return 0;
+    }
+}
 
 // FILTRO LEGAL — dominio público en ESPAÑA, no en EE. UU.
 // Project Gutenberg aplica la ley estadounidense (publicado antes de 1929), pero en España
@@ -109,6 +132,7 @@ router.post('/add', async (req, res) => {
         // Descarga (compartida; si ya existe el archivo, no lo volvemos a bajar)
         fs.mkdirSync(CATALOG_DIR, { recursive: true });
         const filePath = path.join(CATALOG_DIR, `pg-${gid}.epub`);
+        let buf;
         if (!fs.existsSync(filePath)) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), 30000);
@@ -116,20 +140,25 @@ router.post('/add', async (req, res) => {
             clearTimeout(timer);
             if (!er.ok) return res.status(502).json({ message: 'No se pudo descargar el libro.' });
             const ab = await er.arrayBuffer();
-            const buf = Buffer.from(ab);
+            buf = Buffer.from(ab);
             if (buf.slice(0, 2).toString() !== 'PK') return res.status(502).json({ message: 'El archivo descargado no es un EPUB válido.' });
             fs.writeFileSync(filePath, buf);
+        } else {
+            buf = fs.readFileSync(filePath);
         }
 
+        // Nº de páginas estimado a partir del texto (0 si no se puede calcular)
+        const pages = estimatePagesFromEpub(buf);
+
         const [result] = await pool.query(
-            `INSERT INTO libros (usuario_id, titulo, autor, genero, estado_lectura, portada_url, archivo_url, archivo_tipo, notas, origen)
-             VALUES (?, ?, ?, '', 'Pendiente', ?, ?, 'epub', '[]', 'catalogo')`,
-            [req.user.id, title, author, cover, relUrl]
+            `INSERT INTO libros (usuario_id, titulo, autor, genero, estado_lectura, portada_url, archivo_url, archivo_tipo, notas, origen, numero_paginas)
+             VALUES (?, ?, ?, '', 'Pendiente', ?, ?, 'epub', '[]', 'catalogo', ?)`,
+            [req.user.id, title, author, cover, relUrl, pages]
         );
         const [[row]] = await pool.query('SELECT * FROM libros WHERE id = ?', [result.insertId]);
         res.status(201).json({
             id: row.id.toString(), title: row.titulo, author: row.autor, genre: row.genero,
-            formato: row.formato, status: row.estado_lectura, rating: 0, totalPages: 0, pagesRead: 0,
+            formato: row.formato, status: row.estado_lectura, rating: 0, totalPages: row.numero_paginas || 0, pagesRead: 0,
             coverUrl: row.portada_url, fileUrl: row.archivo_url, fileType: row.archivo_tipo,
             notes: [], categories: [], shelfIds: [], origen: 'catalogo',
         });

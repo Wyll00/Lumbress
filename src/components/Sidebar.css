@@ -4,14 +4,18 @@
  * bloque de cuenta y tarjeta de usuario. Plegable en escritorio.
  * ============================================================ */
 
-.sidebar {
-    /* Colores del menú (modo claro); el oscuro los aviva más abajo */
+/* Colores del menú (modo claro); el oscuro los aviva más abajo.
+   También en .sidebar-bottom-group: el menú de cuenta se renderiza fuera del sidebar (portal). */
+.sidebar,
+.sidebar-bottom-group {
     --nav-warm: #A85A2B;
     --nav-pink: #A05C74;
     --nav-green: #64803F;
     --nav-accent: #A85A2B;
     --nav-accent-soft: rgba(168, 90, 43, 0.13);
+}
 
+.sidebar {
     width: 260px;
     height: calc(100vh - 32px);
     position: fixed;
@@ -29,7 +33,8 @@
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
-[data-theme='dark'] .sidebar {
+[data-theme='dark'] .sidebar,
+[data-theme='dark'] .sidebar-bottom-group {
     --nav-warm: #E08B5F;
     --nav-pink: #D68FA3;
     --nav-green: #A9C287;
@@ -209,18 +214,44 @@
     flex-shrink: 0;
 }
 
+/* Menú de cuenta desplegable: solo aparece al tocar la tarjeta de usuario.
+   position:fixed para que no lo recorte el overflow del sidebar (también plegado). */
+.user-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 125;
+    background: transparent;
+}
+
 .sidebar-bottom-group {
+    position: fixed;
+    left: 24px;
+    bottom: 94px;
+    width: 244px;
+    z-index: 130;
     display: flex;
     flex-direction: column;
     gap: 2px;
     padding: 6px;
     border-radius: 16px;
-    background: color-mix(in srgb, var(--sidebar-ink) 4%, transparent);
+    background: var(--card-bg, var(--sidebar-bg));
     border: 1px solid var(--card-border);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+    animation: userMenuIn 0.15s ease-out;
+}
+
+@keyframes userMenuIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Con la barra plegada, el menú se despliega desde el avatar hacia fuera */
+.sidebar-bottom-group.from-collapsed {
+    left: 20px;
 }
 
 .sidebar-bottom-group .nav-item {
-    padding: 8px 12px;
+    padding: 9px 12px;
     font-size: 0.9rem;
     border-radius: 11px;
 }
@@ -229,12 +260,31 @@
     display: flex;
     align-items: center;
     gap: 11px;
+    width: 100%;
     padding: 9px 12px;
     border-radius: 16px;
     background: color-mix(in srgb, var(--sidebar-ink) 4%, transparent);
     border: 1px solid var(--card-border);
     text-decoration: none;
+    text-align: left;
+    font-family: inherit;
+    cursor: pointer;
     transition: background 0.2s ease;
+}
+
+.user-card-chevron {
+    margin-left: auto;
+    color: var(--sidebar-muted);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.sidebar-user-card.open .user-card-chevron {
+    transform: rotate(180deg);
+}
+
+.sidebar.collapsed .user-card-chevron {
+    display: none;
 }
 
 .sidebar-user-card:hover {
@@ -349,6 +399,12 @@
 
     .sidebar-header,
     .sidebar-bottom {
+        display: none;
+    }
+
+    /* El menú de cuenta (portal) es solo de escritorio; en móvil vive en el panel "Más" */
+    .sidebar-bottom-group,
+    .user-menu-backdrop {
         display: none;
     }
 

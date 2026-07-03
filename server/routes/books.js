@@ -11,7 +11,10 @@ const { getPlan } = require('../middleware/plan');
 // temporal firmado (emitido en /:id/file-url tras comprobar sesión y propiedad). Va ANTES
 // del auth global: el token ES la autorización, así que el lector puede pedirlo directamente
 // (funciona en web con cookie y en la app con Bearer, sin exponer la sesión).
-router.get('/file/:token', async (req, res) => {
+// El sufijo /:filename? es decorativo pero IMPORTANTE: epub.js decide por la extensión de la
+// URL si el archivo es un .epub empaquetado; sin ".epub" al final intenta abrirlo como carpeta
+// y falla con "Error loading book". Por eso el enlace termina en /libro.epub o /libro.pdf.
+router.get('/file/:token/:filename?', async (req, res) => {
     try {
         let payload;
         try {
@@ -27,7 +30,9 @@ router.get('/file/:token', async (req, res) => {
             [payload.bid, payload.uid]
         );
         const book = rows[0];
-        if (!book || !book.archivo_url || !/^\/uploads\/books\/[\w.-]+$/.test(book.archivo_url)) {
+        // books = subidos por el usuario (privados); catalogo = dominio público compartido.
+        // Ambos se abren por enlace firmado: el lector usa siempre este flujo.
+        if (!book || !book.archivo_url || !/^\/uploads\/(books|catalogo)\/[\w.-]+$/.test(book.archivo_url)) {
             return res.status(404).json({ message: 'Archivo no encontrado.' });
         }
         const filePath = path.join(__dirname, '..', book.archivo_url);
@@ -48,7 +53,7 @@ router.use(auth);
 router.get('/:id/file-url', async (req, res) => {
     try {
         const [rows] = await pool.query(
-            'SELECT id, archivo_url FROM libros WHERE id = ? AND usuario_id = ?',
+            'SELECT id, archivo_url, archivo_tipo FROM libros WHERE id = ? AND usuario_id = ?',
             [req.params.id, req.user.id]
         );
         if (!rows[0] || !rows[0].archivo_url) return res.status(404).json({ message: 'Este libro no tiene archivo.' });
@@ -57,7 +62,8 @@ router.get('/:id/file-url', async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '2h', algorithm: 'HS256' }
         );
-        res.json({ url: `/api/books/file/${token}` });
+        const ext = rows[0].archivo_tipo === 'pdf' ? 'pdf' : 'epub';
+        res.json({ url: `/api/books/file/${token}/libro.${ext}` });
     } catch (err) {
         console.error('Error generando enlace de libro:', err.message);
         res.status(500).json({ message: 'Error interno.' });

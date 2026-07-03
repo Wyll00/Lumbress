@@ -1,6 +1,7 @@
 import { useContext, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink } from 'react-router-dom';
-import { BookOpen, Home, Compass, Users, MessageSquare, Sparkles, Newspaper, Headphones, Feather, BarChart3, SlidersHorizontal, Shield, Globe, LogOut, CreditCard, MoreHorizontal, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { BookOpen, Home, Compass, Users, MessageSquare, Sparkles, Newspaper, Headphones, Feather, BarChart3, SlidersHorizontal, Shield, Globe, LogOut, CreditCard, MoreHorizontal, PanelLeftClose, PanelLeftOpen, ChevronUp } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
@@ -17,6 +18,11 @@ const Sidebar = () => {
     // Móvil: la barra inferior muestra los ítems esenciales + "Más" (el resto en un panel)
     const [moreOpen, setMoreOpen] = useState(false);
     const closeMore = () => setMoreOpen(false);
+
+    // Escritorio: el bloque de cuenta (Estadísticas, Ajustes…) vive en un menú que solo
+    // se despliega al tocar la tarjeta de usuario, para no ocupar espacio siempre.
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const closeUserMenu = () => setUserMenuOpen(false);
 
     // Escritorio: menú plegable a solo-iconos (persistido). El margen del contenido lo
     // ajusta App.css a través de la clase en <body>.
@@ -174,44 +180,56 @@ const Sidebar = () => {
                 </>
             )}
 
-            {/* Bloque inferior (solo escritorio): cuenta + tarjeta de usuario */}
+            {/* Bloque inferior (solo escritorio): la tarjeta de usuario despliega el menú de cuenta */}
             <div className="sidebar-bottom">
-                <div className="sidebar-bottom-group">
-                    <NavLink to="/statistics" className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
-                        <BarChart3 size={19} />
-                        <span>{t('statistics')}</span>
-                    </NavLink>
-                    {SUBSCRIPTIONS_ENABLED && (
-                        <NavLink to="/subscriptions" className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
-                            <CreditCard size={19} />
-                            <span>{t('subscriptionsNav')}</span>
-                        </NavLink>
-                    )}
-                    <NavLink to="/settings" className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
-                        <SlidersHorizontal size={19} />
-                        <span>{t('settingsNav')}</span>
-                    </NavLink>
-                    {!!user?.is_admin && (
-                        <NavLink to="/admin" className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
-                            <Shield size={19} />
-                            <span>Admin</span>
-                        </NavLink>
-                    )}
-                    <button
-                        className="nav-item nav-warm nav-btn"
-                        onClick={toggleLanguage}
-                        title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
-                    >
-                        <Globe size={19} />
-                        <span>{language === 'es' ? 'Idioma · EN' : 'Language · ES'}</span>
-                    </button>
-                    <button className="nav-item nav-warm nav-btn" onClick={logout}>
-                        <LogOut size={19} />
-                        <span>{language === 'es' ? 'Salir' : 'Logout'}</span>
-                    </button>
-                </div>
+                {/* Portal al <body>: si el menú viviera dentro del sidebar, su overflow y el
+                    efecto glass lo recortarían (sobre todo con la barra plegada). */}
+                {userMenuOpen && createPortal(
+                    <>
+                        <div className="user-menu-backdrop" onClick={closeUserMenu} />
+                        <div className={`sidebar-bottom-group${collapsed ? ' from-collapsed' : ''}`}>
+                            <NavLink to="/statistics" onClick={closeUserMenu} className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
+                                <BarChart3 size={19} />
+                                <span>{t('statistics')}</span>
+                            </NavLink>
+                            {SUBSCRIPTIONS_ENABLED && (
+                                <NavLink to="/subscriptions" onClick={closeUserMenu} className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
+                                    <CreditCard size={19} />
+                                    <span>{t('subscriptionsNav')}</span>
+                                </NavLink>
+                            )}
+                            <NavLink to="/settings" onClick={closeUserMenu} className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
+                                <SlidersHorizontal size={19} />
+                                <span>{t('settingsNav')}</span>
+                            </NavLink>
+                            {!!user?.is_admin && (
+                                <NavLink to="/admin" onClick={closeUserMenu} className={({ isActive }) => `nav-item nav-warm${isActive ? ' active' : ''}`}>
+                                    <Shield size={19} />
+                                    <span>Admin</span>
+                                </NavLink>
+                            )}
+                            <button
+                                className="nav-item nav-warm nav-btn"
+                                onClick={toggleLanguage}
+                                title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+                            >
+                                <Globe size={19} />
+                                <span>{language === 'es' ? 'Idioma · EN' : 'Language · ES'}</span>
+                            </button>
+                            <button className="nav-item nav-warm nav-btn" onClick={logout}>
+                                <LogOut size={19} />
+                                <span>{language === 'es' ? 'Salir' : 'Logout'}</span>
+                            </button>
+                        </div>
+                    </>,
+                    document.body
+                )}
 
-                <NavLink to="/settings" className="sidebar-user-card" title={`@${user?.username || ''}`}>
+                <button
+                    className={`sidebar-user-card${userMenuOpen ? ' open' : ''}`}
+                    onClick={() => setUserMenuOpen((o) => !o)}
+                    title={`@${user?.username || ''}`}
+                >
                     <div className="sidebar-user-avatar">
                         {user?.profile_image
                             ? <img src={user.profile_image} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
@@ -222,7 +240,8 @@ const Sidebar = () => {
                         <strong>{user?.username || ''}</strong>
                         <span>{hours} hrs</span>
                     </div>
-                </NavLink>
+                    <ChevronUp size={16} className="user-card-chevron" />
+                </button>
             </div>
         </nav>
     );
