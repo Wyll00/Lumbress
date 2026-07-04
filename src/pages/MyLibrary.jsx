@@ -7,7 +7,8 @@ import BookModal from '../components/BookModal';
 import NotesPanel from '../components/NotesPanel';
 import ImportBooksModal from '../components/ImportBooksModal';
 import ShelfPicker from '../components/ShelfPicker';
-import { Plus, Search, Filter, Upload, Pencil, Trash2, Check, X, Compass, Library } from 'lucide-react';
+import BookshelfView from '../components/BookshelfView';
+import { Plus, Search, Filter, Upload, Pencil, Trash2, Check, X, Compass, Library, LayoutGrid } from 'lucide-react';
 import './MyLibrary.css';
 
 const MyLibrary = () => {
@@ -24,6 +25,10 @@ const MyLibrary = () => {
     const [filterStatus, setFilterStatus] = useState('All');
     const [filterFormat, setFilterFormat] = useState('All');
     const [sortBy, setSortBy] = useState('Date Added');
+
+    // Vista: cuadrícula clásica o estantería con lomos (se recuerda la elección)
+    const [viewMode, setViewModeState] = useState(() => localStorage.getItem('lumbres-library-view') || 'grid');
+    const setViewMode = (v) => { setViewModeState(v); localStorage.setItem('lumbres-library-view', v); };
 
     // Estanterías
     const [activeShelf, setActiveShelf] = useState(null); // id de estantería o null = todas
@@ -260,6 +265,34 @@ const MyLibrary = () => {
                                 <option value="Progress">{t('progressSort')}</option>
                             </select>
                         </div>
+
+                        {/* Conmutador de vista: cuadrícula / estantería */}
+                        <div className="filter-group" style={{ display: 'flex', gap: 4 }}>
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                title="Vista cuadrícula"
+                                style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '9px 11px',
+                                    borderRadius: 10, cursor: 'pointer', border: '1px solid var(--card-border, rgba(255,255,255,0.12))',
+                                    background: viewMode === 'grid' ? 'var(--accent-soft, rgba(193,138,47,0.16))' : 'transparent',
+                                    color: viewMode === 'grid' ? 'var(--accent, #C18A2F)' : 'var(--text-muted)',
+                                }}
+                            >
+                                <LayoutGrid size={17} />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('shelf')}
+                                title="Vista estantería"
+                                style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '9px 11px',
+                                    borderRadius: 10, cursor: 'pointer', border: '1px solid var(--card-border, rgba(255,255,255,0.12))',
+                                    background: viewMode === 'shelf' ? 'var(--accent-soft, rgba(193,138,47,0.16))' : 'transparent',
+                                    color: viewMode === 'shelf' ? 'var(--accent, #C18A2F)' : 'var(--text-muted)',
+                                }}
+                            >
+                                <Library size={17} />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -278,6 +311,8 @@ const MyLibrary = () => {
                             </div>
                         </div>
                     </div>
+                ) : viewMode === 'shelf' ? (
+                    <BookshelfView books={filteredAndSortedBooks} onEdit={handleOpenModal} />
                 ) : (
                     <div className="books-grid">
                         {filteredAndSortedBooks.map(book => (
