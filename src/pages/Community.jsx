@@ -1,8 +1,9 @@
 import { useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { API_URL, withAuth } from '../config';
-import { Heart, Trash2, ImagePlus, X, Send, Users, AlertTriangle, Newspaper, Tag, BookPlus, BadgeCheck } from 'lucide-react';
+import { Heart, Trash2, ImagePlus, X, Send, Users, AlertTriangle, Newspaper, Tag, BadgeCheck, Pencil, Plus, Sparkles } from 'lucide-react';
 import NewsFeed from '../components/NewsFeed';
 import OffersFeed from '../components/OffersFeed';
 import './Community.css';
@@ -34,10 +35,10 @@ function ConfirmModal({ isOpen, onConfirm, onCancel }) {
 const API = `${API_URL}/api/posts`;
 
 const TIPO_CONFIG = {
-  general:       { label: '💬 General',       color: '#7b61ff' },
-  reseña:        { label: '📖 Reseña',         color: '#e6b345' },
-  recomendacion: { label: '⭐ Recomendación',  color: '#27ae60' },
-  reflexion:     { label: '💭 Reflexión',      color: '#3498db' },
+  general:       { label: '💬 General',       name: 'General',        color: '#8b7bff' },
+  reseña:        { label: '📖 Reseña',         name: 'Reseña',         color: '#e7c65a' },
+  recomendacion: { label: '⭐ Recomendación',  name: 'Recomendación',  color: '#7fc99a' },
+  reflexion:     { label: '💭 Reflexión',      name: 'Reflexión',      color: '#c9a0ff' },
 };
 
 function timeAgo(dateStr) {
@@ -131,6 +132,7 @@ const Community = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState('todo');
+  const [editorOpen, setEditorOpen] = useState(false); // hoja inferior del editor
 
   // Confirm modal state
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -181,7 +183,8 @@ const Community = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.contenido.trim()) return;
+    // Sin contenido no se publica; si además está vacío, solo cerramos la hoja.
+    if (!form.contenido.trim()) { setEditorOpen(false); return; }
     setSubmitting(true);
     try {
       const res = await fetch(API, withAuth({
@@ -196,6 +199,7 @@ const Community = () => {
         setImagePreview(null);
         setCharCount(0);
         if (fileInputRef.current) fileInputRef.current.value = '';
+        setEditorOpen(false);
       }
     } catch (e) {
       console.error(e);
@@ -256,130 +260,56 @@ const Community = () => {
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
       />
-      <header className="page-header community-header">
-        <div>
-          <h1><Users size={28} color="#b08a98" style={{ verticalAlign: 'middle', marginRight: 8 }} />Comunidad</h1>
-          <p>Comparte reseñas, recomendaciones y reflexiones con otros lectores</p>
-        </div>
-        <button className="sell-book-btn" onClick={() => navigate('/vender')}>
-          <BookPlus size={18} />
+      <div className="cm-container">
+        {/* Título */}
+        <header className="cm-header">
+          <Users size={22} color="#8b7bff" />
+          <h1>Comunidad</h1>
+        </header>
+
+        {/* CTA: vender libro */}
+        <button className="cm-sell-cta" onClick={() => navigate('/vender')}>
+          <span className="cm-sell-chip"><Plus size={13} /></span>
           Vende tu libro con nosotros
         </button>
-      </header>
 
-      <div className={`community-layout ${(activeFilter === 'noticias' || activeFilter === 'ofertas') ? 'no-composer' : ''}`}>
-        {/* ── Composer (oculto en Noticias / Ofertas) ── */}
+        {/* Composer compacto (abre la hoja del editor). Oculto en Noticias/Ofertas */}
         {activeFilter !== 'noticias' && activeFilter !== 'ofertas' && (
-        <aside className="composer-panel glass-panel">
-          <h2>✍️ Nueva publicación</h2>
-          <form onSubmit={handleSubmit} className="composer-form">
-            {/* Tipo */}
-            <div className="composer-field">
-              <label>Tipo</label>
-              <div className="tipo-grid">
-                {Object.entries(TIPO_CONFIG).map(([key, cfg]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`tipo-btn ${form.tipo === key ? 'active' : ''}`}
-                    style={{ '--tipo-color': cfg.color }}
-                    onClick={() => setForm(f => ({ ...f, tipo: key }))}
-                  >
-                    {cfg.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Título opcional */}
-            <div className="composer-field">
-              <label>Título <span className="optional">(opcional)</span></label>
-              <input
-                type="text"
-                placeholder="Ej: Mi libro favorito del año..."
-                value={form.titulo}
-                onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
-                maxLength={200}
-              />
-            </div>
-
-            {/* Contenido */}
-            <div className="composer-field">
-              <label>Contenido</label>
-              <textarea
-                placeholder="Cuéntanos algo interesante..."
-                value={form.contenido}
-                onChange={handleContenidoChange}
-                maxLength={5000}
-                rows={5}
-                required
-              />
-              <span className={`char-count ${charCount > 4500 ? 'warn' : ''}`}>
-                {charCount}/5000
-              </span>
-            </div>
-
-            {/* Imagen */}
-            {imagePreview ? (
-              <div className="image-preview-wrapper">
-                <img src={imagePreview} alt="Preview" className="image-preview" />
-                <button type="button" className="remove-image-btn" onClick={removeImage}>
-                  <X size={16} />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="add-image-btn"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <ImagePlus size={18} />
-                Añadir imagen
-              </button>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImagePick}
-              style={{ display: 'none' }}
-            />
-
-            <button
-              type="submit"
-              className="btn-primary composer-submit"
-              disabled={submitting || !form.contenido.trim()}
-            >
-              <Send size={16} />
-              {submitting ? 'Publicando...' : 'Publicar'}
-            </button>
-          </form>
-        </aside>
+          <button className="cm-composer" onClick={() => setEditorOpen(true)}>
+            <span className="cm-composer-avatar">
+              {user?.profile_image
+                ? <img src={user.profile_image} alt="" />
+                : (user?.username ? user.username.substring(0, 2).toUpperCase() : '?')}
+            </span>
+            <span className="cm-composer-placeholder">Comparte algo con la comunidad…</span>
+            <span className="cm-composer-pencil"><Pencil size={15} /></span>
+          </button>
         )}
 
-        {/* ── Feed ── */}
-        <section className="posts-feed">
-          <div className="feed-filters">
-            <button className={`filter-pill ${activeFilter === 'todo' ? 'active' : ''}`} onClick={() => setActiveFilter('todo')}>Todo</button>
-            <button className={`filter-pill ${activeFilter === 'reseña' ? 'active' : ''}`} onClick={() => setActiveFilter('reseña')}>Reseñas</button>
-            <button className={`filter-pill ${activeFilter === 'recomendacion' ? 'active' : ''}`} onClick={() => setActiveFilter('recomendacion')}>Recomendaciones</button>
-            <button className={`filter-pill ${activeFilter === 'reflexion' ? 'active' : ''}`} onClick={() => setActiveFilter('reflexion')}>Reflexión</button>
-            <button
-              className={`filter-pill ${activeFilter === 'noticias' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('noticias')}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <Newspaper size={14} /> Noticias
-            </button>
-            <button
-              className={`filter-pill ${activeFilter === 'ofertas' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('ofertas')}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <Tag size={14} /> Ofertas
-            </button>
-          </div>
+        {/* Filtros del feed */}
+        <div className="feed-filters">
+          <button className={`filter-pill ${activeFilter === 'todo' ? 'active' : ''}`} onClick={() => setActiveFilter('todo')}>Todo</button>
+          <button className={`filter-pill ${activeFilter === 'reseña' ? 'active' : ''}`} onClick={() => setActiveFilter('reseña')}>Reseñas</button>
+          <button className={`filter-pill ${activeFilter === 'recomendacion' ? 'active' : ''}`} onClick={() => setActiveFilter('recomendacion')}>Recomendaciones</button>
+          <button className={`filter-pill ${activeFilter === 'reflexion' ? 'active' : ''}`} onClick={() => setActiveFilter('reflexion')}>Reflexión</button>
+          <button
+            className={`filter-pill ${activeFilter === 'noticias' ? 'active' : ''}`}
+            onClick={() => setActiveFilter('noticias')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Newspaper size={14} /> Noticias
+          </button>
+          <button
+            className={`filter-pill ${activeFilter === 'ofertas' ? 'active' : ''}`}
+            onClick={() => setActiveFilter('ofertas')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Tag size={14} /> Ofertas
+          </button>
+        </div>
 
+        {/* Feed */}
+        <section className="posts-feed">
           {activeFilter === 'noticias' ? (
             <NewsFeed />
           ) : activeFilter === 'ofertas' ? (
@@ -392,8 +322,10 @@ const Community = () => {
           ) : error ? (
             <p className="feed-error">{error}</p>
           ) : filteredPosts.length === 0 ? (
-            <div className="feed-empty glass-panel">
-              <p>🌟 ¡Sé la primera persona en publicar algo en esta categoría!</p>
+            <div className="cm-empty">
+              <span className="cm-empty-icon"><Sparkles size={22} /></span>
+              <p className="cm-empty-title">Aún no hay publicaciones</p>
+              <p className="cm-empty-sub">Toca «Comparte algo…» para empezar</p>
             </div>
           ) : (
             filteredPosts.map(post => (
@@ -408,6 +340,80 @@ const Community = () => {
           )}
         </section>
       </div>
+
+      {/* ── Editor: hoja inferior (bottom sheet). Portal al body: la animación de la
+             página crea un transform que rompería el position:fixed del backdrop. ── */}
+      {editorOpen && createPortal(
+        <div className="cm-sheet-backdrop" onClick={() => setEditorOpen(false)}>
+          <div className="cm-sheet" onClick={e => e.stopPropagation()}>
+            <div className="cm-grabber" />
+            <div className="cm-sheet-header">
+              <h2>Nueva publicación</h2>
+              <button className="cm-sheet-close" onClick={() => setEditorOpen(false)} title="Cerrar">
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="cm-sheet-form">
+              <label className="cm-label">Título (opcional)</label>
+              <input
+                className="cm-input"
+                type="text"
+                placeholder="Ej: Mi libro favorito del año…"
+                value={form.titulo}
+                onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
+                maxLength={120}
+              />
+
+              <label className="cm-label">Contenido</label>
+              <textarea
+                className="cm-textarea"
+                placeholder="Cuéntanos algo interesante…"
+                value={form.contenido}
+                onChange={handleContenidoChange}
+                maxLength={5000}
+                rows={4}
+              />
+              <span className={`cm-counter ${charCount > 4500 ? 'warn' : ''}`}>{charCount}/5000</span>
+
+              {/* Imagen (opcional) */}
+              {imagePreview ? (
+                <div className="cm-image-preview">
+                  <img src={imagePreview} alt="Preview" />
+                  <button type="button" className="cm-image-remove" onClick={removeImage}><X size={14} /></button>
+                </div>
+              ) : (
+                <button type="button" className="cm-image-add" onClick={() => fileInputRef.current?.click()}>
+                  <ImagePlus size={15} /> Añadir imagen
+                </button>
+              )}
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImagePick} style={{ display: 'none' }} />
+
+              <div className="cm-sep" />
+
+              <p className="cm-type-q">¿Qué tipo de publicación es?</p>
+              <div className="cm-type-chips">
+                {Object.entries(TIPO_CONFIG).map(([key, cfg]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`cm-type-chip ${form.tipo === key ? 'active' : ''}`}
+                    onClick={() => setForm(f => ({ ...f, tipo: key }))}
+                  >
+                    {cfg.name}
+                  </button>
+                ))}
+              </div>
+
+              <button type="submit" className="cm-publish" disabled={submitting || !form.contenido.trim()}>
+                <Send size={15} />
+                {submitting ? 'Publicando…' : 'Publicar'}
+              </button>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
