@@ -350,6 +350,14 @@ const Reader = () => {
         };
     }, []);
 
+    // Salir del lector: cierra la pantalla completa nativa si estaba activa y vuelve atrás
+    const exitReader = () => {
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+        }
+        navigate('/library');
+    };
+
     // === Ajustes de lectura ===
     // Persistir
     useEffect(() => {
@@ -446,11 +454,42 @@ const Reader = () => {
             ref={containerRef}
             className="reader-page animate-fade-in"
             style={{
+                // Modo inmersivo: al abrir un libro, el lector ocupa TODA la ventana
+                // (tapa el menú lateral y la barra móvil). Se sale con la X flotante.
+                position: 'fixed', inset: 0, zIndex: 300,
                 display: 'flex', flexDirection: 'column',
-                height: isFullscreen ? '100vh' : (isMobile ? 'calc(100dvh - 130px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' : 'calc(100vh - 48px)'),
-                ...(isFullscreen ? { background: 'var(--bg, #161410)', padding: isMobile ? 12 : 20, boxSizing: 'border-box' } : {}),
+                background: 'var(--bg, #161410)',
+                padding: isMobile
+                    ? 'calc(10px + env(safe-area-inset-top, 0px)) 12px calc(10px + env(safe-area-inset-bottom, 0px))'
+                    : 20,
+                boxSizing: 'border-box',
             }}
         >
+            {/* X flotante semitransparente para salir del libro */}
+            <button
+                onClick={exitReader}
+                title="Cerrar el libro"
+                style={{
+                    position: 'fixed',
+                    top: 'calc(10px + env(safe-area-inset-top, 0px))',
+                    right: 14,
+                    zIndex: 360,
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    border: '1px solid rgba(255,255,255,0.22)',
+                    background: 'rgba(0,0,0,0.35)',
+                    backdropFilter: 'blur(4px)',
+                    color: 'rgba(255,255,255,0.92)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                }}
+            >
+                <X size={20} />
+            </button>
+
             <header style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 14, marginBottom: 10, flexWrap: 'wrap' }}>
                 <button
                     className="btn-secondary"
@@ -463,7 +502,7 @@ const Reader = () => {
                     <h2 style={{ margin: 0, fontSize: '1.05rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{book.title}</h2>
                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{book.author} · {book.fileType?.toUpperCase()}</p>
                 </div>
-                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <div style={{ marginLeft: 'auto', marginRight: 48, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     {/* Ajustes de lectura (tamaño de letra, tema…) */}
                     <button
                         className="btn-secondary"

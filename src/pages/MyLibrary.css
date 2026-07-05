@@ -4,56 +4,52 @@
     align-items: flex-start;
 }
 
-/* ===== Estanterías (pestañas de filtro) ===== */
+/* ===== Estanterías como enlaces de texto (diseño 1c) ===== */
 .shelf-tabs {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 14px;
+    gap: 20px;
+    align-items: baseline;
+    margin-bottom: 6px;
 }
 
 .shelf-tab {
     display: inline-flex;
-    align-items: center;
+    align-items: baseline;
     gap: 6px;
-    padding: 7px 14px;
-    border-radius: 999px;
-    border: 1px solid var(--card-border, rgba(255, 255, 255, 0.1));
-    background: transparent;
-    color: var(--text-secondary, #9b8e78);
+    padding: 0 0 2px;
+    border: none;
+    border-bottom: 1px solid transparent;
+    border-radius: 0;
+    background: none;
+    color: var(--text-muted, #8F8973);
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.83rem;
     font-family: inherit;
-    transition: all 0.15s ease;
+    transition: color 0.15s ease;
     white-space: nowrap;
 }
 
 .shelf-tab:hover {
     color: var(--text, #f5efe6);
-    border-color: var(--accent-color, #e0a93b);
 }
 
 .shelf-tab.active {
-    background: rgba(224, 169, 59, 0.14);
-    border-color: var(--accent-color, #e0a93b);
-    color: var(--accent-color, #e0a93b);
-    font-weight: 700;
+    color: var(--accent, #E9BA4C);
+    font-weight: 600;
+    border-bottom-color: color-mix(in srgb, var(--accent, #E9BA4C) 40%, transparent);
 }
 
 .shelf-tab-count {
-    font-size: 0.7rem;
-    background: rgba(255, 255, 255, 0.08);
-    padding: 0 7px;
-    border-radius: 999px;
-}
-
-.shelf-tab.active .shelf-tab-count {
-    background: rgba(224, 169, 59, 0.25);
+    font-size: 0.72rem;
+    opacity: 0.7;
+    background: none;
+    padding: 0;
 }
 
 .shelf-tab-add {
-    border-style: dashed;
+    color: var(--text-muted, #6E6957);
+    opacity: 0.85;
 }
 
 .shelf-new-inline {
@@ -122,26 +118,149 @@
     gap: 24px;
 }
 
+/* ===== Cabecera 1c: título+contador · lupa expandible · vista · importar · añadir ===== */
 .library-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 0;
 }
 
-.title-section h1 {
-    font-size: 2.5rem;
+.library-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+}
+
+.library-title-row h1 {
+    font-family: var(--font-display, Georgia, serif);
+    font-size: 1.5rem;
     font-weight: 700;
-    margin-bottom: 4px;
-    background: var(--text);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    margin: 0;
+    color: var(--text);
+    white-space: nowrap;
 }
 
-.title-section p {
+.library-count {
+    font-size: 0.78rem;
     color: var(--text-muted);
-    font-size: 1.1rem;
+    white-space: nowrap;
+}
+
+.library-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+/* Botones circulares de 36px (lupa, vista, importar) */
+.lib-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--card-border, rgba(255, 255, 255, 0.12));
+    background: transparent;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.lib-icon-btn:hover {
+    background: rgba(127, 127, 127, 0.09);
+    color: var(--text);
+}
+
+/* Botón + ámbar (CTA principal) */
+.lib-add-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent, #E9BA4C);
+    color: var(--accent-ink, #251D09);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+}
+
+.lib-add-btn:hover {
+    background: var(--accent-hover, #F3C75E);
+}
+
+/* Campo de búsqueda expandido (pill) */
+.lib-search-pill {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: min(280px, 56vw);
+    border-radius: 999px;
+    background: var(--input-bg, rgba(0, 0, 0, 0.25));
+    border: 1px solid color-mix(in srgb, var(--accent, #E9BA4C) 35%, transparent);
+    transition: border-color 0.15s ease;
+}
+
+.lib-search-pill:focus-within {
+    border-color: color-mix(in srgb, var(--accent, #E9BA4C) 60%, transparent);
+}
+
+.lib-search-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.lib-search-pill input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 32px 8px 34px;
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 0.82rem;
+    font-family: inherit;
+    color: var(--text);
+}
+
+.lib-search-pill input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.75;
+}
+
+.lib-search-clear {
+    position: absolute;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.lib-search-clear:hover {
+    background: rgba(127, 127, 127, 0.12);
+    color: var(--text);
+}
+
+/* Área de libros: separada por un divisor fino */
+.library-books-area {
+    border-top: 1px solid var(--divider, rgba(255, 255, 255, 0.06));
+    padding-top: 22px;
 }
 
 .add-book-btn {
@@ -242,9 +361,7 @@
     }
 
     .library-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
+        gap: 10px;
     }
 
     .controls-bar {

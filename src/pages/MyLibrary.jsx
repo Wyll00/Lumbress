@@ -8,7 +8,7 @@ import NotesPanel from '../components/NotesPanel';
 import ImportBooksModal from '../components/ImportBooksModal';
 import ShelfPicker from '../components/ShelfPicker';
 import BookshelfView from '../components/BookshelfView';
-import { Plus, Search, Filter, Upload, Pencil, Trash2, Check, X, Compass, Library, LayoutGrid } from 'lucide-react';
+import { Plus, Search, Upload, Pencil, Trash2, Check, X, Compass, Library, LayoutGrid } from 'lucide-react';
 import './MyLibrary.css';
 
 const MyLibrary = () => {
@@ -22,9 +22,8 @@ const MyLibrary = () => {
     const [shelfPickerBook, setShelfPickerBook] = useState(null);
 
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState('All');
-    const [filterFormat, setFilterFormat] = useState('All');
-    const [sortBy, setSortBy] = useState('Date Added');
+    // Búsqueda expandible (diseño 1c): lupa → campo con foco; ✕ limpia y colapsa
+    const [searchOpen, setSearchOpen] = useState(false);
 
     // Vista: cuadrícula clásica o estantería con lomos (se recuerda la elección)
     const [viewMode, setViewModeState] = useState(() => localStorage.getItem('lumbres-library-view') || 'grid');
@@ -72,41 +71,14 @@ const MyLibrary = () => {
             );
         }
 
-        // Filter by status
-        if (filterStatus !== 'All') {
-            result = result.filter(book => book.status === filterStatus);
-        }
-
-        // Filter by format
-        if (filterFormat !== 'All') {
-            result = result.filter(book => (book.formato || '') === filterFormat);
-        }
-
         // Filter by shelf
         if (activeShelf) {
             result = result.filter(book => (book.shelfIds || []).includes(activeShelf));
         }
 
-        // Sort
-        result = [...result].sort((a, b) => {
-            switch (sortBy) {
-                case 'Title: A-Z':
-                    return a.title.localeCompare(b.title);
-                case 'Title: Z-A':
-                    return b.title.localeCompare(a.title);
-                case 'Progress': {
-                    const aProg = a.totalPages ? a.pagesRead / a.totalPages : 0;
-                    const bProg = b.totalPages ? b.pagesRead / b.totalPages : 0;
-                    return bProg - aProg;
-                }
-                case 'Date Added':
-                default:
-                    return new Date(b.dateAdded) - new Date(a.dateAdded);
-            }
-        });
-
-        return result;
-    }, [books, searchTerm, filterStatus, filterFormat, sortBy, activeShelf]);
+        // Más recientes primero (sin más filtros: búsqueda + estanterías bastan)
+        return [...result].sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+    }, [books, searchTerm, activeShelf]);
 
     const handleOpenModal = (book = null) => {
         setEditingBook(book);
@@ -150,23 +122,44 @@ const MyLibrary = () => {
     return (
         <div className="mylibrary-layout">
             <div className={`mylibrary-main animate-fade-in ${selectedBookForNotes ? 'with-notes-panel' : ''}`}>
+                {/* Cabecera 1c (Claude Design): título + contador · lupa expandible · vista · importar · añadir */}
                 <header className="library-header">
-                    <div className="title-section">
-                        <h1><Library size={26} color="#C18A2F" style={{ verticalAlign: 'middle', marginRight: 8 }} />{t('myLibrary')}</h1>
-                        <p>{books.length === 1 ? t('bookTotal', { count: books.length }) : t('booksTotal', { count: books.length })}</p>
+                    <div className="library-title-row">
+                        <h1>{t('myLibrary')}</h1>
+                        <span className="library-count">{books.length === 1 ? '1 libro' : `${books.length} libros`}</span>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <div className="library-actions">
+                        {searchOpen ? (
+                            <div className="lib-search-pill">
+                                <Search size={14} className="lib-search-icon" />
+                                <input
+                                    autoFocus
+                                    value={searchTerm}
+                                    placeholder={t('searchPlaceholder')}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Escape') { setSearchTerm(''); setSearchOpen(false); } }}
+                                />
+                                <button className="lib-search-clear" onClick={() => { setSearchTerm(''); setSearchOpen(false); }} title="Cerrar búsqueda">
+                                    <X size={13} />
+                                </button>
+                            </div>
+                        ) : (
+                            <button className="lib-icon-btn" onClick={() => setSearchOpen(true)} title="Buscar libros o autores">
+                                <Search size={15} />
+                            </button>
+                        )}
                         <button
-                            className="btn-secondary"
-                            onClick={() => setImportOpen(true)}
-                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                            className="lib-icon-btn"
+                            onClick={() => setViewMode(viewMode === 'shelf' ? 'grid' : 'shelf')}
+                            title={viewMode === 'shelf' ? 'Cambiar a vista cuadrícula' : 'Cambiar a vista estantería'}
                         >
-                            <Upload size={18} />
-                            <span>Importar</span>
+                            {viewMode === 'shelf' ? <LayoutGrid size={15} /> : <Library size={15} />}
                         </button>
-                        <button className="btn-primary add-book-btn" onClick={() => handleOpenModal()}>
-                            <Plus size={20} />
-                            <span>{t('addNewBook')}</span>
+                        <button className="lib-icon-btn" onClick={() => setImportOpen(true)} title="Importar libros">
+                            <Upload size={15} />
+                        </button>
+                        <button className="lib-add-btn" onClick={() => handleOpenModal()} title={t('addNewBook')}>
+                            <Plus size={17} />
                         </button>
                     </div>
                 </header>
@@ -224,78 +217,7 @@ const MyLibrary = () => {
                     </div>
                 )}
 
-                <div className="controls-bar glass-panel">
-                    <div className="search-box">
-                        <Search size={20} className="search-icon" />
-                        <input
-                            type="text"
-                            className="input"
-                            placeholder={t('searchPlaceholder')}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="filters-box">
-                        <div className="filter-group">
-                            <Filter size={18} className="filter-icon" />
-                            <select className="input" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                                <option value="All">{t('allStatuses')}</option>
-                                <option value="To Read">{t('toRead')}</option>
-                                <option value="Reading">{t('reading')}</option>
-                                <option value="Read">{t('read')}</option>
-                            </select>
-                        </div>
-
-                        <div className="filter-group">
-                            <select className="input" value={filterFormat} onChange={(e) => setFilterFormat(e.target.value)} title="Filtrar por formato">
-                                <option value="All">Todos los formatos</option>
-                                <option value="Físico">📖 Físico</option>
-                                <option value="Kindle">📱 Kindle/eBook</option>
-                                <option value="Audiolibro">🎧 Audiolibro</option>
-                                <option value="PDF">💻 PDF</option>
-                            </select>
-                        </div>
-
-                        <div className="filter-group">
-                            <select className="input" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                                <option value="Date Added">{t('newestFirst')}</option>
-                                <option value="Title: A-Z">{t('titleAZ')}</option>
-                                <option value="Title: Z-A">{t('titleZA')}</option>
-                                <option value="Progress">{t('progressSort')}</option>
-                            </select>
-                        </div>
-
-                        {/* Conmutador de vista: cuadrícula / estantería */}
-                        <div className="filter-group" style={{ display: 'flex', gap: 4 }}>
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                title="Vista cuadrícula"
-                                style={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '9px 11px',
-                                    borderRadius: 10, cursor: 'pointer', border: '1px solid var(--card-border, rgba(255,255,255,0.12))',
-                                    background: viewMode === 'grid' ? 'var(--accent-soft, rgba(193,138,47,0.16))' : 'transparent',
-                                    color: viewMode === 'grid' ? 'var(--accent, #C18A2F)' : 'var(--text-muted)',
-                                }}
-                            >
-                                <LayoutGrid size={17} />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('shelf')}
-                                title="Vista estantería"
-                                style={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '9px 11px',
-                                    borderRadius: 10, cursor: 'pointer', border: '1px solid var(--card-border, rgba(255,255,255,0.12))',
-                                    background: viewMode === 'shelf' ? 'var(--accent-soft, rgba(193,138,47,0.16))' : 'transparent',
-                                    color: viewMode === 'shelf' ? 'var(--accent, #C18A2F)' : 'var(--text-muted)',
-                                }}
-                            >
-                                <Library size={17} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
+                <div className="library-books-area">
                 {filteredAndSortedBooks.length === 0 ? (
                     <div className="empty-library">
                         <div className="empty-message glass-panel">
@@ -328,6 +250,7 @@ const MyLibrary = () => {
                         ))}
                     </div>
                 )}
+                </div>
             </div>
 
             {selectedBookForNotes && (
