@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../db');
 const { COOKIE_NAME, cookieOptions } = require('../utils/cookies');
-const { sendVerificationCode } = require('../services/mailer');
+const { sendVerificationCode, sendAccountExistsNotice } = require('../services/mailer');
 
 if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET environment variable is required');
@@ -41,9 +41,27 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'El nombre de usuario debe tener entre 3 y 30 caracteres' });
         }
 
-        const [existing] = await pool.query('SELECT id FROM usuarios WHERE email = ? OR username = ?', [email, username]);
-        if (existing.length > 0) {
-            return res.status(400).json({ message: 'El usuario o el correo ya están registrados' });
+        // Respuesta estándar del alta (idéntica exista o no el correo → anti-enumeración).
+        const okResponse = {
+            message: 'Cuenta creada. Revisa tu correo e introduce el código de verificación.',
+            needsVerification: true,
+            email,
+        };
+
+        // El nombre de usuario SÍ se revela si está cogido: es público (aparece como @usuario)
+        // y hace falta para que la persona elija otro.
+        const [uRows] = await pool.query('SELECT id FROM usuarios WHERE username = ?', [username]);
+        if (uRows.length > 0) {
+            return res.status(409).json({ message: 'Ese nombre de usuario ya está en uso. Prueba con otro.' });
+        }
+
+        // El correo NO se revela: si ya tiene cuenta, respondemos igual que en un alta normal
+        // pero sin crear nada, y avisamos al dueño real por correo. Así un atacante no puede
+        // averiguar qué correos están registrados probando el formulario.
+        const [eRows] = await pool.query('SELECT username FROM usuarios WHERE email = ?', [email]);
+        if (eRows.length > 0) {
+            sendAccountExistsNotice({ toEmail: email, toName: eRows[0].username }).catch(() => {});
+            return res.status(201).json(okResponse);
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -67,11 +85,7 @@ router.post('/register', async (req, res) => {
         );
         await sendVerificationCode({ toEmail: email, toName: username, code });
 
-        res.status(201).json({
-            message: 'Cuenta creada. Revisa tu correo e introduce el código de verificación.',
-            needsVerification: true,
-            email,
-        });
+        res.status(201).json(okResponse);
 
     } catch (err) {
         console.error('Error in register:', err);

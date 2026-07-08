@@ -54,8 +54,16 @@ const BookModal = ({ isOpen, onClose, onSave, editingBook }) => {
                 return c ? c.id : null;
             }).filter(Boolean);
             
+            // Los campos que respaldan inputs/selects controlados no pueden llegar a null
+            // (React avisa: "value prop should not be null"). Si el libro los trae vacíos
+            // en la BD, los normalizamos a su valor por defecto del estado inicial.
+            const normalizado = {};
+            for (const k of Object.keys(INITIAL_STATE)) {
+                normalizado[k] = editingBook[k] ?? INITIAL_STATE[k];
+            }
             setFormData({
                 ...editingBook,
+                ...normalizado,
                 fecha_inicio: toDateInput(editingBook.fecha_inicio),
                 fecha_fin: toDateInput(editingBook.fecha_fin),
                 notes: editingBook.notes || [],

@@ -130,6 +130,47 @@ async function sendVerificationCode({ toEmail, toName, code } = {}) {
 }
 
 /**
+ * Aviso al dueño de un correo cuando alguien intenta registrarse con él.
+ * Se usa para NO revelar en el registro si un correo ya tiene cuenta (anti-enumeración):
+ * la respuesta al que se registra es idéntica exista o no, pero al dueño real le llega
+ * esta guía. Fire-and-forget: nunca lanza.
+ */
+async function sendAccountExistsNotice({ toEmail, toName } = {}) {
+    if (!isConfigured() || !toEmail) return false;
+    const from = process.env.MAIL_FROM || 'Lumbres <no-reply@lumbres.app>';
+    const subject = 'Ya tienes una cuenta en Lumbres';
+    const text =
+        `Hola ${toName || ''},\n\n` +
+        `Alguien ha intentado registrarse en Lumbres con este correo, que ya tiene una cuenta.\n\n` +
+        `Si fuiste tú, no necesitas crear otra: inicia sesión con tu contraseña, o usa ` +
+        `"¿Olvidaste tu contraseña?" si no la recuerdas.\n\n` +
+        `Si no fuiste tú, puedes ignorar este correo con tranquilidad: tu cuenta sigue segura.\n\n— Lumbres`;
+    const html = `
+    <div style="font-family:Inter,Arial,sans-serif;background:#1a1410;padding:24px;color:#f5efe6">
+      <div style="max-width:520px;margin:0 auto;background:#241b14;border:1px solid #e0a93b33;border-radius:16px;overflow:hidden">
+        <div style="background:#e0a93b;color:#1a1410;padding:14px 20px;font-weight:800;font-size:14px;letter-spacing:.5px">
+          🔥 LUMBRES · Ya tienes una cuenta
+        </div>
+        <div style="padding:26px 24px">
+          <p style="margin:0 0 12px;font-size:16px">Hola <strong>${escapeHtml(toName || '')}</strong>,</p>
+          <p style="margin:0 0 12px;color:#cbbfa9">Alguien ha intentado registrarse en Lumbres con este correo, que <strong>ya tiene una cuenta</strong>.</p>
+          <p style="margin:0 0 12px;color:#cbbfa9">Si fuiste tú, no necesitas crear otra: inicia sesión con tu contraseña, o usa <strong>«¿Olvidaste tu contraseña?»</strong> si no la recuerdas.</p>
+          <p style="margin:0;color:#6b5e4a;font-size:13px">Si no fuiste tú, ignora este correo con tranquilidad: tu cuenta sigue segura.</p>
+        </div>
+      </div>
+      <p style="text-align:center;color:#6b5e4a;font-size:12px;margin-top:16px">Lumbres · Lecturas Sociales</p>
+    </div>`;
+    try {
+        const info = await getTransporter().sendMail({ from, to: toEmail, subject, text, html });
+        console.log(`[mail] Aviso "ya tienes cuenta" enviado a ${toEmail} (messageId: ${info.messageId})`);
+        return true;
+    } catch (err) {
+        console.error('[mail] Error enviando el aviso de cuenta existente:', err.message);
+        return false;
+    }
+}
+
+/**
  * Aviso genérico para el administrador (errores, caídas, etc.).
  * Fire-and-forget: registra errores pero nunca lanza.
  */
@@ -160,4 +201,4 @@ async function sendAlert({ toEmail, subject, text } = {}) {
     }
 }
 
-module.exports = { sendNewMessageEmail, sendVerificationCode, sendAlert, isConfigured };
+module.exports = { sendNewMessageEmail, sendVerificationCode, sendAccountExistsNotice, sendAlert, isConfigured };
