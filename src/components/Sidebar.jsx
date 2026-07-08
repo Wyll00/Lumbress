@@ -1,7 +1,7 @@
 import { useContext, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { NavLink } from 'react-router-dom';
-import { BookOpen, Home, Compass, Users, MessageSquare, Sparkles, Newspaper, Headphones, Feather, BarChart3, SlidersHorizontal, Shield, Globe, LogOut, CreditCard, MoreHorizontal, PanelLeftClose, PanelLeftOpen, ChevronUp } from 'lucide-react';
+import { BookOpen, Home, Compass, Users, MessageSquare, Sparkles, BarChart3, SlidersHorizontal, Shield, Globe, LogOut, CreditCard, MoreHorizontal, PanelLeftClose, PanelLeftOpen, ChevronUp } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
@@ -105,29 +105,10 @@ const Sidebar = () => {
                     </NavLink>
                 </li>
 
-                <li className="nav-section"><span>{language === 'es' ? 'Descubrir' : 'Discover'}</span></li>
                 <li>
-                    <NavLink to="/novedades" className={({ isActive }) => `nav-item nav-green${isActive ? ' active' : ''}`}>
+                    <NavLink to="/descubrir" className={({ isActive }) => `nav-item nav-green${isActive ? ' active' : ''}`}>
                         <Sparkles size={20} />
-                        <span>{language === 'es' ? 'Novedades' : "What's new"}</span>
-                    </NavLink>
-                </li>
-                <li className="nav-extra">
-                    <NavLink to="/blog" className={({ isActive }) => `nav-item nav-green${isActive ? ' active' : ''}`}>
-                        <Newspaper size={20} />
-                        <span>Blog</span>
-                    </NavLink>
-                </li>
-                <li className="nav-extra">
-                    <NavLink to="/podcasts" className={({ isActive }) => `nav-item nav-green${isActive ? ' active' : ''}`}>
-                        <Headphones size={20} />
-                        <span>Podcasts</span>
-                    </NavLink>
-                </li>
-                <li className="nav-extra">
-                    <NavLink to="/taller" className={({ isActive }) => `nav-item nav-green${isActive ? ' active' : ''}`}>
-                        <Feather size={20} />
-                        <span>{t('workshop')}</span>
+                        <span>{language === 'es' ? 'Descubrir' : 'Discover'}</span>
                     </NavLink>
                 </li>
 
@@ -151,17 +132,8 @@ const Sidebar = () => {
                         <NavLink to="/statistics" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                             <BarChart3 size={19} /><span>{t('statistics')}</span>
                         </NavLink>
-                        <NavLink to="/novedades" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                            <Sparkles size={19} /><span>{language === 'es' ? 'Novedades' : "What's new"}</span>
-                        </NavLink>
-                        <NavLink to="/blog" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                            <Newspaper size={19} /><span>Blog</span>
-                        </NavLink>
-                        <NavLink to="/podcasts" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                            <Headphones size={19} /><span>Podcasts</span>
-                        </NavLink>
-                        <NavLink to="/taller" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                            <Feather size={19} /><span>{t('workshop')}</span>
+                        <NavLink to="/descubrir" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                            <Sparkles size={19} /><span>{language === 'es' ? 'Descubrir' : 'Discover'}</span>
                         </NavLink>
                         {SUBSCRIPTIONS_ENABLED && (
                             <NavLink to="/subscriptions" onClick={closeMore} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>

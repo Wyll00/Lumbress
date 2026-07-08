@@ -23,6 +23,7 @@ const PublicShelf = lazy(() => import('./pages/PublicShelf'));
 const Reader = lazy(() => import('./pages/Reader'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Catalogo = lazy(() => import('./pages/Catalogo'));
+const Descubrir = lazy(() => import('./pages/Descubrir'));
 const Novedades = lazy(() => import('./pages/Novedades'));
 const Blog = lazy(() => import('./pages/Blog'));
 const BlogPost = lazy(() => import('./pages/BlogPost'));
@@ -59,6 +60,7 @@ function App() {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/library" element={<MyLibrary />} />
                     <Route path="/catalogo" element={<Catalogo />} />
+                    <Route path="/descubrir" element={<Descubrir />} />
                     <Route path="/novedades" element={<Novedades />} />
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/:id" element={<BlogPost />} />

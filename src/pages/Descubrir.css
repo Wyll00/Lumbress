@@ -1,0 +1,70 @@
+/* Hub "Descubrir": barra de pestañas + contenido de la pestaña activa. */
+.descubrir-page {
+    display: flex;
+    flex-direction: column;
+}
+
+.descubrir-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-bottom: 12px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--divider, rgba(255, 255, 255, 0.06));
+}
+
+.descubrir-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 15px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.descubrir-tab svg {
+    color: var(--accent, #e0a93b);
+    opacity: 0.85;
+}
+
+.descubrir-tab:hover {
+    color: var(--text);
+    background: var(--nav-active-bg, rgba(224, 169, 59, 0.08));
+}
+
+.descubrir-tab.active {
+    color: var(--accent, #e0a93b);
+    background: var(--accent-soft, rgba(224, 169, 59, 0.14));
+    border-color: color-mix(in srgb, var(--accent, #e0a93b) 30%, transparent);
+}
+
+.descubrir-tab.active svg {
+    opacity: 1;
+}
+
+.descubrir-loading {
+    display: flex;
+    justify-content: center;
+    padding: 60px 0;
+}
+
+@media (max-width: 768px) {
+    .descubrir-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .descubrir-tab {
+        padding: 8px 13px;
+        font-size: 0.82rem;
+    }
+}

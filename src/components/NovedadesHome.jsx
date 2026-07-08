@@ -26,7 +26,7 @@ const NovedadesHome = () => {
                 <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
                     <Sparkles size={22} style={{ color: '#e0a93b' }} /> Novedades
                 </h2>
-                <Link to="/novedades" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.88rem' }}>
+                <Link to="/descubrir?tab=novedades" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.88rem' }}>
                     Ver todas <ChevronRight size={16} />
                 </Link>
             </div>

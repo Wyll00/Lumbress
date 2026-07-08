@@ -44,7 +44,7 @@ const BlogPost = () => {
             <div className="glass-panel" style={{ maxWidth: 600, margin: '40px auto', textAlign: 'center', padding: 40 }}>
                 <Newspaper size={32} style={{ color: 'var(--text-secondary)', marginBottom: 10 }} />
                 <p style={{ color: 'var(--text)', fontWeight: 600, margin: 0 }}>No encontramos este artículo.</p>
-                <button className="btn-secondary" onClick={() => navigate('/blog')} style={{ marginTop: 16 }}>Volver al blog</button>
+                <button className="btn-secondary" onClick={() => navigate('/descubrir?tab=blog')} style={{ marginTop: 16 }}>Volver al blog</button>
             </div>
         );
     }
@@ -54,7 +54,7 @@ const BlogPost = () => {
     return (
         <div className="blog-page animate-fade-in" style={{ maxWidth: 1100, margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, gap: 10 }}>
-                <button className="btn-secondary" onClick={() => navigate('/blog')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px' }}>
+                <button className="btn-secondary" onClick={() => navigate('/descubrir?tab=blog')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px' }}>
                     <ArrowLeft size={16} /> Blog
                 </button>
                 {isAdmin && (
