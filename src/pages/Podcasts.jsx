@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
-import { Headphones, Search, Filter, X, Trash2, Edit3, ExternalLink, Star, Play, Pause, Clock } from 'lucide-react';
+import { Headphones, Search, X, Trash2, Edit3, ExternalLink, Star, Play, Pause, Plus } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { PlayerContext } from '../context/PlayerContext';
 import { API_URL, withAuth, mediaUrl, uploadFile } from '../config';
@@ -51,7 +51,7 @@ const Podcasts = () => {
     const [podcasts, setPodcasts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
-    const [filterEstado, setFilterEstado] = useState('All');
+    const [searchOpen, setSearchOpen] = useState(false); // búsqueda colapsable (lupa)
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [form, setForm] = useState(emptyForm);
@@ -100,17 +100,8 @@ const Podcasts = () => {
                 (p.categoria || '').toLowerCase().includes(q)
             );
         }
-        if (filterEstado !== 'All') {
-            result = result.filter(p => p.estado === filterEstado);
-        }
         return result;
-    }, [podcasts, search, filterEstado]);
-
-    const stats = useMemo(() => ({
-        total: podcasts.length,
-        escuchando: podcasts.filter(p => p.estado === 'escuchando').length,
-        escuchados: podcasts.filter(p => p.estado === 'escuchado').length,
-    }), [podcasts]);
+    }, [podcasts, search]);
 
     const openNew = () => {
         setEditing(null);
@@ -320,24 +311,45 @@ const Podcasts = () => {
 
     return (
         <div className="podcasts-page" ref={rootRef}>
-            <header className="page-header">
-                <div className="podcasts-title">
-                    <Headphones size={32} color="#7fa06f" />
-                    <div>
-                        <h1>Podcasts y Audiolibros</h1>
-                        <p>Gestiona tus podcasts favoritos y descubre nuevos episodios</p>
-                    </div>
-                </div>
-                <div className="podcasts-header-actions">
-                    <button className="btn-primary" onClick={openNew}>
-                        Añadir
+            {/* Cabecera 1B (Claude Design): título + lupa + botón dorado de añadir */}
+            <header className="pc-header">
+                <h1 className="pc-title">Podcasts y Audiolibros</h1>
+                <div className="pc-actions">
+                    <button className="pc-icon-btn" onClick={() => setSearchOpen(o => !o)} aria-label="Buscar" title="Buscar">
+                        <Search size={22} />
                     </button>
-                    <div className="podcast-listened-counter" title="Tiempo total reproducido en la app">
-                        <Clock size={18} />
-                        <span><strong>{formatHours(listenedSeconds)}</strong> escuchadas</span>
-                    </div>
+                    <button className="pc-add-btn" onClick={openNew} aria-label="Añadir podcast" title="Añadir podcast">
+                        <Plus size={24} />
+                    </button>
                 </div>
             </header>
+
+            {/* Línea de resumen */}
+            <p className="pc-summary">
+                {podcasts.length === 0
+                    ? 'Sin podcasts guardados'
+                    : `${podcasts.length} ${podcasts.length === 1 ? 'podcast guardado' : 'podcasts guardados'}`}
+                {'  ·  '}
+                <span className="pc-summary-gold">{formatHours(listenedSeconds)} escuchadas</span>
+            </p>
+
+            {/* Búsqueda colapsable */}
+            {searchOpen && (
+                <div className="pc-search">
+                    <Search size={18} className="pc-search-icon" />
+                    <input
+                        autoFocus
+                        type="text"
+                        placeholder="Buscar por nombre, autor…"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Escape') { setSearch(''); setSearchOpen(false); } }}
+                    />
+                    {search && (
+                        <button className="pc-search-clear" onClick={() => setSearch('')} title="Limpiar"><X size={14} /></button>
+                    )}
+                </div>
+            )}
 
             {feedback && (
                 <div className={`podcast-feedback ${feedback.type}`}>
@@ -345,53 +357,17 @@ const Podcasts = () => {
                 </div>
             )}
 
-            <div className="podcast-stats">
-                <div className="podcast-stat-card glass-panel">
-                    <span className="stat-label">Total</span>
-                    <span className="stat-value">{stats.total}</span>
-                </div>
-                <div className="podcast-stat-card glass-panel">
-                    <span className="stat-label">🔊 Escuchando</span>
-                    <span className="stat-value" style={{ color: '#f1c40f' }}>{stats.escuchando}</span>
-                </div>
-                <div className="podcast-stat-card glass-panel">
-                    <span className="stat-label">✅ Escuchados</span>
-                    <span className="stat-value" style={{ color: '#2ecc71' }}>{stats.escuchados}</span>
-                </div>
-            </div>
-
-            <div className="controls-bar glass-panel">
-                <div className="search-box">
-                    <Search size={20} className="search-icon" />
-                    <input
-                        type="text"
-                        className="input"
-                        placeholder="Buscar por nombre, autor o categoría..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
-                </div>
-                <div className="filter-group">
-                    <Filter size={18} />
-                    <select className="input" value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)}>
-                        <option value="All">Todos los estados</option>
-                        <option value="por_escuchar">🎧 Por escuchar</option>
-                        <option value="escuchando">🔊 Escuchando</option>
-                        <option value="escuchado">✅ Escuchado</option>
-                    </select>
-                </div>
-            </div>
-
             {loading ? (
                 <p className="podcast-empty">Cargando...</p>
             ) : filtered.length === 0 ? (
-                <div className="podcast-empty glass-panel">
-                    <Headphones size={48} style={{ opacity: 0.3 }} />
-                    <h2>{podcasts.length === 0 ? 'Aún no has añadido podcasts' : 'No hay resultados'}</h2>
-                    <p>{podcasts.length === 0 ? 'Empieza añadiendo tu primer podcast favorito.' : 'Prueba a cambiar los filtros.'}</p>
+                <div className="pc-empty">
+                    <div className="pc-empty-glow" aria-hidden="true" />
+                    <Headphones size={46} className="pc-empty-icon" strokeWidth={1.5} />
+                    <h2 className="pc-empty-title">{podcasts.length === 0 ? 'Aún no has añadido podcasts' : 'No hay resultados'}</h2>
+                    <p className="pc-empty-sub">{podcasts.length === 0 ? 'Empieza añadiendo tu primer podcast favorito.' : 'Prueba con otra búsqueda.'}</p>
                     {podcasts.length === 0 && (
-                        <button className="btn-primary" onClick={openNew}>
-                            Añadir el primero
+                        <button className="pc-cta" onClick={openNew}>
+                            <Plus size={18} /> Añadir el primero
                         </button>
                     )}
                 </div>
