@@ -19,6 +19,7 @@ const TallerNovela = lazy(() => import('./pages/TallerNovela'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const PublicShelf = lazy(() => import('./pages/PublicShelf'));
 const Reader = lazy(() => import('./pages/Reader'));
 const Admin = lazy(() => import('./pages/Admin'));
@@ -45,6 +46,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify" element={<VerifyEmail />} />
+        <Route path="/recuperar" element={<ForgotPassword />} />
         <Route path="/u/:username" element={<PublicShelf />} />
         <Route path="/privacidad" element={<Privacidad />} />
         <Route path="/terminos" element={<Terminos />} />

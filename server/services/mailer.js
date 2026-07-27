@@ -130,6 +130,54 @@ async function sendVerificationCode({ toEmail, toName, code } = {}) {
 }
 
 /**
+ * Envía el código para restablecer la contraseña (6 dígitos).
+ * Si el SMTP no está configurado, registra el código en consola (útil en desarrollo)
+ * y devuelve false.
+ */
+async function sendPasswordResetCode({ toEmail, toName, code } = {}) {
+    if (!isConfigured()) {
+        console.warn(`[mail] SMTP sin configurar — código de recuperación para ${toEmail}: ${code}`);
+        return false;
+    }
+    if (!toEmail || !code) return false;
+
+    const from = process.env.MAIL_FROM || 'Lumbres <no-reply@lumbres.app>';
+    const subject = `Código para recuperar tu contraseña: ${code}`;
+    const text =
+        `Hola ${toName || ''},\n\n` +
+        `Tu código para restablecer la contraseña de Lumbres es: ${code}\n\n` +
+        `Caduca en 15 minutos. Si no has pedido cambiarla, ignora este correo: ` +
+        `tu contraseña seguirá siendo la misma.\n\n— Lumbres`;
+
+    const html = `
+    <div style="font-family:Inter,Arial,sans-serif;background:#1a1410;padding:24px;color:#f5efe6">
+      <div style="max-width:520px;margin:0 auto;background:#241b14;border:1px solid #e0a93b33;border-radius:16px;overflow:hidden">
+        <div style="background:#e0a93b;color:#1a1410;padding:14px 20px;font-weight:800;font-size:14px;letter-spacing:.5px">
+          🔥 LUMBRES · Recuperar contraseña
+        </div>
+        <div style="padding:28px 24px;text-align:center">
+          <p style="margin:0 0 6px;font-size:16px">Hola <strong>${escapeHtml(toName || '')}</strong>,</p>
+          <p style="margin:0 0 20px;color:#cbbfa9">Tu código para restablecer la contraseña es:</p>
+          <div style="font-size:38px;font-weight:800;letter-spacing:10px;color:#f1c40f;background:#1a1410;border:1px solid #e0a93b55;border-radius:12px;padding:18px 0;margin:0 0 18px">
+            ${escapeHtml(code)}
+          </div>
+          <p style="margin:0;color:#6b5e4a;font-size:13px">Caduca en 15 minutos. Si no has pedido cambiarla, ignora este correo: tu contraseña seguirá siendo la misma.</p>
+        </div>
+      </div>
+      <p style="text-align:center;color:#6b5e4a;font-size:12px;margin-top:16px">Lumbres · Lecturas Sociales</p>
+    </div>`;
+
+    try {
+        const info = await getTransporter().sendMail({ from, to: toEmail, subject, text, html });
+        console.log(`[mail] Código de recuperación enviado a ${toEmail} (messageId: ${info.messageId})`);
+        return true;
+    } catch (err) {
+        console.error('[mail] Error enviando el código de recuperación:', err.message);
+        return false;
+    }
+}
+
+/**
  * Aviso al dueño de un correo cuando alguien intenta registrarse con él.
  * Se usa para NO revelar en el registro si un correo ya tiene cuenta (anti-enumeración):
  * la respuesta al que se registra es idéntica exista o no, pero al dueño real le llega
@@ -201,4 +249,4 @@ async function sendAlert({ toEmail, subject, text } = {}) {
     }
 }
 
-module.exports = { sendNewMessageEmail, sendVerificationCode, sendAccountExistsNotice, sendAlert, isConfigured };
+module.exports = { sendNewMessageEmail, sendVerificationCode, sendPasswordResetCode, sendAccountExistsNotice, sendAlert, isConfigured };

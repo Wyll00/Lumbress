@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../db');
 const { COOKIE_NAME, cookieOptions } = require('../utils/cookies');
-const { sendVerificationCode, sendAccountExistsNotice } = require('../services/mailer');
+const { sendVerificationCode, sendPasswordResetCode, sendAccountExistsNotice } = require('../services/mailer');
 
 if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET environment variable is required');
@@ -207,6 +207,73 @@ router.post('/resend-code', async (req, res) => {
         res.json({ message: 'Si la cuenta existe y no está verificada, te hemos enviado un código.' });
     } catch (err) {
         console.error('Error in resend-code:', err);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+});
+
+// POST /api/auth/forgot-password { email } — envía un código para restablecer la contraseña.
+// No revela si la cuenta existe (misma respuesta siempre), igual que el registro.
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const email = String(req.body.email || '').trim();
+        if (!email) return res.status(400).json({ message: 'Falta el correo.' });
+
+        const [users] = await pool.query('SELECT id, username FROM usuarios WHERE email = ?', [email]);
+        if (users.length > 0) {
+            const code = genCode();
+            await pool.query(
+                'UPDATE usuarios SET reset_code = ?, reset_expires = ? WHERE id = ?',
+                [code, codeExpiry(), users[0].id]
+            );
+            await sendPasswordResetCode({ toEmail: email, toName: users[0].username, code });
+        }
+        res.json({ message: 'Si la cuenta existe, te hemos enviado un código para restablecer la contraseña.' });
+    } catch (err) {
+        console.error('Error in forgot-password:', err);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+});
+
+// POST /api/auth/reset-password { email, code, password } — valida el código y cambia la contraseña
+router.post('/reset-password', async (req, res) => {
+    try {
+        const email = String(req.body.email || '').trim();
+        const code = String(req.body.code || '').trim();
+        const { password } = req.body;
+
+        if (!email || !code || !password) return res.status(400).json({ message: 'Faltan datos.' });
+        if (typeof password !== 'string' || password.length < 8) {
+            return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' });
+        }
+
+        // Mismo mensaje si la cuenta no existe, el código no coincide o ha caducado:
+        // así el formulario tampoco sirve para averiguar qué correos están registrados.
+        const invalid = () => res.status(400).json({ message: 'Código incorrecto o caducado. Pide uno nuevo.' });
+
+        const [users] = await pool.query(
+            'SELECT id, reset_code, reset_expires FROM usuarios WHERE email = ?', [email]
+        );
+        if (users.length === 0) return invalid();
+        const user = users[0];
+        if (!user.reset_code || !user.reset_expires) return invalid();
+        if (new Date(user.reset_expires) < new Date()) return invalid();
+        if (String(user.reset_code) !== code) return invalid();
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Quemamos el código al usarlo. Damos también el correo por verificado: quien recibe
+        // el código demuestra que controla el buzón, y así no queda una cuenta con contraseña
+        // nueva que siga sin poder entrar por estar sin verificar.
+        await pool.query(
+            `UPDATE usuarios SET password = ?, reset_code = NULL, reset_expires = NULL,
+             email_verified = 1, verification_code = NULL, verification_expires = NULL WHERE id = ?`,
+            [hashedPassword, user.id]
+        );
+
+        res.json({ message: 'Contraseña actualizada. Ya puedes iniciar sesión.' });
+    } catch (err) {
+        console.error('Error in reset-password:', err);
         res.status(500).json({ message: 'Error interno del servidor' });
     }
 });

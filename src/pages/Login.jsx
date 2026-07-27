@@ -158,7 +158,8 @@ const Login = () => {
                 </form>
 
                 <div className="auth-footer">
-                    <p>{t('authNoAccount')} <Link to="/register">{t('authRegisterLink')}</Link></p>
+                    <p><Link to="/recuperar">{t('authForgotLink')}</Link></p>
+                    <p style={{ marginTop: 8 }}>{t('authNoAccount')} <Link to="/register">{t('authRegisterLink')}</Link></p>
                     <p style={{ fontSize: '0.75rem', marginTop: 10 }}>
                         <Link to="/aviso-legal" style={{ color: 'var(--text-secondary)' }}>Aviso Legal</Link>
                         {' · '}
