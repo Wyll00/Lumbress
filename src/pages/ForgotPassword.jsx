@@ -1,8 +1,9 @@
 import { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { KeyRound, MailCheck, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Check } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { API_URL, withAuth } from '../config';
+import AuthLayout from '../components/AuthLayout';
 import './AuthForm.css';
 
 // Recuperación de contraseña en dos pasos: pedir el código al correo y luego
@@ -59,102 +60,105 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="auth-container">
-            <div className="auth-card glass-panel">
-                <div className="auth-header">
-                    {step === 'done'
-                        ? <ShieldCheck size={52} color="var(--accent-color)" />
-                        : step === 'reset'
-                            ? <MailCheck size={52} color="var(--accent-color)" />
-                            : <KeyRound size={52} color="var(--accent-color)" />}
-                    <h1>{step === 'done' ? t('forgotDoneTitle') : t('forgotTitle')}</h1>
-                    <p>{step === 'done' ? t('forgotDoneSub') : step === 'reset' ? t('forgotResetSub') : t('forgotSub')}</p>
+        <AuthLayout>
+            <div className="auth-header">
+                <h1>{step === 'done' ? t('forgotDoneTitle') : t('forgotTitle')}</h1>
+                <p>{step === 'done' ? t('forgotDoneSub') : step === 'reset' ? t('forgotResetSub') : t('forgotSub')}</p>
+            </div>
+
+            {error && (
+                <div className="auth-error">
+                    <AlertCircle size={19} style={{ flex: 'none', marginTop: 1 }} />
+                    <span>{error}</span>
                 </div>
+            )}
+            {info && (
+                <div className="auth-note">
+                    <Check size={19} style={{ flex: 'none', marginTop: 1 }} />
+                    <span>{info}</span>
+                </div>
+            )}
 
-                {error && <div className="auth-error">{error}</div>}
-                {info && (
-                    <div className="auth-error" style={{ background: 'rgba(46,204,113,0.1)', color: '#2ecc71', borderColor: 'rgba(46,204,113,0.25)' }}>
-                        {info}
+            {step === 'request' && (
+                <form onSubmit={handleRequest} className="auth-form">
+                    <div className="form-group">
+                        <label htmlFor="forgot-email">{t('forgotEmailLabel')}</label>
+                        <input
+                            id="forgot-email"
+                            type="email"
+                            autoComplete="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            autoFocus
+                        />
                     </div>
-                )}
+                    <button type="submit" className="auth-submit" disabled={loading}>
+                        {loading ? t('forgotSending') : t('forgotSendBtn')}
+                    </button>
+                </form>
+            )}
 
-                {step === 'request' && (
-                    <form onSubmit={handleRequest} className="auth-form">
-                        <div className="form-group">
-                            <label>{t('forgotEmailLabel')}</label>
+            {step === 'reset' && (
+                <form onSubmit={handleReset} className="auth-form">
+                    <div className="form-group">
+                        <label htmlFor="forgot-code">{t('forgotCodeLabel')}</label>
+                        <input
+                            id="forgot-code"
+                            className="auth-code-input"
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            maxLength={6}
+                            value={code}
+                            onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                            placeholder="______"
+                            required
+                            autoFocus
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="forgot-newpass">{t('forgotNewPassword')}</label>
+                        <div className="password-input-wrapper">
                             <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                id="forgot-newpass"
+                                type={showPassword ? 'text' : 'password'}
+                                autoComplete="new-password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                minLength={8}
                                 required
-                                autoFocus
                             />
-                        </div>
-                        <button type="submit" className="primary-btn auth-submit" disabled={loading}>
-                            {loading ? t('forgotSending') : t('forgotSendBtn')}
-                        </button>
-                    </form>
-                )}
-
-                {step === 'reset' && (
-                    <form onSubmit={handleReset} className="auth-form">
-                        <div className="form-group">
-                            <label>{t('forgotCodeLabel')}</label>
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                autoComplete="one-time-code"
-                                maxLength={6}
-                                value={code}
-                                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                                placeholder="______"
-                                required
-                                autoFocus
-                                style={{ letterSpacing: '0.5em', textAlign: 'center', fontSize: '1.4rem', fontWeight: 700 }}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>{t('forgotNewPassword')}</label>
-                            <div className="password-input-wrapper">
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    minLength={8}
-                                    required
-                                />
-                                <button
-                                    type="button"
-                                    className="password-toggle-btn"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    tabIndex="-1"
-                                >
-                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                </button>
-                            </div>
-                        </div>
-                        <button type="submit" className="primary-btn auth-submit" disabled={loading || code.length < 6 || password.length < 8}>
-                            {loading ? t('forgotResetting') : t('forgotResetBtn')}
-                        </button>
-                    </form>
-                )}
-
-                <div className="auth-footer">
-                    {step === 'reset' && (
-                        <p>
                             <button
                                 type="button"
-                                onClick={() => { setStep('request'); setCode(''); setPassword(''); setError(''); setInfo(''); }}
-                                style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+                                className="password-toggle-btn"
+                                onClick={() => setShowPassword(!showPassword)}
+                                aria-label={showPassword ? t('authHidePassword') : t('authShowPassword')}
+                                tabIndex="-1"
                             >
-                                {t('forgotResend')}
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
-                        </p>
-                    )}
-                    <p style={{ marginTop: 8 }}><Link to="/login">{t('forgotBackToLogin')}</Link></p>
-                </div>
+                        </div>
+                    </div>
+                    <button type="submit" className="auth-submit" disabled={loading || code.length < 6 || password.length < 8}>
+                        {loading ? t('forgotResetting') : t('forgotResetBtn')}
+                    </button>
+                </form>
+            )}
+
+            <div className="auth-footer">
+                {step === 'reset' && (
+                    <button
+                        type="button"
+                        className="auth-link-btn muted"
+                        onClick={() => { setStep('request'); setCode(''); setPassword(''); setError(''); setInfo(''); }}
+                    >
+                        {t('forgotResend')}
+                    </button>
+                )}
+                <Link to="/login">{t('forgotBackToLogin')}</Link>
             </div>
-        </div>
+        </AuthLayout>
     );
 };
 

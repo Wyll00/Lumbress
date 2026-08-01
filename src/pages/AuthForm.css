@@ -1,173 +1,370 @@
+/* ============================================================
+   Pantallas de acceso — rediseño 2026-07 (Claude Design)
+
+   Formulario centrado a pantalla completa, con el logo arriba. Usa los
+   tokens de niebla-oliva.css, así que respeta el tema claro/oscuro.
+   ============================================================ */
+
 .auth-container {
     display: flex;
-    align-items: center;
-    justify-content: center;
     min-height: 100vh;
-    padding: 20px;
-    background: radial-gradient(circle at center, rgba(123, 97, 255, 0.1) 0%, transparent 50%);
+    background: var(--bg);
+    font-family: var(--font-sans);
 }
 
-.auth-card {
-    width: 100%;
-    max-width: 480px;
-    padding: 40px;
+/* ---------- Área del formulario ---------- */
+
+.auth-panel {
+    flex: 1;
+    min-width: 0;
+    min-height: 100vh;
+    box-sizing: border-box;
+    padding: 56px 24px;
     display: flex;
     flex-direction: column;
-    gap: 30px;
-    border-radius: 24px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-form-wrap {
+    width: 100%;
+    max-width: 448px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    animation: authRise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Logo pequeño: solo se ve en móvil, donde no hay panel de marca */
+.auth-logo {
+    width: 108px;
+    height: 108px;
+    object-fit: contain;
+    border-radius: 50%;
+    align-self: center;
+}
+
+/* Lienzo del logo 3D: ocupa lo mismo que el PNG para que no salte al cargar.
+   `overflow: hidden` es a propósito: si por lo que sea quedara un lienzo de
+   más, se recorta aquí en vez de desbordarse encima del formulario. */
+.auth-logo-3d {
+    align-self: center;
+    flex: none;
+    overflow: hidden;
+    cursor: pointer;
+    touch-action: manipulation;
 }
 
 .auth-header {
-    text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
-}
-
-.auth-logo {
-    width: 150px;
-    height: 150px;
-    object-fit: contain;
-    border-radius: 50%;
+    text-align: center;
+    gap: 10px;
 }
 
 .auth-header h1 {
-    font-size: 2rem;
-    color: var(--text);
     margin: 0;
+    font-family: var(--font-display);
+    font-size: 38px;
+    line-height: 1.08;
+    font-weight: 600;
+    color: var(--text);
+    text-wrap: pretty;
 }
 
 .auth-header p {
-    color: var(--text-muted);
     margin: 0;
+    font-size: 16.5px;
+    line-height: 1.5;
+    color: var(--text-muted);
 }
 
-.auth-error {
-    background: rgba(231, 76, 60, 0.1);
-    color: var(--status-abandoned);
-    padding: 12px 16px;
-    border-radius: 8px;
-    border: 1px solid rgba(231, 76, 60, 0.2);
-    text-align: center;
-    font-size: 0.9rem;
+/* El icono grande solo aparece en las pantallas que lo piden (verificar) */
+.auth-header > svg {
+    margin-bottom: 4px;
 }
+
+/* ---------- Formulario ---------- */
 
 .auth-form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
+}
+
+.auth-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
 }
 
 .auth-form .form-group label {
-    display: block;
-    margin-bottom: 8px;
+    padding-left: 4px;
+    font-size: 13.5px;
+    font-weight: 600;
     color: var(--text-muted);
-    font-size: 0.9rem;
 }
 
 .auth-form .form-group input {
     width: 100%;
-    padding: 12px 16px;
-    background: rgba(0, 0, 0, 0.2);
+    height: 56px;
+    box-sizing: border-box;
+    padding: 0 22px;
+    border-radius: 999px;
     border: 1px solid var(--card-border);
-    border-radius: 12px;
+    background: var(--input-bg, rgba(0, 0, 0, 0.18));
     color: var(--text);
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-.auth-form .form-group input:focus {
+    font-family: inherit;
+    font-size: 16px;
     outline: none;
-    border-color: var(--accent);
-    background: rgba(0, 0, 0, 0.4);
-    box-shadow: 0 0 0 3px rgba(123, 97, 255, 0.2);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.auth-submit {
-    margin-top: 10px;
-    width: 100%;
-    padding: 14px;
-    font-size: 1.1rem;
-    border-radius: 12px;
-    transition: transform 0.2s ease, filter 0.2s ease;
-}
-
-.auth-submit:hover:not(:disabled) {
-    transform: translateY(-2px);
-    filter: brightness(1.1);
-}
-
-.auth-submit:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-.auth-footer {
-    text-align: center;
-    margin-top: 10px;
+.auth-form .form-group input::placeholder {
     color: var(--text-muted);
 }
 
-.auth-footer a {
-    color: var(--accent);
-    text-decoration: none;
-    font-weight: 600;
-    transition: color 0.2s ease;
+.auth-form .form-group input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
-.auth-footer a:hover {
-    color: var(--accent-hover);
-    text-decoration: underline;
-}
-
+/* Botón de ver/ocultar contraseña: píldora dentro del campo */
 .password-input-wrapper {
     position: relative;
     display: flex;
     align-items: center;
 }
 
+.password-input-wrapper input {
+    padding-right: 62px !important;
+}
+
 .password-toggle-btn {
     position: absolute;
-    right: 12px;
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 4px;
+    right: 6px;
+    height: 44px;
+    width: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s ease;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease;
 }
 
 .password-toggle-btn:hover {
+    background: var(--accent-soft);
     color: var(--accent);
 }
 
-.password-input-wrapper input {
-    padding-right: 40px !important;
+/* ---------- Botón principal ---------- */
+
+.auth-submit {
+    margin-top: 4px;
+    width: 100%;
+    height: 58px;
+    border: none;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.18s ease, transform 0.12s ease;
 }
 
-@media (max-width: 480px) {
-    .auth-container {
-        padding: 14px;
-        align-items: flex-start;
-        padding-top: 6vh;
+.auth-submit:hover:not(:disabled) {
+    background: var(--accent-hover);
+}
+
+.auth-submit:active:not(:disabled) {
+    transform: scale(0.985);
+}
+
+.auth-submit:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* ---------- Avisos ---------- */
+
+.auth-error {
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+    padding: 13px 18px;
+    border-radius: 18px;
+    background: rgba(139, 111, 122, 0.16);
+    border: 1px solid rgba(139, 111, 122, 0.34);
+    color: var(--text);
+    font-size: 14.5px;
+    line-height: 1.45;
+    text-align: left;
+    animation: authShake 0.47s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Variante en verde para confirmaciones (código reenviado, etc.) */
+.auth-note {
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+    padding: 13px 18px;
+    border-radius: 18px;
+    background: rgba(78, 97, 71, 0.18);
+    border: 1px solid rgba(78, 97, 71, 0.38);
+    color: var(--text);
+    font-size: 14.5px;
+    line-height: 1.45;
+    animation: authRise 0.4s ease-out both;
+}
+
+/* ---------- Pie: enlaces ---------- */
+
+.auth-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.auth-footer p {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--text-muted);
+}
+
+.auth-footer a,
+.auth-link-btn {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 700;
+    font-family: inherit;
+    font-size: 14.5px;
+    transition: color 0.2s ease;
+}
+
+.auth-footer a:hover,
+.auth-link-btn:hover {
+    color: var(--accent-hover);
+}
+
+/* Botón que parece enlace (reenviar código, volver atrás…) */
+.auth-link-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.auth-link-btn.muted {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.auth-link-btn.muted:hover {
+    color: var(--accent);
+}
+
+.auth-legal {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+}
+
+.auth-legal a {
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.auth-legal a:hover {
+    color: var(--accent);
+}
+
+/* Aviso de consentimiento del registro */
+.auth-consent {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.auth-consent a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+/* Campo de código de 6 dígitos */
+.auth-code-input {
+    letter-spacing: 0.5em;
+    text-align: center;
+    font-size: 1.4rem !important;
+    font-weight: 700;
+}
+
+/* ---------- Animaciones ---------- */
+
+@keyframes authRise {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes authShake {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX(3px); }
+    30%, 50%, 70% { transform: translateX(-6px); }
+    40%, 60% { transform: translateX(6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-form-wrap,
+    .auth-error,
+    .auth-note {
+        animation: none;
+    }
+}
+
+/* ---------- Móvil ---------- */
+
+@media (max-width: 600px) {
+    .auth-panel {
+        padding: 34px 20px calc(28px + env(safe-area-inset-bottom));
+        justify-content: flex-start;
     }
 
-    .auth-card {
-        padding: 28px 20px;
-        gap: 22px;
+    .auth-form-wrap {
+        margin-top: 2vh;
+        gap: 20px;
     }
 
     .auth-logo {
-        width: 110px;
-        height: 110px;
+        width: 92px;
+        height: 92px;
     }
 
     .auth-header h1 {
-        font-size: 1.6rem;
+        font-size: 30px;
+    }
+
+    .auth-header p {
+        font-size: 15.5px;
+    }
+
+    .auth-footer {
+        justify-content: center;
+        gap: 6px 14px;
     }
 }

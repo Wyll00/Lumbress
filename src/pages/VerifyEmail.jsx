@@ -1,9 +1,10 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { ShieldCheck, MailCheck } from 'lucide-react';
+import { ShieldCheck, AlertCircle, Check } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
 import { API_URL, withAuth, saveToken } from '../config';
+import AuthLayout from '../components/AuthLayout';
 import './AuthForm.css';
 
 // Pantalla de verificación por código (tras el registro o al intentar entrar sin verificar).
@@ -19,14 +20,6 @@ const VerifyEmail = () => {
     const [info, setInfo] = useState('');
     const [loading, setLoading] = useState(false);
     const [resending, setResending] = useState(false);
-
-    // Si llegamos sin email (p. ej. recarga), volvemos al login
-    useEffect(() => {
-        if (!location.state?.email) {
-            // permitimos escribir el correo a mano, pero avisamos
-            setInfo('');
-        }
-    }, [location.state]);
 
     const handleVerify = async (e) => {
         e.preventDefault();
@@ -67,56 +60,68 @@ const VerifyEmail = () => {
     };
 
     return (
-        <div className="auth-container">
-            <div className="auth-card glass-panel">
-                <div className="auth-header">
-                    <MailCheck size={52} color="var(--accent-color)" />
-                    <h1>{t('verifyTitle')}</h1>
-                    <p>{t('verifySub')}</p>
+        <AuthLayout>
+            <div className="auth-header">
+                <h1>{t('verifyTitle')}</h1>
+                <p>{t('verifySub')}</p>
+            </div>
+
+            {error && (
+                <div className="auth-error">
+                    <AlertCircle size={19} style={{ flex: 'none', marginTop: 1 }} />
+                    <span>{error}</span>
                 </div>
+            )}
+            {info && (
+                <div className="auth-note">
+                    <Check size={19} style={{ flex: 'none', marginTop: 1 }} />
+                    <span>{info}</span>
+                </div>
+            )}
 
-                {error && <div className="auth-error">{error}</div>}
-                {info && <div className="auth-error" style={{ background: 'rgba(46,204,113,0.1)', color: '#2ecc71', borderColor: 'rgba(46,204,113,0.25)' }}>{info}</div>}
-
-                <form onSubmit={handleVerify} className="auth-form">
-                    {!location.state?.email && (
-                        <div className="form-group">
-                            <label>{t('verifyEmailLabel')}</label>
-                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                        </div>
-                    )}
+            <form onSubmit={handleVerify} className="auth-form">
+                {!location.state?.email && (
                     <div className="form-group">
-                        <label>{t('verifyCodeLabel')}</label>
+                        <label htmlFor="verify-email">{t('verifyEmailLabel')}</label>
                         <input
-                            type="text"
-                            inputMode="numeric"
-                            autoComplete="one-time-code"
-                            maxLength={6}
-                            value={code}
-                            onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                            placeholder="______"
+                            id="verify-email"
+                            type="email"
+                            autoComplete="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             required
-                            autoFocus
-                            style={{ letterSpacing: '0.5em', textAlign: 'center', fontSize: '1.4rem', fontWeight: 700 }}
                         />
                     </div>
-                    <button type="submit" className="primary-btn auth-submit" disabled={loading || code.length < 6}>
-                        <ShieldCheck size={18} style={{ marginRight: 6, verticalAlign: 'middle' }} />
-                        {loading ? t('verifyVerifying') : t('verifyBtn')}
-                    </button>
-                </form>
-
-                <div className="auth-footer">
-                    <p>
-                        <button type="button" onClick={handleResend} disabled={resending}
-                            style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
-                            {resending ? '…' : t('verifyResend')}
-                        </button>
-                    </p>
-                    <p style={{ marginTop: 8 }}><Link to="/login">{t('verifyBackToLogin')}</Link></p>
+                )}
+                <div className="form-group">
+                    <label htmlFor="verify-code">{t('verifyCodeLabel')}</label>
+                    <input
+                        id="verify-code"
+                        className="auth-code-input"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={6}
+                        value={code}
+                        onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                        placeholder="______"
+                        required
+                        autoFocus
+                    />
                 </div>
+                <button type="submit" className="auth-submit" disabled={loading || code.length < 6}>
+                    <ShieldCheck size={18} />
+                    {loading ? t('verifyVerifying') : t('verifyBtn')}
+                </button>
+            </form>
+
+            <div className="auth-footer">
+                <button type="button" className="auth-link-btn muted" onClick={handleResend} disabled={resending}>
+                    {resending ? '…' : t('verifyResend')}
+                </button>
+                <Link to="/login">{t('verifyBackToLogin')}</Link>
             </div>
-        </div>
+        </AuthLayout>
     );
 };
 

@@ -1,8 +1,9 @@
 import { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { BookMarked, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { LanguageContext } from '../context/LanguageContext';
 import { API_URL, withAuth } from '../config';
+import AuthLayout from '../components/AuthLayout';
 import './AuthForm.css';
 
 const Register = () => {
@@ -56,101 +57,106 @@ const Register = () => {
     };
 
     return (
-        <div className="auth-container">
-            <div className="auth-card glass-panel">
-                <div className="auth-header">
-                    <img
-                        src="/logo.png"
-                        alt="Lumbres"
-                        className="auth-logo"
-                        onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'block'; }}
-                    />
-                    <BookMarked size={48} color="var(--accent-color)" style={{ display: 'none' }} />
-                    <h1>{t('authCreateAccount')}</h1>
-                    <p>{t('authRegisterSub')}</p>
-                </div>
-
-                {error && <div className="auth-error">{error}</div>}
-
-                <form onSubmit={handleSubmit} className="auth-form">
-                    <div className="form-group">
-                        <label>{t('authUsername')}</label>
-                        <input
-                            type="text"
-                            name="username"
-                            value={formData.username}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>{t('authEmail')}</label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>{t('authPassword')}</label>
-                        <div className="password-input-wrapper">
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                minLength={6}
-                            />
-                            <button 
-                                type="button" 
-                                className="password-toggle-btn"
-                                onClick={() => setShowPassword(!showPassword)}
-                                tabIndex="-1"
-                            >
-                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                            </button>
-                        </div>
-                    </div>
-                    <div className="form-group">
-                        <label>{t('authConfirmPassword')}</label>
-                        <div className="password-input-wrapper">
-                            <input
-                                type={showConfirmPassword ? "text" : "password"}
-                                name="confirmPassword"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                required
-                            />
-                            <button 
-                                type="button" 
-                                className="password-toggle-btn"
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                tabIndex="-1"
-                            >
-                                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                            </button>
-                        </div>
-                    </div>
-                    <button type="submit" className="primary-btn auth-submit" disabled={isLoading}>
-                        {isLoading ? t('authRegistering') : t('authRegisterBtn')}
-                    </button>
-                    <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', textAlign: 'center', margin: '12px 0 0', lineHeight: 1.5 }}>
-                        Al registrarte aceptas los{' '}
-                        <Link to="/terminos" style={{ color: 'var(--accent-color)' }}>Términos y Condiciones</Link>{' '}
-                        y la{' '}
-                        <Link to="/privacidad" style={{ color: 'var(--accent-color)' }}>Política de Privacidad</Link>.
-                        {' '}Consulta también el <Link to="/aviso-legal" style={{ color: 'var(--accent-color)' }}>Aviso Legal</Link>.
-                    </p>
-                </form>
-
-                <div className="auth-footer">
-                    <p>{t('authHaveAccount')} <Link to="/login">{t('authLoginLink')}</Link></p>
-                </div>
+        <AuthLayout>
+            <div className="auth-header">
+                <h1>{t('authCreateAccount')}</h1>
+                <p>{t('authRegisterSub')}</p>
             </div>
-        </div>
+
+            {error && (
+                <div className="auth-error">
+                    <AlertCircle size={19} style={{ flex: 'none', marginTop: 1 }} />
+                    <span>{error}</span>
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="auth-form">
+                <div className="form-group">
+                    <label htmlFor="reg-username">{t('authUsername')}</label>
+                    <input
+                        id="reg-username"
+                        type="text"
+                        name="username"
+                        autoComplete="username"
+                        value={formData.username}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="reg-email">{t('authEmail')}</label>
+                    <input
+                        id="reg-email"
+                        type="email"
+                        name="email"
+                        autoComplete="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="reg-password">{t('authPassword')}</label>
+                    <div className="password-input-wrapper">
+                        <input
+                            id="reg-password"
+                            type={showPassword ? 'text' : 'password'}
+                            name="password"
+                            autoComplete="new-password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                            minLength={8}
+                        />
+                        <button
+                            type="button"
+                            className="password-toggle-btn"
+                            onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? t('authHidePassword') : t('authShowPassword')}
+                            tabIndex="-1"
+                        >
+                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                    </div>
+                </div>
+                <div className="form-group">
+                    <label htmlFor="reg-confirm">{t('authConfirmPassword')}</label>
+                    <div className="password-input-wrapper">
+                        <input
+                            id="reg-confirm"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            name="confirmPassword"
+                            autoComplete="new-password"
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="password-toggle-btn"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            aria-label={showConfirmPassword ? t('authHidePassword') : t('authShowPassword')}
+                            tabIndex="-1"
+                        >
+                            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" className="auth-submit" disabled={isLoading}>
+                    {isLoading ? t('authRegistering') : t('authRegisterBtn')}
+                </button>
+                <p className="auth-consent">
+                    Al registrarte aceptas los <Link to="/terminos">Términos y Condiciones</Link> y la{' '}
+                    <Link to="/privacidad">Política de Privacidad</Link>. Consulta también el{' '}
+                    <Link to="/aviso-legal">Aviso Legal</Link>.
+                </p>
+            </form>
+
+            <div className="auth-footer">
+                <p>{t('authHaveAccount')}</p>
+                <Link to="/login">{t('authLoginLink')}</Link>
+            </div>
+        </AuthLayout>
     );
 };
 
