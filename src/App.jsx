@@ -7,6 +7,8 @@ import RouteTracker from './components/RouteTracker';
 import './App.css';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+// Pantalla de prueba: dashboard del paquete React/Next con datos reales (/nuevo)
+const DashboardNuevo = lazy(() => import('./pages/DashboardNuevo'));
 const MyLibrary = lazy(() => import('./pages/MyLibrary'));
 const Statistics = lazy(() => import('./pages/Statistics'));
 const Settings = lazy(() => import('./pages/Settings'));
@@ -60,6 +62,7 @@ function App() {
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
+                    <Route path="/nuevo" element={<DashboardNuevo />} />
                     <Route path="/library" element={<MyLibrary />} />
                     <Route path="/catalogo" element={<Catalogo />} />
                     <Route path="/descubrir" element={<Descubrir />} />
