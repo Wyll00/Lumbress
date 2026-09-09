@@ -35,18 +35,18 @@
     animation: authRise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-/* Logo pequeño: solo se ve en móvil, donde no hay panel de marca */
+/* Logotipo de la marca, arriba del formulario */
 .auth-logo {
-    width: 108px;
-    height: 108px;
-    object-fit: contain;
-    border-radius: 50%;
+    /* Marca apaisada (libro + "Lumbres"), 360x70 -> proporcion 5:1.
+       Alto automatico para no deformarla; nada de recorte circular. */
+    width: 100%;
+    max-width: 280px;
+    height: auto;
     align-self: center;
 }
 
-/* Lienzo del logo 3D: ocupa lo mismo que el PNG para que no salte al cargar.
-   `overflow: hidden` es a propósito: si por lo que sea quedara un lienzo de
-   más, se recorta aquí en vez de desbordarse encima del formulario. */
+/* Lienzo del logo 3D (components/Logo3D.jsx). Ahora mismo NO se usa: el login
+   muestra el logotipo apaisado. Se conserva por si se reactiva. */
 .auth-logo-3d {
     align-self: center;
     flex: none;
@@ -351,8 +351,7 @@
     }
 
     .auth-logo {
-        width: 92px;
-        height: 92px;
+        max-width: 232px;
     }
 
     .auth-header h1 {
