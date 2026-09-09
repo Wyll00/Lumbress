@@ -7,7 +7,7 @@ import RouteTracker from './components/RouteTracker';
 import './App.css';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
-// Pantalla de prueba: dashboard del paquete React/Next con datos reales (/nuevo)
+// Dashboard del paquete React/Next (portada). El clasico queda en /clasico.
 const DashboardNuevo = lazy(() => import('./pages/DashboardNuevo'));
 const MyLibrary = lazy(() => import('./pages/MyLibrary'));
 const Statistics = lazy(() => import('./pages/Statistics'));
@@ -61,8 +61,11 @@ function App() {
               <main className="main-content">
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
-                    <Route path="/" element={<Dashboard />} />
+                    {/* Portada: el dashboard nuevo. El anterior sigue accesible en
+                        /clasico por si hay que volver atras o comparar. */}
+                    <Route path="/" element={<DashboardNuevo />} />
                     <Route path="/nuevo" element={<DashboardNuevo />} />
+                    <Route path="/clasico" element={<Dashboard />} />
                     <Route path="/library" element={<MyLibrary />} />
                     <Route path="/catalogo" element={<Catalogo />} />
                     <Route path="/descubrir" element={<Descubrir />} />

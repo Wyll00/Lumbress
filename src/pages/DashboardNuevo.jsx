@@ -89,7 +89,7 @@ const DashboardNuevo = () => {
             readingGoal={Number(user?.reading_goal) || 0}
             challengeYear={year}
             challengeCompletedCount={terminadosEsteAno}
-            logoSrc="/lumbres/logo.webp"
+            logoSrc="/lumbres/nombre.webp"
             onProgressChange={guardarProgreso}
             onGoalChange={guardarMeta}
             onOpenBook={(book) => navigate(`/library?libro=${encodeURIComponent(book.id)}`)}
