@@ -8,7 +8,11 @@
 .auth-container {
     display: flex;
     min-height: 100vh;
-    background: var(--bg);
+    /* Mismo tono que el fondo incrustado del logotipo animado (#1A1B12). El
+       WebP animado no puede llevar alfa aqui, asi que en vez de un recuadro
+       visible alrededor del libro igualamos el fondo de la pantalla. Es casi
+       identico a --bg (#13140C) y estas pantallas se ven a solas. */
+    background: #1A1B12;
     font-family: var(--font-sans);
 }
 
@@ -37,12 +41,24 @@
 
 /* Logotipo de la marca, arriba del formulario */
 .auth-logo {
-    /* Marca apaisada (libro + "Lumbres"), 360x70 -> proporcion 5:1.
-       Alto automatico para no deformarla; nada de recorte circular. */
-    width: 100%;
-    max-width: 280px;
-    height: auto;
+    /* Logotipo apilado: libro animado arriba, nombre debajo. */
     align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* El libro: la animacion de la pagina pasando (WebP animado, 196x166, 81 fotogramas) */
+.auth-logo-libro {
+    width: auto;
+    height: 104px;
+}
+
+/* El nombre "Lumbres" (590x130 -> proporcion 4.5:1) */
+.auth-logo-nombre {
+    width: auto;
+    height: 42px;
 }
 
 /* Lienzo del logo 3D (components/Logo3D.jsx). Ahora mismo NO se usa: el login
@@ -350,8 +366,12 @@
         gap: 20px;
     }
 
-    .auth-logo {
-        max-width: 232px;
+    .auth-logo-libro {
+        height: 84px;
+    }
+
+    .auth-logo-nombre {
+        height: 34px;
     }
 
     .auth-header h1 {
