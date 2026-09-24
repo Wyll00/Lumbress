@@ -89,7 +89,7 @@ const DashboardNuevo = () => {
             readingGoal={Number(user?.reading_goal) || 0}
             challengeYear={year}
             challengeCompletedCount={terminadosEsteAno}
-            logoSrc="/lumbres/nombre.webp"
+            showHeader={false}   /* la app ya tiene su Sidebar: no duplicamos navegacion */
             onProgressChange={guardarProgreso}
             onGoalChange={guardarMeta}
             onOpenBook={(book) => navigate(`/library?libro=${encodeURIComponent(book.id)}`)}

@@ -72,6 +72,7 @@ export function LumbresDashboard({
   challengeYear,
   challengeCompletedCount,
   logoSrc = '/lumbres/logo.webp',
+  showHeader = true,
   onProgressChange,
   onGoalChange,
   onWantToReadChange,
@@ -290,18 +291,20 @@ export function LumbresDashboard({
 
   return (
     <div className={styles.dashboard} aria-label="Inicio de Lumbres">
-      <header className="l-top">
-        <a href={`#${id('home')}`} aria-label="Lumbres, inicio">
-          <img className="l-logo" src={logoSrc} alt="Lumbres" width={360} height={70} />
-        </a>
-        <nav className="l-nav" aria-label="Principal">
-          <a href={`#${id('home')}`} aria-current="page">Inicio</a>
-          <a href={`#${id('shelf')}`}>Mi biblioteca</a>
-          <a href={`#${id('discover')}`}>Descubrir</a>
-          <a href={`#${id('community')}`}>Comunidad</a>
-        </nav>
-        <span className="l-avatar" aria-hidden="true">L</span>
-      </header>
+      {showHeader && (
+        <header className="l-top">
+          <a href={`#${id('home')}`} aria-label="Lumbres, inicio">
+            <img className="l-logo" src={logoSrc} alt="Lumbres" width={360} height={70} />
+          </a>
+          <nav className="l-nav" aria-label="Principal">
+            <a href={`#${id('home')}`} aria-current="page">Inicio</a>
+            <a href={`#${id('shelf')}`}>Mi biblioteca</a>
+            <a href={`#${id('discover')}`}>Descubrir</a>
+            <a href={`#${id('community')}`}>Comunidad</a>
+          </nav>
+          <span className="l-avatar" aria-hidden="true">L</span>
+        </header>
+      )}
       <main className="l-main" id={id('home')}>
         <div className="l-intro">
           <div>

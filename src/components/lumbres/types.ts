@@ -35,6 +35,12 @@ export interface LumbresDashboardProps {
   challengeCompletedCount?: number;
   /** Defaults to /lumbres/logo.webp. */
   logoSrc?: string;
+  /**
+   * Cabecera propia del paquete (logo + navegacion + avatar). Ponla en false
+   * cuando la aplicacion ya tenga su propia navegacion, para no duplicarla.
+   * Por defecto true, como venia el paquete.
+   */
+  showHeader?: boolean;
   onProgressChange?: (bookId: string, page: number) => Promise<void> | void;
   onGoalChange?: (goal: number) => Promise<void> | void;
   /** Removing a recommendation only removes its 'want-to-read' library entry. */
