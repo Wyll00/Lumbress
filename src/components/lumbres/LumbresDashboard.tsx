@@ -71,7 +71,7 @@ export function LumbresDashboard({
   readingGoal,
   challengeYear,
   challengeCompletedCount,
-  logoSrc = '/lumbres/logo.webp',
+  logoSrc = '/lumbres/nombre.webp',
   showHeader = true,
   onProgressChange,
   onGoalChange,
@@ -294,7 +294,7 @@ export function LumbresDashboard({
       {showHeader && (
         <header className="l-top">
           <a href={`#${id('home')}`} aria-label="Lumbres, inicio">
-            <img className="l-logo" src={logoSrc} alt="Lumbres" width={360} height={70} />
+            <img className="l-logo" src={logoSrc} alt="Lumbres" width={590} height={130} />
           </a>
           <nav className="l-nav" aria-label="Principal">
             <a href={`#${id('home')}`} aria-current="page">Inicio</a>

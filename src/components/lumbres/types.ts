@@ -33,7 +33,7 @@ export interface LumbresDashboardProps {
    * component counts all books whose status is 'finished'.
    */
   challengeCompletedCount?: number;
-  /** Defaults to /lumbres/logo.webp. */
+  /** Defaults to /lumbres/nombre.webp (el logotipo de la marca, 590x130). */
   logoSrc?: string;
   /**
    * Cabecera propia del paquete (logo + navegacion + avatar). Ponla en false
