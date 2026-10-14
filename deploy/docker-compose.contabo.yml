@@ -1,0 +1,99 @@
+# Lumbres en el VPS de Contabo (gestionado por Coolify).
+#
+# Traefik (contenedor "coolify-proxy") ya es dueño de los puertos 80 y 443 y
+# enruta por etiquetas, así que aquí NO se publica ningún puerto en el host:
+# eso evita chocar con las otras apps del servidor.
+#
+# Uso:
+#   cd /opt/lumbres && docker compose -f docker-compose.contabo.yml up -d --build
+#
+# Antes hay que crear el archivo .env de al lado (ver .env.contabo.example).
+
+services:
+  lumbres:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lumbres-app
+    restart: unless-stopped
+    depends_on:
+      lumbres-db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      SERVE_STATIC: "true"
+      PORT: "5001"
+      DB_HOST: lumbres-db
+      DB_PORT: "3306"
+      DB_USER: lumbres
+      DB_PASSWORD: ${DB_PASSWORD:?falta DB_PASSWORD}
+      DB_NAME: biblioteca_personal
+      JWT_SECRET: ${JWT_SECRET:?falta JWT_SECRET}
+      JWT_EXPIRES_IN: 7d
+      APP_URL: https://${DOMINIO:?falta DOMINIO}
+      ALLOWED_ORIGINS: https://${DOMINIO}
+      # Correo (Resend). Si se dejan vacías, el envío se omite sin romper nada.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_SECURE: ${SMTP_SECURE:-true}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      # Stripe (opcional; sin claves, las suscripciones quedan inactivas)
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_PREMIUM_MES: ${STRIPE_PRICE_PREMIUM_MES:-}
+      STRIPE_PRICE_PREMIUM_ANO: ${STRIPE_PRICE_PREMIUM_ANO:-}
+    volumes:
+      - lumbres-uploads:/app/server/uploads
+    networks:
+      - coolify
+      - interna
+    labels:
+      # Misma convención que el resto de apps de este servidor
+      traefik.enable: "true"
+      traefik.docker.network: coolify
+      traefik.http.routers.lumbres-http.entryPoints: http
+      traefik.http.routers.lumbres-http.rule: Host(`${DOMINIO}`)
+      traefik.http.routers.lumbres-http.middlewares: redirect-to-https
+      traefik.http.routers.lumbres.entryPoints: https
+      traefik.http.routers.lumbres.rule: Host(`${DOMINIO}`)
+      traefik.http.routers.lumbres.middlewares: gzip
+      traefik.http.routers.lumbres.tls: "true"
+      traefik.http.routers.lumbres.tls.certresolver: letsencrypt
+      traefik.http.services.lumbres.loadbalancer.server.port: "5001"
+
+  lumbres-db:
+    image: mariadb:11
+    container_name: lumbres-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: biblioteca_personal
+      MARIADB_USER: lumbres
+      MARIADB_PASSWORD: ${DB_PASSWORD:?falta DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?falta DB_ROOT_PASSWORD}
+    command: >
+      --max_allowed_packet=256M
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+    volumes:
+      - lumbres-db-data:/var/lib/mysql
+      # Los .sql de esta carpeta se ejecutan SOLO al crear la base vacía
+      - ./esquema:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    networks:
+      - interna
+
+volumes:
+  lumbres-uploads:
+  lumbres-db-data:
+
+networks:
+  coolify:
+    external: true
+  interna:

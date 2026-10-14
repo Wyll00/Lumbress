@@ -159,6 +159,28 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
+// ── Frontend compilado ───────────────────────────────────────────────────────
+// En el VPS de Hostinger esto lo hacia nginx. En contenedor (Contabo/Coolify)
+// lo sirve el propio Express: asi basta UN contenedor y Traefik solo tiene que
+// apuntar aqui. Se activa con SERVE_STATIC=true para no cambiar el desarrollo
+// local, donde el frontend lo sirve Vite.
+if (String(process.env.SERVE_STATIC).toLowerCase() === 'true') {
+    const distDir = path.join(__dirname, '..', 'dist');
+    // Los assets llevan hash en el nombre: cache larga. El index.html, nunca.
+    app.use('/assets', express.static(path.join(distDir, 'assets'), {
+        maxAge: '30d', immutable: true,
+    }));
+    app.use(express.static(distDir, { index: false, maxAge: '1h' }));
+    // SPA: cualquier ruta que no sea /api ni /uploads cae en index.html
+    app.get(/^(?!\/(api|uploads)\/).*/, (req, res, next) => {
+        if (req.method !== 'GET') return next();
+        res.sendFile(path.join(distDir, 'index.html'), (err) => {
+            if (err) next(err);
+        });
+    });
+    console.log('[static] Sirviendo el frontend compilado desde', distDir);
+}
+
 // Generic error handler — never leak stack traces to the client
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);

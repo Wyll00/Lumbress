@@ -1,0 +1,11 @@
+node_modules
+server/node_modules
+server/uploads
+dist
+android
+.git
+.github
+Diseños nuevos
+*.log
+.env
+server/.env
