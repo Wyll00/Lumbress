@@ -46,9 +46,44 @@ docker compose -f deploy/docker-compose.contabo.yml --env-file .env up -d --buil
 
 ## Copias de seguridad
 
-Lo que se perdio con Hostinger fue precisamente que las copias vivian dentro
-del mismo servidor. Conviene sacarlas fuera:
+Lumbres **no tiene un sistema de copias propio**: entra en el del servidor, que
+respalda todas las apps de Contabo cada noche.
+
+- **Que**: `/usr/local/sbin/backup-servidor.sh`, lanzado por `backup-servidor.timer`
+  (systemd, no cron) hacia las 03:30.
+- **Que copia de Lumbres**: el volumen de subidas (`deploy_lumbres-uploads`),
+  `/opt/lumbres` entero (incluido el `.env`) y la base de datos.
+- **Donde**: primero en `/var/backups/servidor/<fecha>` (en el propio VPS, 7 dias)
+  y despues **fuera, en Cloudflare R2**, cifrado con restic (bucket
+  `wyll-copias-servidor`, 7 dias).
+
+### La base de datos
+
+El script copiaba los volumenes de MySQL/MariaDB **en caliente**, como archivos:
+un tar del directorio de datos mientras la base escribe, que puede salir a medias.
+El 2026-10-16 se anadio el paso **3b**: un volcado logico consistente
+(`--single-transaction`) de **todas** las bases MySQL/MariaDB del servidor
+(Lumbres, asistente y cobama), comprobando que el volcado termina en
+`Dump completed`. Se probo restaurandolo en una base desechable: correcto.
+
+En la copia aparece como `mysql-lumbres-db.sql.gz`.
+
+### ⚠️ La contrasena de restic
+
+Las copias de R2 estan cifradas con `RESTIC_PASSWORD`, que vive en
+`/root/.restic-copias.env` **del propio servidor**. Si se pierde el servidor y no
+hay copia de esa contrasena en otro sitio, **las copias de R2 no se pueden
+descifrar**: seria repetir lo de Hostinger. Tiene que estar tambien en un gestor
+de contrasenas.
+
+### Restaurar la base de datos de Lumbres desde R2
 
 ```bash
-docker exec lumbres-db mariadb-dump -ulumbres -p"$DB_PASSWORD" biblioteca_personal | gzip > copia.sql.gz
+ssh astro-vps
+set -a; . /root/.restic-copias.env; set +a
+export AWS_ACCESS_KEY_ID=$R2_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$R2_SECRET_ACCESS_KEY
+export RESTIC_REPOSITORY="s3:https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET}"
+restic snapshots                       # elegir una
+restic restore latest --target /tmp/rest --include '*mysql-lumbres-db.sql.gz'
+zcat /tmp/rest/var/backups/servidor/*/mysql-lumbres-db.sql.gz   | docker exec -i lumbres-db sh -c 'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" mariadb -uroot'
 ```
