@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const pool = require('./db');
 const { logTraffic } = require('./middleware/traffic');
 const { logError } = require('./services/errorLog');
+const { realClientIp } = require('./utils/realIp');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -19,6 +20,9 @@ if (!process.env.JWT_SECRET) {
 }
 
 app.set('trust proxy', 1);
+// Detras de Cloudflare (nube naranja), req.ip seria la IP de Cloudflare: esto la
+// sustituye por la del visitante. Va lo primero, antes de limitadores y registro.
+app.use(realClientIp);
 
 // Security headers — permitimos que /uploads se sirva cross-origin (imágenes/audio)
 app.use(helmet({
