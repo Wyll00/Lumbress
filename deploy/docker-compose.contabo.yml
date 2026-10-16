@@ -12,7 +12,9 @@
 services:
   lumbres:
     build:
-      context: .
+      # Las rutas del compose se resuelven desde ESTA carpeta (deploy/),
+      # asi que el contexto es la raiz del proyecto.
+      context: ..
       dockerfile: Dockerfile
     container_name: lumbres-app
     restart: unless-stopped
@@ -53,12 +55,20 @@ services:
       # Misma convención que el resto de apps de este servidor
       traefik.enable: "true"
       traefik.docker.network: coolify
+      # Se atienden el dominio y su www. El www redirige al dominio principal
+      # (una sola direccion canonica). Sin el www en la regla, Traefik
+      # devolvia "503 no available server" a quien escribiera www.
       traefik.http.routers.lumbres-http.entryPoints: http
-      traefik.http.routers.lumbres-http.rule: Host(`${DOMINIO}`)
+      traefik.http.routers.lumbres-http.rule: Host(`${DOMINIO}`) || Host(`www.${DOMINIO}`)
       traefik.http.routers.lumbres-http.middlewares: redirect-to-https
       traefik.http.routers.lumbres.entryPoints: https
-      traefik.http.routers.lumbres.rule: Host(`${DOMINIO}`)
-      traefik.http.routers.lumbres.middlewares: gzip
+      traefik.http.routers.lumbres.rule: Host(`${DOMINIO}`) || Host(`www.${DOMINIO}`)
+      traefik.http.routers.lumbres.middlewares: lumbres-www,gzip
+      # www.lumbress.com/lo-que-sea -> https://lumbress.com/lo-que-sea (301)
+      # ($$ es el escape de $ en docker-compose)
+      traefik.http.middlewares.lumbres-www.redirectregex.regex: ^https?://www\.(.+)
+      traefik.http.middlewares.lumbres-www.redirectregex.replacement: https://$${1}
+      traefik.http.middlewares.lumbres-www.redirectregex.permanent: "true"
       traefik.http.routers.lumbres.tls: "true"
       traefik.http.routers.lumbres.tls.certresolver: letsencrypt
       traefik.http.services.lumbres.loadbalancer.server.port: "5001"
